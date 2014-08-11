@@ -1042,7 +1042,7 @@ inline vector<GenJet> * GenJetsNonZero(GenJetEventPointers inGJEPs) {
     }
     return outGenJetVec;
 }
-bool InSystBound(int iSyst, vector<int> * systLB, vector<int> * systUB) {
+inline bool InSystBound(int iSyst, vector<int> * systLB, vector<int> * systUB) {
     bool outBool = false;
     for (unsigned int iBound = 0; iBound < systLB->size(); ++iBound) {
         //        cout << "iBound " << iBound << endl;
