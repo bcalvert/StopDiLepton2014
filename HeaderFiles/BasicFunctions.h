@@ -238,7 +238,7 @@ inline void PrintLorentzVector(TLorentzVector * inputVec) {
     cout << "vec En " << inputVec->E() << endl;
 }
 
-void HistogramUnderflowOverflow(TH1F * inputHist, bool doUnderflow, bool doOverflow) {
+inline void HistogramUnderflowOverflow(TH1F * inputHist, bool doUnderflow, bool doOverflow) {
     float newHistErr;
     int NBins = inputHist->GetNbinsX();
     if (doUnderflow) {
@@ -253,7 +253,7 @@ void HistogramUnderflowOverflow(TH1F * inputHist, bool doUnderflow, bool doOverf
     }
 }
 
-void BadBinCheck(int &checkInt, int inputAxisNBins) {
+inline void BadBinCheck(int &checkInt, int inputAxisNBins) {
     if (checkInt == 0) {
         cout << "problem with information entropy, homeslice! Input value is too low! Setting it to be right at histogram edge" << endl;
         checkInt = 1;
@@ -263,7 +263,7 @@ void BadBinCheck(int &checkInt, int inputAxisNBins) {
         checkInt = inputAxisNBins;
     }
 }
-void BinFinder(int * address, TH1 * hist, float x, float y, float z) {    
+inline void BinFinder(int * address, TH1 * hist, float x, float y, float z) {
     TAxis * xAxis = hist->GetXaxis();
     TAxis * yAxis, * zAxis;
     address[0] = xAxis->FindBin(x);
@@ -282,7 +282,7 @@ void BinFinder(int * address, TH1 * hist, float x, float y, float z) {
         BadBinCheck(address[2], zAxis->GetNbins());
     }
 }
-void PassFailCuts(vector<double> * integrals, vector<double> * integralErrors, int * binAddreses, TH1 * hist) {
+inline void PassFailCuts(vector<double> * integrals, vector<double> * integralErrors, int * binAddreses, TH1 * hist) {
     double numPassCut, numFailCut;
     double numPassCutErr, numFailCutErr;
     numPassCut = hist->IntegralAndError(binAddreses[0], hist->GetNbinsX() + 1, numPassCutErr);
@@ -300,7 +300,7 @@ void PassFailCuts(vector<double> * integrals, vector<double> * integralErrors, i
     integralErrors->push_back(numFailCutErr);
     integralErrors->push_back(numPassCutErr);
 }
-void PassFailCuts(vector<double> * integrals, vector<double> * integralErrors, int * binAddreses, TH2 * hist) {
+inline void PassFailCuts(vector<double> * integrals, vector<double> * integralErrors, int * binAddreses, TH2 * hist) {
     double numPassCut, numFailCut;
     double numPassCutErr, numFailCutErr;
     numPassCut = hist->IntegralAndError(binAddreses[0], hist->GetNbinsX() + 1, binAddreses[1], hist->GetNbinsY() + 1, numPassCutErr);
@@ -318,7 +318,7 @@ void PassFailCuts(vector<double> * integrals, vector<double> * integralErrors, i
     integralErrors->push_back(numFailCutErr);
     integralErrors->push_back(numPassCutErr);
 }
-void PassFailCuts(vector<double> * integrals, vector<double> * integralErrors, int * binAddreses, TH3 * hist) {
+inline void PassFailCuts(vector<double> * integrals, vector<double> * integralErrors, int * binAddreses, TH3 * hist) {
     double numPassCut, numFailCut;
     double numPassCutErr, numFailCutErr;
     numPassCut = hist->IntegralAndError(binAddreses[0], hist->GetNbinsX() + 1, binAddreses[1], hist->GetNbinsY() + 1, binAddreses[2], hist->GetNbinsZ() + 1, numPassCutErr);
@@ -371,7 +371,7 @@ inline TLorentzVector LeptonScaleSystShift(TLorentzVector inputLepVec, int input
     return outShiftVec;
 }
 
-TH1F * PassCutHisto(TH1 * inputHist, vector<int> * values, vector<TString> * names, TString histNameAppend, TString SystAppendName = "") {
+inline TH1F * PassCutHisto(TH1 * inputHist, vector<int> * values, vector<TString> * names, TString histNameAppend, TString SystAppendName = "") {
     /// Function to make a custom "pass/fail histogram "
     // inputs are the following
     // vector of integer values which are the cut points

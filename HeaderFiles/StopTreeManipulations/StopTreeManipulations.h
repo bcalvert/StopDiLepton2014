@@ -46,6 +46,8 @@ inline TString SystString_v3(int whichSyst = 0) {
   return outString;
 }
 
+/*
+ //temp commented out due to definition in other place
 inline TString SystString_v4(int whichSyst = 0) {
   TString suffixSyst[10] = {"", "LepES", "JetES", "BTagEffSF", "BMisTagSF", "JetSmear", "UncES", "LepEffSF", "genRecoilRW", "genStopXSec"};
   ////    cout << "suffixSyst[7] " << suffixSyst[7] << endl;
@@ -64,6 +66,7 @@ inline TString SystString_v4(int whichSyst = 0) {
   }
   return outString;
 }
+ */
 
 
 inline void SetDiStructureBranch(TTree * outTree, DiParticle * DP_ToUse, TString prefixBranchName, TString appendStringSyst, bool doKinVars = true) {
