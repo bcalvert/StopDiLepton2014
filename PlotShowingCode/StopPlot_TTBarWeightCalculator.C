@@ -1,0 +1,124 @@
+#include <iostream>
+#include "TMath.h"
+#include "../HeaderFiles/StopPlottingHeaderFiles.h"
+/*
+#include "../HeaderFiles/BasicFunctions.h"
+#include "../HeaderFiles/HistogramSystematics2.h"
+#include "../HeaderFiles/HistogramSystematicsStructs.h"
+#include "../HeaderFiles/StopStructDefinitions.h"
+#include "../HeaderFiles/StopFunctionDefinitions_Plots.h"
+#include "../HeaderFiles/GeneralPlotDrawingStructs.h"
+#include "../HeaderFiles/GeneralPlotDrawingFunctions.h"
+#include "../HeaderFiles/PlotDisplayStructs.h"
+#include "../HeaderFiles/GeneralPlotDrawingFunctions_Set2.h"
+#include "../HeaderFiles/StopPlotStructs_PlottingMacro.h"
+#include "../HeaderFiles/StopPlotSetup_FileSetup.h"
+#include "../HeaderFiles/StopPlotSetup_CustomPlots.h"
+#include "../HeaderFiles/StopPlotStructs.h"
+#include "../HeaderFiles/StopPlotSetup_ISPIFunctions_Set2.h"
+#include "../HeaderFiles/StopPlotSetup.h"
+*/
+
+#include "TH1F.h"
+#include "TFile.h"
+#include "TStyle.h"
+#include "TCanvas.h"
+#include "TROOT.h"
+#include "TRint.h"
+#include <vector>
+#include <cmath>
+using namespace std;
+
+typedef pair<int, int> intBounds;
+typedef pair<TString, intBounds> indMCParams;
+using namespace std;
+
+//using namespace std;
+int main( int argc, char* argv[]) {
+    gROOT->ProcessLine("#include <vector>");
+    // Style things
+    gStyle->SetErrorX(0.5); // set X uncertainty to 1/2 of a bin
+    gStyle->SetTitleFont(42);        
+    //    gStyle->SetLegendFont(42);
+    
+    //./StopPlot_TTBarWeightCalculator doPURW wTTbarGen 2 wNTuple 0 doReReco JsSm 0
+    
+    
+    TRint theApp("App", &argc, argv);
+    Bool_t retVal = kTRUE;
+    
+    RunParams RP;
+    WeightCalculators WC;
+    PlotMakingStructs PMS;
+    AncillaryDrawingVariables ADV;    
+    GlobalHistPlotInfo GHPI;
+    HistDisplayParams HDP;
+    
+    SetupPlotRunning_Part1(argc, argv, &RP, &WC, &PMS, &ADV, &GHPI, &HDP);
+    bool doVerb = RP.HPM.doVerbosity;
+    
+    HistogramDisplayStructs HDS_Data;
+    HistogramDisplayStructs HDS_MC;
+    SetupPlotRunning_DataMC(&RP, &WC, &PMS, &HDS_Data, &HDS_MC, doVerb);
+    
+    TString multiChannelCompOutputName;    
+    RP.SLS.SetupMultiHist_MultiChanLoading(&PMS.multiHistListIDs, PMS.vecVecHistTtoUse[0], &PMS.multiChannelIDs, PMS.subSampVec, multiChannelCompOutputName);
+    
+    TString nameTTBarNormHist_Data, nameTTBarNormHist_MC;
+    TString appendString = RP.SLS.noType0 ? "_noType0" : "";
+    appendString += PMS.subSampVec->at(RP.SLS.whichChan).histNameSuffix;
+    cout << "running on " << appendString << endl;
+//    appendString += "_FullCut";
+    
+    nameTTBarNormHist_Data = "h_MT2ll";
+    nameTTBarNormHist_Data += appendString;
+    nameTTBarNormHist_MC = "h_SmearMT2ll";
+    nameTTBarNormHist_MC += appendString;
+
+    HDS_Data.GrabCentralValues(nameTTBarNormHist_Data, doVerb);
+    HDS_MC.GrabCentralValues(nameTTBarNormHist_MC, doVerb);
+    HDS_MC.GrabSystValues(nameTTBarNormHist_MC, &PMS.vecSystNames, doVerb);
+    
+    HDS_Data.DoProjection(&PMS.vecIndMCParams, &RP.API, &HDP, "DataComp", false, doVerb);
+    HDS_MC.DoProjection(&PMS.vecIndMCParams, &RP.API, &HDP, "MCComp", false, doVerb);
+    
+    TString weightName = "_TTBarFullCutNormalization";
+    SpecificWeight SW_TTBarNorm;
+    SW_TTBarNorm.SetHistDefault(weightName, &PMS.vecSystNames);
+    TString outFileName = "ScaleFactors";
+    outFileName += weightName;
+    outFileName += RP.SLS.TTBarString();
+    if (!RP.SLS.doExcSamps) outFileName += "_noExcSamps";
+    outFileName += ".root";
+    TFile * outFile = new TFile(outFileName, "RECREATE");
+    
+//    cout << "running with TTBar Generator " << RP.SLS.TTBarString() << endl;
+    float SF;
+    vector<TString> vecNamesToHave; 
+    vecNamesToHave.push_back("TTbar");
+    vecNamesToHave.push_back("TTBar");
+    
+    
+    vector<TString> vecNamesNotToHave; 
+    vecNamesNotToHave.push_back("VecBoson");
+    
+    int endBin = HDS_Data.compSamp.first.grabbedHist_TH1F->GetXaxis()->FindBin(79.9);
+    cout << "endBin " << endBin << endl;
+    SF = WC.CalcTTBarNormWeight(&vecNamesToHave, &vecNamesNotToHave, &HDS_Data, &HDS_MC, 0, endBin);
+    SW_TTBarNorm.SetSF(SF, 0);
+    cout << "SF " << SF << endl;
+//    cout << endl;
+    for (int iSyst = 1; iSyst <= (int) PMS.vecSystNames.size(); ++iSyst) {
+        SF = WC.CalcTTBarNormWeight(&vecNamesToHave, &vecNamesNotToHave, &HDS_Data, &HDS_MC, iSyst, endBin);
+        SW_TTBarNorm.SetSF(SF, iSyst);
+        cout << "Up SF for syst = " << PMS.vecSystNames[iSyst - 1] << " is " << SF << endl;
+        SF = WC.CalcTTBarNormWeight(&vecNamesToHave, &vecNamesNotToHave, &HDS_Data, &HDS_MC, -1 * iSyst, endBin);
+        SW_TTBarNorm.SetSF(SF, -1 * iSyst);
+        cout << "Down SF for syst = " << PMS.vecSystNames[iSyst - 1] << " is " << SF << endl;
+    }
+    SW_TTBarNorm.WriteToFile(outFile);
+    outFile->Write();
+    outFile->Close();
+    theApp.Run(retVal);
+    //    theApp.Terminate(0);
+}
