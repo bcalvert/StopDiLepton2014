@@ -76,43 +76,18 @@ int main( int argc, char* argv[] ) {
     TString baseDirNonDataRootFile = "../../NonDataRootFiles/";
     TString baseDirOfficialSmearing = baseDirNonDataRootFile + "OfficialSmearing/";
     TString baseDirSmearingTemplate = baseDirNonDataRootFile + "SmearingTemplates/";
+    TString baseDirJESUncert        = baseDirNonDataRootFile + "JESUncertainty/";
+    TString baseDirPUReweighting = baseDirNonDataRootFile + TString("PUReweighting/");
     /////////Variable initializations/////////////////
     /////Organization Variables//////////////
     
-    TFile * JetESFile = new TFile("../../PlotShowingCode/Summer13JESUncert.root");
-    TH2F * h_JetESUp = (TH2F *) JetESFile->Get("h_JESSystUncertUp");
-    TH2F * h_JetESDown = (TH2F *) JetESFile->Get("h_JESSystUncertDown");
-    TFile * GenJetSmearFile = new TFile("pfJetResolutionMCtoDataCorrLUT.root");
-    TH2F * h_GenJetSmearHist = (TH2F*) GenJetSmearFile->Get("pfJetResolutionMCtoDataCorrLUT");
-    TH2F * h_RecoJetLowPtSmearHist = ResolutionHistMaker(TString("JetResolution.txt"));
-    
-    TFile * FullSimPUWeights = new TFile("WeightStop_FullSim.root");
-    TH3F * FullSimWeightHist = (TH3F *) FullSimPUWeights->Get("WHist");
-    
-    TFile * FastSimPUWeights = new TFile("WeightStop_FastSim.root");
-    TH3F * FastSimWeightHist = (TH3F *) FastSimPUWeights->Get("WHist");
-    
-    TFile * FullSimTruePUWeight = new TFile("FullSimWeight1D.root");
-    TH1F * FullSimTrueWeightHist = (TH1F *) FullSimTruePUWeight->Get("TrueNumIntWeights");
-    TFile * FastSimTruePUWeight = new TFile("FastSimWeight1D.root");
-    TH1F * FastSimTrueWeightHist = (TH1F *) FastSimTruePUWeight->Get("TrueNumIntWeights");
-    
-    TH3F * WeightHistToUse3D;
-    TH1F * TrueWeightHistToUse1D;
-    
-    TFile * JetSmearSFFile = new TFile("pfJetResolutionMCtoDataCorrLUT.root");
-    TH2F * h_JetSmearSFs = (TH2F*) JetSmearSFFile->Get("pfJetResolutionMCtoDataCorrLUT");
-    /*
-    TFile * JetESFile = new TFile("../../PlotShowingCode/Summer13JESUncert.root");
+    TFile * JetESFile = new TFile(baseDirJESUncert + TString("Summer13JESUncert.root"));
     TH2F * h_JetESUp = (TH2F *) JetESFile->Get("h_JESSystUncertUp");
     TH2F * h_JetESDown = (TH2F *) JetESFile->Get("h_JESSystUncertDown");
     
     TFile * GenJetSmearFile = new TFile(baseDirOfficialSmearing + TString("pfJetResolutionMCtoDataCorrLUT.root"));
     TH2F * h_GenJetSmearHist = (TH2F*) GenJetSmearFile->Get("pfJetResolutionMCtoDataCorrLUT");
     TH2F * h_RecoJetLowPtSmearHist = ResolutionHistMaker(baseDirOfficialSmearing + TString("JetResolution.txt"));
-    
-    
-    TString baseDirPUReweighting = baseDirNonDataRootFile + TString("PUReweightingRootFiles/");
     
     TFile * FullSimPUWeights = new TFile(baseDirPUReweighting + TString("WeightStop_FullSim.root"));
     TH3F * FullSimWeightHist = (TH3F *) FullSimPUWeights->Get("WHist");
@@ -130,8 +105,6 @@ int main( int argc, char* argv[] ) {
     
     TFile * JetSmearSFFile = new TFile(baseDirOfficialSmearing + TString("pfJetResolutionMCtoDataCorrLUT.root"));
     TH2F * h_JetSmearSFs = (TH2F*) JetSmearSFFile->Get("pfJetResolutionMCtoDataCorrLUT");
-    
-    */
     
     TH2F * h_DeltaPtSmearUnsmear_GenMatched = new TH2F("h_DeltaPtSmearUnsmear_GenMatched", ";Unsmeared Jet p_{T}; #Delta p_{T} (Smear, Unsmear)",  250, 0, 250, 150, -30, 30);
     TH2F * h_DeltaPtSmearUnsmear_NotGenMatched = new TH2F("h_DeltaPtSmearUnsmear_NotGenMatched", ";Unsmeared Jet p_{T}; #Delta p_{T} (Smear, Unsmear)",  250, 0, 250, 150, -30, 30);
@@ -163,6 +136,7 @@ int main( int argc, char* argv[] ) {
     TString outputAppendMM = "_Output.root";
     TString outputAppendBC = "Haddplots.root";
     
+    /*
     TFile * TTBarFile_HighJet = new TFile("TTbarJets_NJetsGrEq2_Output.root");
     TFile * DYFile_HighJet = new TFile("ZJets_2l_NJetsGrEq2_Output.root");
     TFile * WWFile_HighJet = new TFile("WW_NJetsGrEq2_Output.root");
@@ -180,7 +154,8 @@ int main( int argc, char* argv[] ) {
     TFile * WJFile_LowJet = new TFile("WJHaddplots.root");
     TFile * ZGFile_LowJet = new TFile("ZGHaddplots.root");
     TFile * WGFile_LowJet = new TFile("WGHaddplots.root");
-    /*
+    */
+    
     TFile * TTBarFile_HighJet = new TFile(baseDirSmearingTemplate + TString("TTbarJets") + highJet + outputAppendMM);
     TFile * DYFile_HighJet = new TFile(baseDirSmearingTemplate + TString("ZJets_2l") + highJet + outputAppendMM);
     TFile * WWFile_HighJet = new TFile(baseDirSmearingTemplate + TString("WW") + highJet + outputAppendMM);
@@ -199,7 +174,6 @@ int main( int argc, char* argv[] ) {
     TFile * ZGFile_LowJet = new TFile(baseDirSmearingTemplate + TString("ZG") + outputAppendBC);
     TFile * WGFile_LowJet = new TFile(baseDirSmearingTemplate + TString("WG") + outputAppendBC);
     
-    */
     
     // push the files from above into two specific vector<TFile *>
     vector<TFile *> * METSmearFiles_LowJet = new vector<TFile *>;
