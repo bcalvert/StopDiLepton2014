@@ -24,9 +24,9 @@
 #include <TFile.h>
 #include "TF1.h"
 // Header file for the classes stored in the TTree if any.                                                                            
-#include <Math/GenVector/PtEtaPhiM4D.h>
+//#include <Math/GenVector/PtEtaPhiM4D.h>
 #include <vector>
-#include <Math/GenVector/LorentzVector.h>
+//#include <Math/GenVector/LorentzVector.h>
 //BTag shenanigans
 #include "./BTagSFUtil.C"
 
@@ -53,8 +53,8 @@ using namespace std;
  }
  */
 
-typedef ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> > LV;
-typedef std::vector<LV> VLV;
+//typedef ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> > LV;
+//typedef std::vector<LV> VLV;
 
 inline void METComponents(float &MET, float &METPhi, float &METX, float &METY, int METCompDirection) {
     // Bust MET Pt/Phi into MET X/Y or reverse
@@ -163,6 +163,7 @@ inline bool ElectronPassCutStage2(bool isPFElectron, bool passConvVeto, float re
     return passCut;
     //https://twiki.cern.ch/twiki/bin/viewauth/CMS/EgammaCutBasedIdentification    
 }
+/*
 inline bool ElectronPassCutDESY(float relPFElecIso, float elecEta) {
     // function that says if electron passes cuts we put on it -- was only relevant when we had DESY nTuples
     
@@ -177,6 +178,7 @@ inline bool ElectronPassCutDESY(float relPFElecIso, float elecEta) {
     }
     return passCut;
 }
+*/
 inline void ElectronPickOvi(ElectronEventPointers inEEPs, float eventRhoIso, vector<Lepton> * vecIsoLeptons, int levelVerbosity) {
     // runs through the vectors of electron information (contained in the input ElectronEventPointers struct) and selects good electrons
     
@@ -372,6 +374,7 @@ inline bool MuonPassCutStage2(float muonD0, float muonDZ, int muonNumMatchStatio
     }
     return muonPassCut;
 }
+/*
 inline bool MuonPassCutDESY(float relPFMuonIso, float muonEta) {
     // function that says if muon passes cuts we put on it -- deprecated as was only used with DESY nTuples
     bool muonPassCut;
@@ -384,6 +387,7 @@ inline bool MuonPassCutDESY(float relPFMuonIso, float muonEta) {
     }
     return muonPassCut;
 }
+*/
 inline void MuonPickOvi(MuonEventPointers inMEPs, float firstGoodVertZ, vector<Lepton> * vecIsoLeptons, int levelVerbosity) {
     // runs through the vectors of muon information (contained in the input MuonEventPointers struct) and selects good muons
     
@@ -554,7 +558,7 @@ inline void MuonPickOviNew(MuonEventPointers inMEPs, float firstGoodVertZ, vecto
         }
     }
 }
-
+/*
 inline void IsoLeptonsPickDESY(VLV * Leptons, vector<int> *lepPdgId, vector<double> *lepPFIso, int whichSystCase, vector<Lepton> * vecIsoLeptons, vector<Lepton> * vecIsoLeptons_CentVal) {    
     // deprecated -- relevant for DESY
     
@@ -629,6 +633,7 @@ inline void IsoLeptonsPickDESY(VLV * Leptons, vector<int> *lepPdgId, vector<doub
         }
     }
 }
+*/
 inline EventLepInfo LeptonPair(vector<Lepton> * vecIsoLeptons, int levelVerbosity) {
     // tries to find a suitable pairing of opposite sign leptons that matches our selection
     
@@ -925,6 +930,7 @@ inline bool isLeptonJet(vector<Lepton> * isoLeptons, TLorentzVector * inputJet) 
     return false;
 }
 
+/*
 inline void JetInfoDESY(vector<PFJet> * inVecPFJet, vector<Lepton> * isoLeptons, VLV * Jets, vector<double> * JetBTag, float whichSystCase, TH2F * shiftHist) {
     //deprecated as it was for DESY nTuples
     
@@ -953,6 +959,7 @@ inline void JetInfoDESY(vector<PFJet> * inVecPFJet, vector<Lepton> * isoLeptons,
         inVecPFJet->push_back(currPFJet);
     }
 }
+*/
 inline void JetInfo(vector<PFJet> * inVecPFJet, vector<Lepton> * isoLeptons, PFJetEventPointers inPFJEPs, JetCutInfo * inJCI, float whichSystCase, TH2F * shiftHist) {
     // loops over the jets and picks out the good ones which don't overlap with leptons -- can also perform systematic shifts as needed
     

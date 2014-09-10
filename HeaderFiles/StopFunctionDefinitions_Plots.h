@@ -22,9 +22,9 @@
 #include <TFile.h>
 #include "TF1.h"
 // Header file for the classes stored in the TTree if any.                                                                            
-#include <Math/GenVector/PtEtaPhiM4D.h>
+//#include <Math/GenVector/PtEtaPhiM4D.h>
 #include <vector>
-#include <Math/GenVector/LorentzVector.h>
+//#include <Math/GenVector/LorentzVector.h>
 //BTag shenanigans
 //#include "./BTagSFFiles/BTagSFUtil.C"
 #include "./BTagSFUtil.C"
@@ -54,8 +54,8 @@ typedef map<TString, TString> labelMap;
  }
  */
 
-typedef ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> > LV;
-typedef std::vector<LV> VLV;
+//typedef ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> > LV;
+//typedef std::vector<LV> VLV;
 
 inline void AddPatsyName(vector<HistogramT> * vecHistT) {
     // function used to take on the "PATSY" into hist names so that I can find and replace it later with the sub-channel name
