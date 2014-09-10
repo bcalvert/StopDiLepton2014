@@ -16,4 +16,4 @@ NewOviStopPlotSkimmer.o: NewOviStopPlotSkimmer.C
 	g++ -c -o $@ $(COMPFLAGS) $^
 
 clean:
-        rm StopDict.o NewOviStopPlotSkimmer.o
+	rm StopDict.o NewOviStopPlotSkimmer.o
