@@ -203,8 +203,14 @@ typedef struct EventLepInfo {
         int XBin, YBin;
         float LepEtaX, LepEtaY;
         float tempLepEta0, tempLepEta1;
+        
+        tempLepEta0 = vecEventLeps[0].isElec() ? vecEventLeps[0].TempEtaFixElectron() : vecEventLeps[0].BVC.Vec_Eta;
+        tempLepEta1 = vecEventLeps[1].isElec() ? vecEventLeps[1].TempEtaFixElectron() : vecEventLeps[1].BVC.Vec_Eta;
+        
+        /*
         tempLepEta0 = vecEventLeps[0].isElec() ? TruncateNum(vecEventLeps[0].BVC.Vec_Eta, EtaEBEnd, EtaEEBegin, safetyFactor) : vecEventLeps[0].BVC.Vec_Eta;
         tempLepEta1 = vecEventLeps[1].isElec() ? TruncateNum(vecEventLeps[1].BVC.Vec_Eta, EtaEBEnd, EtaEEBegin, safetyFactor) : vecEventLeps[1].BVC.Vec_Eta;
+        */
 
         if (abs(vecEventLeps[0].PDGID) == abs(vecEventLeps[1].PDGID)) {
             //same flavor leptons -- utlize lead lepton for etaX
@@ -258,12 +264,15 @@ typedef struct EventLepInfo {
         float tempLepEta = inputLep->BVC.Vec_Eta;
         
         if (inputLep->isElec()) {
+            tempLepEta = inputLep->TempEtaFixElectron();
+            /*
             if (tempLepEta > EtaEBEnd && tempLepEta < EtaEEBegin) {
                 tempLepEta = TruncateNum(tempLepEta, EtaEBEnd, EtaEEBegin, safetyFactor);
             }
             if (tempLepEta > -1 * EtaEEBegin && tempLepEta < -1 * EtaEBEnd) {
                 tempLepEta = TruncateNum(tempLepEta, -1 * EtaEEBegin, -1 * EtaEBEnd, safetyFactor);
             }
+             */
         }
         int XBin = histToUse->GetXaxis()->FindBin(tempLepEta);
         int YBin = histToUse->GetYaxis()->FindBin(inputLep->BVC.Vec_Pt);
@@ -769,9 +778,12 @@ typedef struct EventMT2Info {
         vecBLeps[1] = vecBSubLep;
         return TMath::Min(MT2lbPair1, MT2lbPair2);
     }
-    void CalcMT2lblb(EventLepInfo * inELI, EventJetInfo * inEJI, float EventMET, float EventMETPhi) {
+    void CalcMT2lblb(EventLepInfo * inELI, EventJetInfo * inEJI, float EventMET, float EventMETPhi, int levelVerbosity = 0) {
         // Set the events M_{T2}(lb)(lb)
-        vector<TLorentzVector> vecLepMT2lb(2), vecJetMT2lb(2);        
+        vector<TLorentzVector> vecLepMT2lb(2), vecJetMT2lb(2); 
+        if (levelVerbosity > 0) {
+            cout << "inEJI->EventNJets " << inEJI->EventNJets << endl;
+        }
         if (inEJI->EventNJets > 1) {
             vecLepMT2lb[0] = inELI->vecEventLeps[0].P4;
             vecLepMT2lb[1] = inELI->vecEventLeps[1].P4;
@@ -796,6 +808,12 @@ typedef struct EventMT2Info {
                 vecJetMT2lb[1] = inEJI->vecEventJets[1].P4;
                 caseMT2lb = 3;
             }
+            
+            if (levelVerbosity > 0) {
+                cout << "vecJetMT2lb[0].Pt() " << vecJetMT2lb[0].Pt() << endl;
+                cout << "vecJetMT2lb[1].Pt() " << vecJetMT2lb[1].Pt() << endl;
+            }
+            
             /*
             cout << "about to try and calculate MT2lblb " << endl;
             cout << "do event? " << inELI->doEvent << endl;
@@ -965,9 +983,9 @@ typedef struct EventMETInfo {
             MET_EMT2I.SetBadMT2ll_BMET();
         }
     }
-    void CalcMT2lblb(EventLepInfo * inELI, EventJetInfo * inEJI) {
+    void CalcMT2lblb(EventLepInfo * inELI, EventJetInfo * inEJI, int levelVerbosity = 0) {
         if (inELI->doEvent) {
-            MET_EMT2I.CalcMT2lblb(inELI, inEJI, EventMET, EventMETPhi);
+            MET_EMT2I.CalcMT2lblb(inELI, inEJI, EventMET, EventMETPhi, levelVerbosity);
         }
         else {
             MET_EMT2I.SetBadMT2lblb();
@@ -987,7 +1005,7 @@ typedef struct EventMETInfo {
             EventBMETPhi = EventMETPhi;
         }
     }
-    void CalcMETVariations(EventLepInfo * inELI, EventJetInfo * inEJI) {
+    void CalcMETVariations(EventLepInfo * inELI, EventJetInfo * inEJI, int levelVerbosity = 0) {
         MET_EMT2I.EMT2IDefaultVarVals();
         CalcBMET(inEJI);
         SetERI(inELI);
@@ -995,7 +1013,7 @@ typedef struct EventMETInfo {
         SetMTJet(inELI, inEJI);
         SetMTBJet(inELI, inEJI);
         CalcMT2ll(inELI);
-        CalcMT2lblb(inELI, inEJI);
+        CalcMT2lblb(inELI, inEJI, levelVerbosity);
         CalcMT2ll_BMET(inELI);
         EventMETdivMeff = EventMET / (inEJI->EventJetST + EventMET + inELI->EventLepST);
         EventMETdivHT = EventMET / (inEJI->EventHT);
@@ -1062,28 +1080,61 @@ typedef struct EventDiStructureInfo {
         }
         ELepMinEJet = 0.;
     }
-    void SetVars(EventLepInfo * inELI, EventJetInfo * inEJI, EventMETInfo * inEMI) {
+    void SetVars(EventLepInfo * inELI, EventJetInfo * inEJI, EventMETInfo * inEMI, int levelVerbosity = 0) {
+        if (levelVerbosity > 0) {
+            cout << "setting vecZ " << endl;
+        }
         TLorentzVector vecZ = inELI->vecEventLeps[0].P4+inELI->vecEventLeps[1].P4;
+        if (levelVerbosity > 0) {
+            cout << "setting vecMET " << endl;
+        }
         TLorentzVector METP4; METP4.SetPtEtaPhiM(inEMI->EventMET, 0., inEMI->EventMETPhi, 0.);
+        if (levelVerbosity > 0) {
+            cout << "setting DiLepton DP " << endl;
+        }
         DP_DiLepton.SetDPVals(&inELI->vecEventLeps[0].P4, &inELI->vecEventLeps[1].P4);
+        if (levelVerbosity > 0) {
+            cout << "setting DiJet DP " << endl;
+        }
         DP_DiJet.SetDPVals(&inEJI->vecEventJets[0].P4, &inEJI->vecEventJets[1].P4);
+        if (levelVerbosity > 0) {
+            cout << "setting DiBJet DP " << endl;
+        }
         DP_DiBJet.SetDPVals(&inEJI->vecEventBTagJets[0].P4, &inEJI->vecEventBTagJets[1].P4);
         if (inEJI->EventNJets > 1) {
+            if (levelVerbosity > 0) {
+                cout << "setting DiBLep DP " << endl;
+            }
             DP_DiBLeps.SetDPVals(&inEMI->MET_EMT2I.EventVecBLepsMT2lb[0], &inEMI->MET_EMT2I.EventVecBLepsMT2lb[1]);
+        }
+        if (levelVerbosity > 0) {
+            cout << "setting DiZMET DP " << endl;
         }
         DP_ZMET.SetDPVals(&vecZ, &METP4);
         
         for (int iLep = 0; iLep < numLeps; ++iLep) {
+            if (levelVerbosity > 0) {
+                cout << "setting LepMET DP for iLep = " << iLep << endl;
+            }
             vecDP_LepMET[iLep].SetDPVals(&inELI->vecEventLeps[iLep].P4, &METP4);
             for (int iJet = 0; iJet < numJets; ++iJet) {
+                if (levelVerbosity > 0) {
+                    cout << "setting LepJet DP for iLep = " << iLep << " and iJet = " << iJet << endl;
+                }
                 vecVecDP_LepJet[iLep][iJet].SetDPVals(&inELI->vecEventLeps[iLep].P4, &inEJI->vecEventJets[iJet].P4);
             }
             for (int iBJet = 0; iBJet < numBJets; ++iBJet) {
+                if (levelVerbosity > 0) {
+                    cout << "setting LepBJet DP for iLep = " << iLep << " and iBJet = " << iBJet << endl;
+                }
                 vecVecDP_LepBJet[iLep][iBJet].SetDPVals(&inELI->vecEventLeps[iLep].P4, &inEJI->vecEventBTagJets[iBJet].P4);
             }
         }        
         for (int iJet = 0; iJet < numJets; ++iJet) {
             for (int iBJet = 0; iBJet < numBJets; ++iBJet) {
+                if (levelVerbosity > 0) {
+                    cout << "setting JetBJet DP for iJet = " << iJet << " and iBJet = " << iBJet << endl;
+                }
                 vecVecDP_JetBJet[iJet][iBJet].SetDPVals(&inEJI->vecEventJets[iJet].P4, &inEJI->vecEventBTagJets[iBJet].P4);
             }
         }

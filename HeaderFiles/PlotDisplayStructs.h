@@ -497,20 +497,23 @@ typedef struct IndSamplePlotInfo {
             HistogramUnderflowOverflow(vecGrabbedHist_SystVarDown_TH1F[iSyst], inHDP->doUnderflow, inHDP->doOverflow);
         }
     }
-    void SetTH1F_PassCut(vector<int> * vecCutValues, vector<TString> * vecCutVarNames, vector<TString> * vecSystNameAppends, bool doSyst = true) {
+    void SetTH1F_PassCut(vector<int> * vecCutValues, vector<TString> * vecCutVarNames, vector<TString> * vecSystNameAppends, bool doSyst = true, int levelVerbosity = 0) {
         if (doSyst && vecSystNameAppends->size() != vecGrabbedHist_SystVarUp.size()) {
             cout << "something funky in that syst name and syst TH1 vecs don't have same size" << endl;
         }
         TString systName = "";
-        grabbedHist_TH1F = PassCutHisto(grabbedHist, vecCutValues, vecCutVarNames, systName);
+        if (levelVerbosity) {
+            cout << "about to run the PassCutHisto! " << endl;
+        }
+        grabbedHist_TH1F = PassCutHisto(grabbedHist, vecCutValues, vecCutVarNames, nameISPI, systName, levelVerbosity);
         if (doSyst) {
             for (unsigned int iSyst = 0; iSyst < vecSystNameAppends->size(); ++iSyst) {
                 systName = "";
                 systName += vecSystNameAppends->at(iSyst);
                 systName += "Shift";
                 
-                vecGrabbedHist_SystVarUp_TH1F[iSyst] = PassCutHisto(vecGrabbedHist_SystVarUp[iSyst], vecCutValues, vecCutVarNames, systName + TString("Up"));
-                vecGrabbedHist_SystVarDown_TH1F[iSyst] = PassCutHisto(vecGrabbedHist_SystVarDown[iSyst], vecCutValues, vecCutVarNames, systName + TString("Down"));
+                vecGrabbedHist_SystVarUp_TH1F[iSyst] = PassCutHisto(vecGrabbedHist_SystVarUp[iSyst], vecCutValues, vecCutVarNames, nameISPI, systName + TString("Up"), levelVerbosity);
+                vecGrabbedHist_SystVarDown_TH1F[iSyst] = PassCutHisto(vecGrabbedHist_SystVarDown[iSyst], vecCutValues, vecCutVarNames, nameISPI, systName + TString("Down"), levelVerbosity);
             }
         }
     }
@@ -667,11 +670,12 @@ typedef struct HistogramDisplayStructs {
         }
     }
     void DoProjection(vector<indMCParams> * vecIndMCParams, AxisProjInfo * inAPI, HistDisplayParams * inHDP, TString compName, bool sortByInt = false, bool doVerbosity = false) {
+        bool doProj = true;
         if (doVerbosity) {
             cout << "vecSampDisplay_IndMC size " << vecSampDisplay_IndMC.size() << endl;
         }
         if (vecSampDisplay_IndMC.size() > 0) {
-            HistogramAdderProjector(inAPI, inHDP, &vecISPI_asLoaded, &compSamp.first, compName, doVerbosity, &vecSampDisplay_IndMC, vecIndMCParams);
+            HistogramAdderProjector(inAPI, inHDP, &vecISPI_asLoaded, &compSamp.first, compName, doProj, doVerbosity, &vecSampDisplay_IndMC, vecIndMCParams);
             for (unsigned int iIndMC = 0; iIndMC < vecSampDisplay_IndMC.size(); ++iIndMC) {
                 if (doVerbosity) {
                     cout << "setting parameters of individual hists " << endl;
@@ -682,16 +686,28 @@ typedef struct HistogramDisplayStructs {
             SortIndMC(sortByInt);
         }
         else {
-            HistogramAdderProjector(inAPI, inHDP, &vecISPI_asLoaded, &compSamp.first, compName, doVerbosity); 
+            HistogramAdderProjector(inAPI, inHDP, &vecISPI_asLoaded, &compSamp.first, compName, doProj, doVerbosity); 
         }
         HistMainAttSet(compSamp.first.grabbedHist_TH1F, &compSamp.second);
     }
     ////////////////////////////////////////////////////////////////////////
     /// Functions related to yield calculations ///
-    void DoPassCutHisto(vector<int> * vecCutValues, vector<TString> * vecCutVarNames, vector<TString> * vecSystNameAppends, bool doSyst = true) {
-        compSamp.first.SetTH1F_PassCut(vecCutValues, vecCutVarNames, vecSystNameAppends, doSyst);
+    void DoPassCutHisto(vector<int> * vecCutValues, vector<TString> * vecCutVarNames, TString compName, vector<indMCParams> * vecIndMCParams, vector<TString> * vecSystNameAppends, bool doSyst = true, int levelVerbosity = 0) {
+        if (levelVerbosity) {
+            cout << "about to run SetTH1F_PassCut on compSamp" << endl;
+        }
+        if (vecSampDisplay_IndMC.size() > 0) {
+            HistogramAdder(&vecISPI_asLoaded, &compSamp.first, compName, levelVerbosity, &vecSampDisplay_IndMC, vecIndMCParams);
+        }
+        else {
+            HistogramAdder(&vecISPI_asLoaded, &compSamp.first, compName, levelVerbosity);
+        }
+        compSamp.first.SetTH1F_PassCut(vecCutValues, vecCutVarNames, vecSystNameAppends, doSyst, levelVerbosity);
         for (unsigned int iIndMC = 0; iIndMC < vecSampDisplay_IndMC.size(); ++iIndMC) {
-            vecSampDisplay_IndMC[iIndMC].first.SetTH1F_PassCut(vecCutValues, vecCutVarNames, vecSystNameAppends, doSyst);          
+            if (levelVerbosity) {
+                cout << "about to run SetTH1F_PassCut on vecSampDisplay_IndMC[iIndMC] for iIndMC = " << iIndMC << endl;
+            }
+            vecSampDisplay_IndMC[iIndMC].first.SetTH1F_PassCut(vecCutValues, vecCutVarNames, vecSystNameAppends, doSyst, levelVerbosity);
         }
     }
     void SetSSI_YieldErrors(bool doIndMC = false, int whichBin = 2, bool justStat = false, bool noSystPlusStat = true, bool doSymErr = false) {
@@ -798,16 +814,22 @@ typedef struct GlobalHistPlotInfo {
         vecLatexStrings.resize(4); //TopCMSPreliminary String is index 0, Integrated Lumi string is index 1, Gen cut string is index 2, MET String is index 3
         fracRatioADP.DefaultVarVals();
     }
-    void SetFracRatioADPNameRange(bool doAbsRatio) {
+    void SetFracRatioADPNameRange(bool doAbsRatio, float fracRatioYAxisRangeLB, float fracRatioYAxisRangeUB) {
         TString fracRatioNumerName;
         TString fracRatioDenomName;
         fracRatioNumerName = (doAbsRatio) ? "Data/" : "(MC-Data)/";
         fracRatioDenomName = (doAbsRatio) ? "MC" : "Data"; 
         
-        float   fracRatioYAxisRangeLB, fracRatioYAxisRangeUB;
+        /*
+            float   fracRatioYAxisRangeLB, fracRatioYAxisRangeUB;
         fracRatioYAxisRangeLB = (doAbsRatio) ? (1 - 0.23) : -0.26;
         fracRatioYAxisRangeUB = (doAbsRatio) ? (1 + 0.23) : 0.26;
         
+        if (doSpecialRange) {
+            fracRatioYAxisRangeUB = 1.6;
+            fracRatioYAxisRangeLB = 0.5;
+        }
+        */
         fracRatioADP.SetStrings(fracRatioNumerName, fracRatioDenomName);
         fracRatioADP.SetRanges(fracRatioYAxisRangeLB, fracRatioYAxisRangeUB);
     }

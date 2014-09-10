@@ -78,32 +78,37 @@ typedef struct EventGenSUSYParticleInfo {
         //    return !(fabs(genStopMass0 -genStopMass1) > 0.1 || fabs(genChi0Mass0 - genChi0Mass1) > 0.1); // || (genChi0Mass0 < 0) || (genChi0Mass1< 0));
         return !(fabs(genStopMass0 - genStopMass1) > 0.1 || fabs(genChi0Mass0 - genChi0Mass1) > 0.1 || (genChi0Mass0 < 0) || (genChi0Mass1 < 0));
     }
-    void SetMasses(float roundNum, int roundMult) {
+    void SetMasses(float roundNum, int roundMult = -1) {
         if (GSEPs.genStopMass->size() > 1) {
             for (int iStop = 0; iStop < numSavedIndSUSYParts; ++iStop) {
-                vecVecGenSUSYRoundMass[0][iStop] =  TMath::Nint(GSEPs.genStopMass->at(iStop)/roundNum) * roundMult;
+                vecVecGenSUSYRoundMass[0][iStop] = TMath::Nint(GSEPs.genStopMass->at(iStop)/roundNum);
+                if (roundMult > 0) {
+                    vecVecGenSUSYRoundMass[0][iStop] *= roundMult;
+                }
+                else {
+                    vecVecGenSUSYRoundMass[0][iStop] *= roundNum;
+                }
             }
-//            genStopMass0 = TMath::Nint(GSEPs.genStopMass->at(0)/roundNum) * roundMult;
-//            genStopMass1 = TMath::Nint(GSEPs.genStopMass->at(1)/roundNum) * roundMult;
         }
         if (GSEPs.genChi0Mass->size() > 1) {
             for (int iChi0 = 0; iChi0 < numSavedIndSUSYParts; ++iChi0) {
-                vecVecGenSUSYRoundMass[1][iChi0] =  TMath::Nint(GSEPs.genChi0Mass->at(iChi0)/roundNum) * roundMult;
+                vecVecGenSUSYRoundMass[1][iChi0] =  TMath::Nint(GSEPs.genChi0Mass->at(iChi0)/roundNum);
+                if (roundMult > 0) {
+                    vecVecGenSUSYRoundMass[1][iChi0] *= roundMult;
+                }
+                else {
+                    vecVecGenSUSYRoundMass[1][iChi0] *= roundNum;
+                }
             }
-//            genChi0Mass0 = TMath::Nint(GSEPs.genChi0Mass->at(0)/roundNum) * roundMult;
-//            genChi0Mass1 = TMath::Nint(GSEPs.genChi0Mass->at(1)/roundNum) * roundMult;
         }
         if (GSEPs.genCharginoMass->size() > 1) {
             for (int iChargino = 0; iChargino < numSavedIndSUSYParts; ++iChargino) {
                 vecGenCharginoRoundMassFrac[iChargino] = CharginoMassFrac(GSEPs.genStopMass->at(iChargino), GSEPs.genChi0Mass->at(iChargino), GSEPs.genCharginoMass->at(iChargino));
                 vecVecGenSUSYRoundMass[2][iChargino] = vecGenCharginoRoundMassFrac[iChargino] * vecVecGenSUSYRoundMass[0][iChargino] + (1 - vecGenCharginoRoundMassFrac[iChargino]) * vecVecGenSUSYRoundMass[1][iChargino];
             }
-//            MassFrac_Chargino0 = CharginoMassFrac(GSEPs.genStopMass->at(0), GSEPs.genChi0Mass->at(0), GSEPs.genCharginoMass->at(0));
-//            genCharginoMass0 = MassFrac_Chargino0 * genStopMass0 + (1 - MassFrac_Chargino0) * genChi0Mass0;
-//            MassFrac_Chargino1 = CharginoMassFrac(GSEPs.genStopMass->at(1), GSEPs.genChi0Mass->at(1), GSEPs.genCharginoMass->at(1));
-//            genCharginoMass1 = MassFrac_Chargino1 * genStopMass1 + (1 - MassFrac_Chargino1) * genChi0Mass1;
         }
     }
+    
     bool PassMassCut(float genStopMassCut, float genChi0MassCut, float roundNum) {
         bool passCut = true;
         for (int iIndSUSY = 0; iIndSUSY < 1; ++iIndSUSY) {

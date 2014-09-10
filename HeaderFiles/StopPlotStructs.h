@@ -563,6 +563,12 @@ typedef struct HistoStrings {
     TString canvName, mcStackName;
     vector<TString> vecMultiChannelAddStrings_Data, vecMultiChannelAddStrings_MC;
     bool doSystCurrPlot;
+    void PrintInfo() {
+        cout << "plotVarName " << plotVarName << endl;
+        cout << "nameToGrabData " << nameToGrabData << endl;
+        cout << "nameToGrabMC " << nameToGrabMC << endl;
+        cout << "canvName " << canvName << endl;
+    }
     void SetBaseStuff(HistogramT * inHistT, SampLoadSettings * inSLS) {
         plotVarName = "";
         plotVarName += inHistT->name;
@@ -658,18 +664,18 @@ typedef struct PlotMakingStructs {
     ////Set of functions
     
     //Functions for Yield calculation
-    void SetCutValues(HistPlotMaking * inHPM) {
+    void SetCutValues(HistPlotMaking * inHPM, int levelVerbosity = 0) {
         vecXaxisCut.resize(0);
         vecYaxisCut.resize(0);
-        inHPM->SetCutValues(&vecXaxisCut, &vecYaxisCut);
+        inHPM->SetCutValues(&vecXaxisCut, &vecYaxisCut, levelVerbosity);
     }
-    void SetYieldHistNames(SampLoadSettings * inSLS, HistPlotMaking * inHPM) {
+    void SetYieldHistNames(SampLoadSettings * inSLS, HistPlotMaking * inHPM, int levelVerbosity = 0) {
         vecHistNamesForYieldCalc.resize(0);
-        SetCutValues(inHPM);
-        inSLS->SetupMultiHistList_MultiChanList_MT2CutYield(&vecHistNamesForYieldCalc, inHPM->tryCalcPassByHand, &vecXaxisCut, &vecYaxisCut);
+        SetCutValues(inHPM, levelVerbosity);
+        inSLS->SetupMultiHistList_MultiChanList_MT2CutYield(&vecHistNamesForYieldCalc, inHPM->tryCalcPassByHand, &vecXaxisCut, &vecYaxisCut, levelVerbosity);
     }
     
-    void DoPassCut(HistogramDisplayStructs * inHDS, int whichSet = 0, bool doSyst = true) {
+    void DoPassCut(HistogramDisplayStructs * inHDS, TString compName, vector<indMCParams> * vecIndMCParams, int whichSet = 0, bool doSyst = true, int levelVerbosity = 0) {
         vector<int> vecCutValues;
         vector<TString> vecCutVarNames;
         vecCutValues.push_back((int) vecXaxisCut[whichSet]);
@@ -677,8 +683,8 @@ typedef struct PlotMakingStructs {
         if (vecYaxisCut.size() > 0) {
             vecCutValues.push_back((int) vecYaxisCut[whichSet]);
             vecCutVarNames.push_back("MT2lblb");
-        }
-        inHDS->DoPassCutHisto(&vecCutValues, &vecCutVarNames, &vecSystNames, doSyst);
+        }        
+        inHDS->DoPassCutHisto(&vecCutValues, &vecCutVarNames, compName, vecIndMCParams, &vecSystNames, doSyst, levelVerbosity);
     }
     ///
     

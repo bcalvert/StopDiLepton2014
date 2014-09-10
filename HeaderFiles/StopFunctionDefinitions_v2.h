@@ -1318,97 +1318,6 @@ inline TH2F * ResolutionHistMaker(TString inputFile) {
     }
     return outHist;
 }
-
-
-/*
-inline TH2F * FakeLeptonHistMaker(TString inputFile, int whichHistType, int whichLepType) {
-    // Reads in input from .txt files that contain the lepton fake and/or prompt rate
-    
-    ￼pT (GeV)
-    10 < pT ≤ 15 15 < pT ≤ 20 20 < pT ≤ 25 25 < pT ≤ 50 50 < pT
-    pT (GeV)
-    electron prompt rate
-    0 < η ≤ 1.4442 1.566<η≤2.5
-    0.833 ± 0.015 0.75 ± 0.02 0.872 ± 0.007 0.785 ± 0.013 0.902 ± 0.004 0.828 ± 0.008 0.9592 ± 0.0005 0.904 ± 0.001 0.9783 ± 0.0010 0.942 ± 0.003
-    muon prompt rate
-    ￼￼￼￼￼￼￼￼￼￼￼￼￼0<η≤1.479
-    1.479 < η ≤ 2.4
-    0.844 ± 0.009 0.895 ± 0.005 0.935 ± 0.003 0.9761 ± 0.0005 0.9921 ± 0.0008
-    ￼10 < pT ≤ 15 ￼ 0.837 ± 0.009 15 < pT ≤ 20 ￼ 0.881 ± 0.005 20 < pT ≤ 25 ￼ 0.915 ± 0.003 25 < pT ≤ 50 ￼ 0.9754 ± 0.0003
-    ￼50 < pT
-    0.9918 ± 0.0005
-    ￼
-    TString lepString = whichLepType == 11 ? "Elec" : "Muon";
-    TString typeString = whichHistType == 1 ? "Prompt" : "Fake";
-    TString histName = "h_";
-    histName += lepString;
-    histName += typeString;
-    histName += "Rate";
-    TString axisString = ";Lepton #eta;Lepton p_{T} [GeV]";
-    TH2F * outHist;
-    ifstream inputFileStream(inputFile);
-    vector<unsigned int> pTParams;
-    float etaBounds[5] = {};
-    //    int nPtBins, PtMin, PtMax, nEtaBins, EtaMin, EtaMax;
-    string line, field;
-    int pTCounter;
-    if (!(inputFileStream.eof())) {
-        getline(inputFileStream, line);
-        stringstream ss( line );
-        while (std::getline(ss, field, ',' )) {
-            stringstream fs ( field );
-            int currField = 0;
-            fs >> currField;
-            pTParams.push_back(currField);
-        }
-    }
-    else {
-        cout << "issue with inputFile: prematurely reached end of file " << endl;
-    }
-    if (!(inputFileStream.eof())) {
-        getline(inputFileStream, line);
-        stringstream ss( (line) );
-        while (std::getline(ss, field, ',' )) {
-            stringstream fs ( field );
-            int currField = 0;
-            fs >> currField;
-            EtaParams.push_back(currField);
-        }
-    }
-    else {
-        cout << "issue with inputFile: prematurely reached end of file " << endl;
-    }
-    outHist = new TH2F("h_MCJetResol", ";Jet #eta;Jet p_{T}", EtaParams[0], EtaParams[1], EtaParams[2], pTParams[0], pTParams[1], pTParams[2]);
-    for (unsigned int iEta = 0; iEta < EtaParams[0]; ++iEta) {
-        pTCounter = 0;
-        if (!(inputFileStream.eof())) {
-            getline(inputFileStream, line);
-            stringstream ss( (line) );
-            while (std::getline(ss, field, ',' )) {
-                stringstream fs ( field );
-                float currField = 0.0;
-                fs >> currField;
-                if (pTCounter == 0) outHist->SetBinContent(iEta + 1, pTCounter, currField);
-                outHist->SetBinContent(iEta + 1, pTCounter + 1, currField);
-                ++pTCounter;
-            }
-        }
-        else {
-            cout << "issue with inputFile: prematurely reached end of file " << endl;
-        }
-    }
-    for (int i = 1; i < outHist->GetNbinsX() + 1; ++i) {
-        for (int j = 1; j < outHist->GetNbinsY() + 1; ++j) {
-            cout << "bin (" << i << ", " << j << ") is (eta = " << outHist->GetXaxis()->GetBinLowEdge(i) << ", pT = " << outHist->GetYaxis()->GetBinLowEdge(j) << endl;
-            cout << "bin content in this bin: " << outHist->GetBinContent(i, j) << endl; 
-        }        
-    }
-    return outHist;
-}
-*/
-
-
-
 inline vector<PFJet> * JetSmear(vector<PFJet> * InputJets, vector<GenJet> * vecGoodGenJets, float systJetES, float systJetSmear, TH2F * shiftHistJetES, TH2F * shiftHistLowPt, TH2F * shiftHistSmearFactor, vector<TF1> * inputTF1Vec, int levelVerbosity, TH1F * DeltaEnergyHist) {
     
     cout << "BROKEN!!!!" << endl;
@@ -1481,53 +1390,44 @@ inline void JetSmearMatchUnSmear(vector<SmearPFJet> * vecGoodSmearPFJets, PFJetE
     }
 }
 
-
 inline void JetSmearMatchUnSmear(vector<SmearPFJet> * vecGoodSmearPFJets, PFJetEventPointers inSmearPFJEPs, vector<PFJet> * vecGoodPFJets, vector<GenJet> * vecGoodGenJets, vector<float> * vecDeltaEnUnsmearJetSmearJetGenMatched, vector<float> * vecDeltaEnUnsmearJetSmearJetNotGenMatched, vector<float> * vecDeltaEnUnsmearJetGenMatchJet, vector<float> * vecGoodUnsmearJetEn) {
-  SmearPFJet currSmearPFJet;
-  bool foundMatchGoodUnsmearJet;
-  for (unsigned int iJet = 0; iJet < inSmearPFJEPs.numPFJets; ++iJet) {
-    foundMatchGoodUnsmearJet = 0;
-    inSmearPFJEPs.SetPFJet(iJet, &currSmearPFJet.intPFJet);
-    currSmearPFJet.ExtractParams();
-    foundMatchGoodUnsmearJet = currSmearPFJet.SetNonKinematicValues(vecGoodPFJets);
-    if (!foundMatchGoodUnsmearJet) continue;
-    else {
-      MatchGenJet(&currSmearPFJet.intPFJet, vecGoodGenJets);
-      if (currSmearPFJet.intPFJet.isGenJetMatched) {
-	vecDeltaEnUnsmearJetGenMatchJet->push_back(currSmearPFJet.intPFJet.dEnRecoGen);
-	vecDeltaEnUnsmearJetSmearJetGenMatched->push_back(currSmearPFJet.intPFJet.BVC.Vec_En - currSmearPFJet.NonSmearP4.E());
-	//                cout << "currSmearPFJet.intPFJet dEn " << currSmearPFJet.intPFJet.dEnRecoGen<< endl;
-      }
-      else {
-	vecDeltaEnUnsmearJetSmearJetNotGenMatched->push_back(currSmearPFJet.intPFJet.BVC.Vec_En - currSmearPFJet.NonSmearP4.E());
-      }
-      vecGoodUnsmearJetEn->push_back(currSmearPFJet.NonSmearP4.E());
-      vecGoodSmearPFJets->push_back(currSmearPFJet);
+    SmearPFJet currSmearPFJet;
+    bool foundMatchGoodUnsmearJet;
+    for (unsigned int iJet = 0; iJet < inSmearPFJEPs.numPFJets; ++iJet) {
+        foundMatchGoodUnsmearJet = 0;
+        inSmearPFJEPs.SetPFJet(iJet, &currSmearPFJet.intPFJet);
+        currSmearPFJet.ExtractParams();
+        foundMatchGoodUnsmearJet = currSmearPFJet.SetNonKinematicValues(vecGoodPFJets);
+        if (!foundMatchGoodUnsmearJet) continue;
+        else {
+            MatchGenJet(&currSmearPFJet.intPFJet, vecGoodGenJets);
+            if (currSmearPFJet.intPFJet.isGenJetMatched) {
+                vecDeltaEnUnsmearJetGenMatchJet->push_back(currSmearPFJet.intPFJet.dEnRecoGen);
+                vecDeltaEnUnsmearJetSmearJetGenMatched->push_back(currSmearPFJet.intPFJet.BVC.Vec_En - currSmearPFJet.NonSmearP4.E());
+                //                cout << "currSmearPFJet.intPFJet dEn " << currSmearPFJet.intPFJet.dEnRecoGen<< endl;
+            }
+            else {
+                vecDeltaEnUnsmearJetSmearJetNotGenMatched->push_back(currSmearPFJet.intPFJet.BVC.Vec_En - currSmearPFJet.NonSmearP4.E());
+            }
+            vecGoodUnsmearJetEn->push_back(currSmearPFJet.NonSmearP4.E());
+            vecGoodSmearPFJets->push_back(currSmearPFJet);
+        }
     }
-  }
 }
 
-
-
-
-
-
-
-
-
 inline void JetGenMatchUnSmear(vector<PFJet> * vecGoodPFJets, vector<GenJet> * vecGoodGenJets, vector<float> * vecDeltaEnUnsmearJetGenMatchJet, vector<float> * vecGoodUnsmearJetEn) {
-  bool foundGenMatch = 0;
-  for (unsigned int iJet = 0; iJet < vecGoodPFJets->size(); ++iJet) {
-    foundGenMatch = 0;
-    MatchGenJet(&vecGoodPFJets->at(iJet), vecGoodGenJets);
-    if (vecGoodPFJets->at(iJet).isGenJetMatched) {
-      //            cout << "iJet " << iJet << endl;
-      //            cout << "vecGoodPFJets->at(iJet).BVC.Vec_En " << vecGoodPFJets->at(iJet).BVC.Vec_En << endl;
-      //            cout << "vecGoodPFJets->at(iJet).dEnRecoGen " << vecGoodPFJets->at(iJet).dEnRecoGen << endl;
-      vecDeltaEnUnsmearJetGenMatchJet->push_back(vecGoodPFJets->at(iJet).dEnRecoGen);
-      vecGoodUnsmearJetEn->push_back(vecGoodPFJets->at(iJet).BVC.Vec_En);
+    bool foundGenMatch = 0;
+    for (unsigned int iJet = 0; iJet < vecGoodPFJets->size(); ++iJet) {
+        foundGenMatch = 0;
+        MatchGenJet(&vecGoodPFJets->at(iJet), vecGoodGenJets);
+        if (vecGoodPFJets->at(iJet).isGenJetMatched) {
+            //            cout << "iJet " << iJet << endl;
+            //            cout << "vecGoodPFJets->at(iJet).BVC.Vec_En " << vecGoodPFJets->at(iJet).BVC.Vec_En << endl;
+            //            cout << "vecGoodPFJets->at(iJet).dEnRecoGen " << vecGoodPFJets->at(iJet).dEnRecoGen << endl;
+            vecDeltaEnUnsmearJetGenMatchJet->push_back(vecGoodPFJets->at(iJet).dEnRecoGen);
+            vecGoodUnsmearJetEn->push_back(vecGoodPFJets->at(iJet).BVC.Vec_En);
+        }
     }
-  }
 }
 
 inline void Jet_ScaleUpSmearing_SF(vector<SmearPFJet> * vecGoodSmearPFJets, vector<SmearPFJet> * vecGoodSmearPFJets_Scaled, float DeltaEnSF = 1.0) {
@@ -2311,7 +2211,36 @@ inline float DeltaMETXY(std::vector<TH1F *> * vecOneDeeHists, TH2F * TwoDeeHist,
     }
 }
 
+inline EventLepInfo * SetELIPointer(EventLepInfo * inELICV, EventLepInfo * inELISystUp, EventLepInfo * inELISystDown, int iSyst, vector<int> * systLB, vector<int> * systUB) {
+    EventLepInfo * outELI = 0;
+    if (InSystBound(abs(iSyst), systLB, systUB)) {
+        outELI = iSyst > 0 ? inELISystUp : inELISystDown;
+    }
+    else {
+        outELI = inELICV;
+    }
+    return outELI;
+}
 
+inline EventJetInfo * SetEJIPointer(EventJetInfo * inEJICV, EventJetInfo * inEJISystUp, EventJetInfo * inEJISystDown, int iSyst, vector<int> * systLB, vector<int> * systUB) {
+    EventJetInfo * outEJI = 0;
+    if (InSystBound(abs(iSyst), systLB, systUB)) {
+        outEJI = iSyst > 0 ? inEJISystUp : inEJISystDown;
+    }
+    else {
+        outEJI = inEJICV;
+    }
+    return outEJI;
+}
 
-
+inline EventMETInfo * SetEMIPointer(EventMETInfo * inEMICV, EventMETInfo * inEMISystUp, EventMETInfo * inEMISystDown, int iSyst, vector<int> * systLB, vector<int> * systUB) {
+    EventMETInfo * outEMI = 0;
+    if (InSystBound(abs(iSyst), systLB, systUB)) {
+        outEMI = iSyst > 0 ? inEMISystUp : inEMISystDown;
+    }
+    else {
+        outEMI = inEMICV;
+    }
+    return outEMI;
+}
 #endif //HistSampFunc_h_

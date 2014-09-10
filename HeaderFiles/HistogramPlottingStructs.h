@@ -354,7 +354,7 @@ inline int HistID(vector<HistogramT> * inputHistTVec, TString inputSearchString)
         currHistName += inputHistTVec->at(iHist).name;
         if (currHistName.EqualTo(inputSearchString)) {
             histID = counter;
-            cout << "found it! ID is " << histID << endl;
+            cout << "found the Hist! ID is " << histID << endl;
         }
         else {
             ++counter;
@@ -375,7 +375,7 @@ inline int ChannelID(vector<SampleT> * inputSubSampVec, TString inputSearchStrin
         currSubSampName += inputSubSampVec->at(iSamp).histNameSuffix;
         if (currSubSampName.EqualTo(inputSearchString)) {
             chanID = counter;
-            cout << "found it! ID is " << chanID << endl;
+            cout << "found the Chan! ID is " << chanID << endl;
         }
         else {
             ++counter;

@@ -121,6 +121,35 @@ int main( int argc, char* argv[] ) {
     ///////////////////////  End: Deal with loading in Lepton SFs
     /******************************************************************************************************************************/
     
+    /******************************************************************************************************************************/
+    ///////////////////////  Begin: Deal with loading in Fake/Prompt Lepton Histos + FakeLeptonCalculator Initalization
+    /******************************************************************************************************************************/
+    
+    TString baseDirFakePromptRate = baseDirNonDataRootFile + "FakePromptRateHistos/";
+    
+    TString nameElec = "Elec";
+    TString nameMuon = "Muon";
+    TString nameFake = "Fake";
+    TString namePrompt = "Prompt";
+    
+    TFile * fileElecFakeRate = TFile::Open(baseDirFakePromptRate + nameElec + nameFake + "Rate.root");
+    TH2F * h_ElecFakeRate = (TH2F *) fileElecFakeRate->Get(TString("h_") + nameElec + nameFake + TString("Rate"));
+    
+    TFile * fileElecPromptRate = TFile::Open(baseDirFakePromptRate + nameElec + namePrompt + "Rate.root");
+    TH2F * h_ElecPromptRate = (TH2F *) fileElecPromptRate->Get(TString("h_") + nameElec + namePrompt + TString("Rate"));
+    
+    TFile * fileMuonFakeRate = TFile::Open(baseDirFakePromptRate + nameMuon + nameFake + "Rate.root");
+    TH2F * h_MuonFakeRate = (TH2F *) fileMuonFakeRate->Get(TString("h_") + nameMuon + nameFake + TString("Rate"));
+    
+    TFile * fileMuonPromptRate = TFile::Open(baseDirFakePromptRate + nameMuon + namePrompt + "Rate.root");
+    TH2F * h_MuonPromptRate = (TH2F *) fileMuonPromptRate->Get(TString("h_") + nameMuon + namePrompt + TString("Rate"));
+    
+    FakeLeptonCalculator FLC; //Structure used for FakeLepton Weight Calculations
+    
+    /******************************************************************************************************************************/
+    ///////////////////////  End: Deal with loading in Fake/Prompt Lepton Histos + FakeLeptonCalculator Initalization
+    /******************************************************************************************************************************/
+    
     
     TString fileTreeName;
     TString fOutName;    
@@ -131,7 +160,7 @@ int main( int argc, char* argv[] ) {
     int numSavedJets  = 3;
     int numSavedBJets = 2;
     
-    BasicEventInfo BEI; BEI.doData = 0;
+    BasicEventInfo BEI; // BEI.doData = 0;
     FilterTriggerInfo FTI;
     EventGenWeight EGW; EGW.SetGenParticleWeightDefault();
     
@@ -189,7 +218,7 @@ int main( int argc, char* argv[] ) {
     systLB_SmearMET.push_back(1); systUB_SmearMET.push_back(numKinSysts);
     
     systLB_EDSI.push_back(systLepES); systUB_EDSI.push_back(systBMisTagSF);
-    systLB_SmearEDSI.push_back(1); systUB_SmearEDSI.push_back(numKinSysts);    
+    systLB_SmearEDSI.push_back(1); systUB_SmearEDSI.push_back(numKinSysts);
     
     EventLepInfo ELI; ELI.ELIDefaultVarVals(numSavedLeps);  
     EventJetInfo EJI; EJI.EJIDefaultVarVals(numSavedJets, numSavedBJets);
@@ -335,8 +364,8 @@ int main( int argc, char* argv[] ) {
             fOutName += "/"; //in case user forgot a slash
         }
     }
-    fOutName += PMRP.PSIV.fInName(fCutSlash);    
-    fOutName += PMRP.OutStringAdd();    
+    fOutName += PMRP.PSIV.fInName(fCutSlash);
+    fOutName += PMRP.OutStringAdd();
     fOutName += "_Output.root";
     cout << "saving to " << fOutName << endl;
     TFile * outputFile;
@@ -353,25 +382,29 @@ int main( int argc, char* argv[] ) {
     fileTree.SetBranchAddress( "T_METPF_Sig",       &METSig_Raw);
     SetInTreeBranch_PlotMaker_BasicInfo(&fileTree, &FTI, &EPI, &BEI, &EGW);
     SetInTreeBranch_PlotMaker_METInfo(&fileTree, &EMI_PF, 0, false, PMRP.SMV.doPhiCorr);
-    SetInTreeBranch_PlotMaker_METInfo(&fileTree, &EMI_PF_noType0, 0, false, PMRP.SMV.doPhiCorr, "_noType0");
-    SetInTreeBranch_PlotMaker_METInfo(&fileTree, &EMI_Calo, 0, false, PMRP.SMV.doPhiCorr);
-    SetInTreeBranch_PlotMaker_LeptonInfo(&fileTree, &ELI, 0, BEI.doData);
+    if (!PMRP.PSIV.useOldNTuple) {
+        SetInTreeBranch_PlotMaker_METInfo(&fileTree, &EMI_PF_noType0, 0, false, PMRP.SMV.doPhiCorr, "_noType0");
+        SetInTreeBranch_PlotMaker_METInfo(&fileTree, &EMI_Calo, 0, false, PMRP.SMV.doPhiCorr);
+    }
+    SetInTreeBranch_PlotMaker_LeptonInfo(&fileTree, &ELI, 0, PMRP.SMV.doData, PMRP.SMV.keepLooseLeps);
     SetInTreeBranch_PlotMaker_JetInfo(&fileTree, &EJI, 0, false);
     SetInTreeBranch_PlotMaker_DiStructureInfo(&fileTree, &EDSI, 0, false, PMRP.SMV.doPhiCorr);
-    if (!BEI.doData) {
+    if (!PMRP.SMV.doData) {
         if (PMRP.SMV.doOfficialSmear) {
             SetInTreeBranch_PlotMaker_METInfo(&fileTree, &SmearEMI_PF, 0, true, PMRP.SMV.doPhiCorr);
         }
         else {
             SetInTreeBranch_PlotMaker_SpecialMETInfo(&fileTree, &SmearEMI_PF, 0, true, PMRP.SMV.doPhiCorr);   
         }
-        SetInTreeBranch_PlotMaker_SpecialMETInfo(&fileTree, &SmearEMI_PF_noType0, 0, true, PMRP.SMV.doPhiCorr, "_noType0");
+        if (!PMRP.PSIV.useOldNTuple) {
+            SetInTreeBranch_PlotMaker_SpecialMETInfo(&fileTree, &SmearEMI_PF_noType0, 0, true, PMRP.SMV.doPhiCorr, "_noType0");
+        }
         SetInTreeBranch_PlotMaker_JetInfo(&fileTree, &SmearEJI, 0, true);
         SetInTreeBranch_PlotMaker_DiStructureInfo(&fileTree, &SmearEDSI, 0, true, PMRP.SMV.doPhiCorr);
         for (int iSyst = 1; iSyst <= numKinSysts; ++iSyst) {
             if (InSystBound(iSyst, &systLB_Lepton, &systUB_Lepton)) {
-                SetInTreeBranch_PlotMaker_LeptonInfo(&fileTree, &ELI_SystVarUp[iSyst],    1 * iSyst, BEI.doData);
-                SetInTreeBranch_PlotMaker_LeptonInfo(&fileTree, &ELI_SystVarDown[iSyst], -1 * iSyst, BEI.doData);
+                SetInTreeBranch_PlotMaker_LeptonInfo(&fileTree, &ELI_SystVarUp[iSyst],    1 * iSyst, PMRP.SMV.doData);
+                SetInTreeBranch_PlotMaker_LeptonInfo(&fileTree, &ELI_SystVarDown[iSyst], -1 * iSyst, PMRP.SMV.doData);
             }            
             if (InSystBound(iSyst, &systLB_Jet, &systUB_Jet)) {
                 SetInTreeBranch_PlotMaker_JetInfo(&fileTree, &EJI_SystVarUp[iSyst],    1 * iSyst, false);
@@ -391,9 +424,11 @@ int main( int argc, char* argv[] ) {
                     SetInTreeBranch_PlotMaker_SpecialMETInfo(&fileTree, &SmearEMI_PF_SystVarDown[iSyst], -1 * iSyst, true, true);
                 }
             }
-            if (InSystBound(iSyst, &systLB_SmearMET, &systUB_SmearMET)) {
-                SetInTreeBranch_PlotMaker_SpecialMETInfo(&fileTree, &SmearEMI_PF_noType0_SystVarUp[iSyst],    1 * iSyst, true, true, "_noType0");
-                SetInTreeBranch_PlotMaker_SpecialMETInfo(&fileTree, &SmearEMI_PF_noType0_SystVarDown[iSyst], -1 * iSyst, true, true, "_noType0");
+            if (!PMRP.PSIV.useOldNTuple) {
+                if (InSystBound(iSyst, &systLB_SmearMET, &systUB_SmearMET)) {
+                    SetInTreeBranch_PlotMaker_SpecialMETInfo(&fileTree, &SmearEMI_PF_noType0_SystVarUp[iSyst],    1 * iSyst, true, true, "_noType0");
+                    SetInTreeBranch_PlotMaker_SpecialMETInfo(&fileTree, &SmearEMI_PF_noType0_SystVarDown[iSyst], -1 * iSyst, true, true, "_noType0");
+                }
             }
             if (InSystBound(iSyst, &systLB_SmearJet, &systUB_SmearJet)) {
                 SetInTreeBranch_PlotMaker_JetInfo(&fileTree, &SmearEJI_SystVarUp[iSyst],    1 * iSyst, true);
@@ -522,7 +557,7 @@ int main( int argc, char* argv[] ) {
     
     int systStopBook = 2; //3/30/14: temporarily don't book systematics for 3D hists -- too much memory 
     
-    if (!BEI.doData) {
+    if (!PMRP.SMV.doData) {
         vecVecHistT_Inclusive_Smear.resize(numSpaceDimensions);
         vecVecHistT_MET_noType0_Smear.resize(numSpaceDimensions);
         
@@ -627,7 +662,7 @@ int main( int argc, char* argv[] ) {
             // book Type0 hists
             BookHists(vecVecHistT_MET_noType0[iDim], histMap_1D_METnoType0, histMap_2D_METnoType0, histMap_3D_METnoType0, &subSampVec->at(iSubSamp), vecNBins, vecBinEdges, iDim + 1);
             
-            if (!BEI.doData) {
+            if (!PMRP.SMV.doData) {
                 // book the smeared hists
                 BookHists(vecVecHistT_Inclusive_Smear[iDim], histMap_1D_Smear, histMap_2D_Smear, histMap_3D_Smear, &subSampVec->at(iSubSamp), vecNBins, vecBinEdges, iDim + 1);
                 
@@ -846,7 +881,7 @@ int main( int argc, char* argv[] ) {
             ELI_SystVarDown[systLepES].EventDiLepinZMass = ELI_SystVarDown[systLepES].EventDiLepMass > 76 && ELI_SystVarDown[systLepES].EventDiLepMass < 106;
         }
         
-        if (!BEI.doData) {
+        if (!PMRP.SMV.doData) {
             //cout << "EDSI DPhiZMET before " << SmearEDSI.DP_ZMET.DPhiInputObjects << endl;
             SmearEDSI.SetDiLepVals(&EDSI);
             SmearEDSI.SetMETVars(&ELI, &SmearEMI_PF);
@@ -888,7 +923,7 @@ int main( int argc, char* argv[] ) {
 //        cout << "test " << d << endl;
         
         ELI.doEvent &= FTI.EventPassTrigger(&ELI);
-        if (!BEI.doData) {
+        if (!PMRP.SMV.doData) {
             ELI_SystVarUp[systLepES].doEvent &= FTI.EventPassTrigger(&ELI_SystVarUp[systLepES]);
             ELI_SystVarDown[systLepES].doEvent &= FTI.EventPassTrigger(&ELI_SystVarDown[systLepES]);
             
@@ -909,7 +944,7 @@ int main( int argc, char* argv[] ) {
         if (!keepEvent) continue;
 //        cout << "test 2 " << d << endl;
         //        cout << "test 2 " << endl;
-        if (!BEI.doData) {
+        if (!PMRP.SMV.doData) {
             if (PMRP.SRS.isSignal) {
 //                cout << "test 1 " << endl;
                 if (!BEI.hasStopInfo) continue;
@@ -928,13 +963,24 @@ int main( int argc, char* argv[] ) {
                 }
             }
         }
+        else if (PMRP.SMV.doData && PMRP.SMV.estFakeLep) {
+//            float weightFakeLepDD = FLC.GetWeightFullChain(&ELI, h_ElecFakeRate, h_ElecPromptRate, h_MuonFakeRate, h_MuonPromptRate, true);
+            float weightFakeLepDD = FLC.GetWeightFullChain(&ELI, h_ElecFakeRate, h_ElecPromptRate, h_MuonFakeRate, h_MuonPromptRate, PMRP.PSIV.doVerbosity);
+            if (PMRP.PSIV.doVerbosity) {
+                cout << "BEI.weight pre DD " << BEI.weight << endl;
+            }
+            BEI.ScaleWeights(weightFakeLepDD, true, true);
+            if (PMRP.PSIV.doVerbosity) {
+                cout << "BEI.weight " << BEI.weight << endl;
+            }
+        }
         ///****************************************
         // Call the code to set up the event information
         ///****************************************
 //        cout << "test 2 " << endl;
         
 //        cout << "BEI.weight 1 " << BEI.weight << endl;
-        if (!BEI.doData) {
+        if (!PMRP.SMV.doData) {
             if (!PMRP.SMV.doGenRecoil && !PMRP.PSIV.fInName.Contains("TT")) {
                 EGW.vecGenWeight[0] = 1.0;
                 EGW.vecGenWeight[1] = 1.0;
@@ -970,7 +1016,7 @@ int main( int argc, char* argv[] ) {
         ///****************************************
         ELI.doEvent &= ELI.PassesAdditionalLepPtCut(1, PMRP.SMV.subLepPtCut); // subLep Pt Cut -- nominal default is 10 GeV so it does nothing        
         //hasMoreThan2Leps = ELI.HasMoreThanNLeps();
-        if (BEI.doData) {
+        if (PMRP.SMV.doData) {
             if (!ELI.doEvent) continue;
         }
         else {            
@@ -1064,7 +1110,7 @@ int main( int argc, char* argv[] ) {
             }
         }
         // basic condition, if running on data, only select type of events that are relevant to prevent double counting
-        if (BEI.doData) {
+        if (PMRP.SMV.doData) {
             if (ELI.EventDiLepType == 0) {
                 if (!(PMRP.PSIV.fInName.Contains("DoubleMu") || PMRP.PSIV.fInName.Contains("mumu_run2012"))) continue;
             }
@@ -1115,7 +1161,7 @@ int main( int argc, char* argv[] ) {
         SetEJIMap(mapIntEJI_Basic, &EJI, &EJI_SystVarUp, &EJI_SystVarDown, numSystsTotal, &mapIntBool_EJI);
         SetELIMap(mapIntELI_Basic, &ELI, &ELI_SystVarUp, &ELI_SystVarDown, numSystsTotal, &mapIntBool_ELI);
         SetEDSIMap(mapIntEDSI_Basic, &EDSI, &EDSI_SystVarUp, &EDSI_SystVarDown, numSystsTotal, &mapIntBool_EDSI);
-        if (!BEI.doData) {
+        if (!PMRP.SMV.doData) {
             SetEMIMap(mapIntEMI_OfficialSmear,   &SmearEMI_PF, &SmearEMI_PF_SystVarUp, &SmearEMI_PF_SystVarDown, numSystsTotal, &mapIntBool_SmearEMI);
             SetEJIMap(mapIntEJI_OfficialSmear,   &SmearEJI,    &SmearEJI_SystVarUp,    &SmearEJI_SystVarDown,    numSystsTotal, &mapIntBool_SmearEJI);
             SetEDSIMap(mapIntEDSI_OfficialSmear, &SmearEDSI,   &SmearEDSI_SystVarUp,   &SmearEDSI_SystVarDown,   numSystsTotal, &mapIntBool_SmearEDSI);
@@ -1124,19 +1170,19 @@ int main( int argc, char* argv[] ) {
         SetEMIMap(mapIntEMI_NoType0, &EMI_PF_noType0, &EMI_PF_SystVarUp, &EMI_PF_SystVarDown, numSystsTotal, &mapIntBool_EMI);        
         //        SetEDSIMap(mapIntEDSI_NoType0, &EDSI,   &EDSI_SystVarUp,   &EDSI_SystVarDown,   numSystsTotal, &mapIntBool_EDSI);
         
-        if (!BEI.doData) {
+        if (!PMRP.SMV.doData) {
             SetEMIMap(mapIntEMI_NoType0_ByHandSmear, &SmearEMI_PF_noType0, &SmearEMI_PF_noType0_SystVarUp, &SmearEMI_PF_noType0_SystVarDown, numSystsTotal, &mapIntBool_SmearEMI);
         }
         //        SetEDSIMap(mapIntEDSI_NoType0_ByHandSmear, &SmearEDSI,   &SmearEDSI_SystVarUp,   &SmearEDSI_SystVarDown,   numSystsTotal, &mapIntBool_SmearEDSI);                
         
         ESPI.SetStructs(0, &mapIntBEI_Basic, &mapIntEMI_Basic, &mapIntEJI_Basic, &mapIntELI_Basic, &mapIntEDSI_Basic);
-        if (!BEI.doData && PMRP.PSIV.fInName) {
+        if (!PMRP.SMV.doData && PMRP.PSIV.fInName) {
             for (int iSyst = 1; iSyst <= numSystsTotal; ++iSyst) {
                 ESPI_SystVarUp[iSyst].SetStructs(iSyst, &mapIntBEI_Basic, &mapIntEMI_Basic, &mapIntEJI_Basic, &mapIntELI_Basic, &mapIntEDSI_Basic);
                 ESPI_SystVarDown[iSyst].SetStructs(-1 * iSyst, &mapIntBEI_Basic, &mapIntEMI_Basic, &mapIntEJI_Basic, &mapIntELI_Basic, &mapIntEDSI_Basic);
             }
         }
-        if (!BEI.doData) {            
+        if (!PMRP.SMV.doData) {            
 //            SmearESPI.SetStructs(0, &mapIntBEI_Basic, &mapIntEMI_OfficialSmear, &mapIntEJI_OfficialSmear, &mapIntELI_Basic, &mapIntEDSI_OfficialSmear);
             SmearESPI.SetStructs(0, &mapIntBEI_Basic, &mapIntEMI_OfficialSmear, &mapIntEJI_OfficialSmear, &mapIntELI_Basic, &mapIntEDSI_OfficialSmear);
             if (PMRP.PSIV.fInName) {
@@ -1151,11 +1197,11 @@ int main( int argc, char* argv[] ) {
 //        cout << "about to set NoType0 map stuff " << endl;
 //        ESPI_NoType0.SetStructs(0, &mapIntBEI_Basic, &mapIntEMI_NoType0, &mapIntEJI_Basic, &mapIntELI_Basic, &mapIntEDSI_NoType0, true);        
         ESPI_NoType0.SetStructs(0, &mapIntBEI_Basic, &mapIntEMI_NoType0, &mapIntEJI_Basic, &mapIntELI_Basic, &mapIntEDSI_Basic);
-        if (!BEI.doData) { 
+        if (!PMRP.SMV.doData) { 
 //            cout << "about to set NoType0 smeared map stuff " << endl;
 //            SmearESPI_NoType0.SetStructs(0, &mapIntBEI_Basic, &mapIntEMI_NoType0_ByHandSmear, &mapIntEJI_OfficialSmear, &mapIntELI_Basic, &mapIntEDSI_OfficialSmear);
             SmearESPI_NoType0.SetStructs(0, &mapIntBEI_Basic, &mapIntEMI_NoType0_ByHandSmear, &mapIntEJI_Basic, &mapIntELI_Basic, &mapIntEDSI_Basic);
-            if (PMRP.PSIV.fInName) {
+            if (PMRP.PSIV.fInName) { // what the hell is this for?
                 for (int iSyst = 1; iSyst <= numSystsTotal; ++iSyst) {
 //                    SmearESPI_NoType0_SystVarUp[iSyst].SetStructs(iSyst, &mapIntBEI_Basic, &mapIntEMI_NoType0_ByHandSmear, &mapIntEJI_OfficialSmear, &mapIntELI_Basic, &mapIntEDSI_OfficialSmear);
 //                    SmearESPI_NoType0_SystVarDown[iSyst].SetStructs(-1 * iSyst, &mapIntBEI_Basic, &mapIntEMI_NoType0_ByHandSmear, &mapIntEJI_OfficialSmear, &mapIntELI_Basic, &mapIntEDSI_OfficialSmear);
@@ -1179,7 +1225,7 @@ int main( int argc, char* argv[] ) {
         StVM_Basic.clear();
         StVM_MET_noType0.clear();
         
-        if (!BEI.doData) {
+        if (!PMRP.SMV.doData) {
             StVM_Smear.clear();
             StVM_Smear_MET_noType0.clear();
             if (PMRP.PSIV.fInName) {
@@ -1215,7 +1261,7 @@ int main( int argc, char* argv[] ) {
         ///// Basic histograms for MET w/0 Type0 /////
         SetupMapsAndFillHistograms(StVM_MET_noType0, subSampBool_noType0, subSampVec, &ESPI_NoType0, &EPI, &vecVecHistT_MET_noType0, &histMap_1D_METnoType0, &histMap_2D_METnoType0, &histMap_3D_METnoType0, METSig_Raw, systStopBook, 0, false, PMRP.SMV.whichDiLepType, PMRP.PSIV.doVerbosity_Plots); 
                         
-        if (!BEI.doData) {
+        if (!PMRP.SMV.doData) {
             if (PMRP.PSIV.doVerbosity_Plots) {
                 cout << "about to do Smeared plots " << endl;
             }

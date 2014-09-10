@@ -40,5 +40,6 @@
 #include "./StopFunctions_PlotFilling.h"
 #include "./StopFunctionDefinitions_Plots.h"
 #include "./StopFunctionDefinitions_v2.h"
-#include "./StopTreeManipulations.h"
+#include "./StopTreeManipulations/StopTreeManipulations.h"
 #include "./StopFunctions_MapShenanigans.h"
+#include "./StopFakeLeptonFunctions.h"

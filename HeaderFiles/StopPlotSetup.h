@@ -858,7 +858,7 @@ void SetupPlotRunning_Part1(int argc, char * argv[], RunParams * inRP, WeightCal
     TString stringMETExtra = inRP->SLS.noType0 ? " w/o Type 0" : "";
     TString genCutUsed = "";
     inGHPI->DefaultVarVals();
-    inGHPI->SetFracRatioADPNameRange(inRP->GHS.doAbsRatio);
+    inGHPI->SetFracRatioADPNameRange(inRP->GHS.doAbsRatio, inRP->GHS.ReturnFracRatioBound(1), inRP->GHS.ReturnFracRatioBound(2));
     inGHPI->SetLatexStringVec(inWC->intLumi, typeMET, stringMETExtra, genCutUsed, true);
     
     

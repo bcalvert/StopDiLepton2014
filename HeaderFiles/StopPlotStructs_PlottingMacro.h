@@ -233,7 +233,7 @@ typedef struct SampLoadSettings {
     
     
     
-    void SetupMultiHistList_MultiChanList_MT2CutYield(vector<TString> * vecMultiHistNames, bool calcByHand, vector<float> * vecMT2llCut, vector<float> * vecMT2lbCut) {
+    void SetupMultiHistList_MultiChanList_MT2CutYield(vector<TString> * vecMultiHistNames, bool calcByHand, vector<float> * vecMT2llCut, vector<float> * vecMT2lbCut, int levelVerbosity = 0) {
         // set up multi hist and multi-channel adding in the context of calculating MT2 yields
         TString plotGrabBaseName = SmearedPlots ? "h_Smear" : "h_";
         vector<TString> addString(0);
@@ -252,7 +252,12 @@ typedef struct SampLoadSettings {
         }
         for (unsigned int iCut = 0; iCut < addString.size(); ++iCut) {
             vecMultiHistNames->push_back(plotGrabBaseName + addString[iCut]);
-        }              
+        }
+        if (levelVerbosity) {
+            for (int iHist = 0; iHist < (int) vecMultiHistNames->size(); ++iHist) {
+                cout << "MT2CutYield Hist name for iHist = " << iHist << " is " << vecMultiHistNames->at(iHist) << endl;
+            }
+        }
     }    
 } SampLoadSettings;
 typedef struct HistPlotMaking{
@@ -331,7 +336,7 @@ typedef struct HistPlotMaking{
         inputMT2lbCut   = 170;
     }
     
-    void SetCutValues(vector<float> * vecMT2llCut, vector<float> * vecMT2lbCut) {
+    void SetCutValues(vector<float> * vecMT2llCut, vector<float> * vecMT2lbCut, int levelVerbosity = 0) {
         float MT2llCutsArray[5] = {80.01, 90.01, 100.01, 110.01, 120.01};
         if (tryCalcPassByHand) {
             vecMT2llCut->push_back(inputMT2llCut);
@@ -342,6 +347,14 @@ typedef struct HistPlotMaking{
         else {
             for (int iMT2ll = 0; iMT2ll < 5; ++iMT2ll) {
                 vecMT2llCut->push_back(MT2llCutsArray[iMT2ll]);
+            }
+        }
+        if (levelVerbosity) {
+            for (int iMT2ll = 0; iMT2ll < (int) vecMT2llCut->size(); ++iMT2ll) {
+                cout << "cut for iMT2ll = " << iMT2ll << " is " << vecMT2llCut->at(iMT2ll) << endl;
+            }
+            for (int iMT2lb = 0; iMT2lb < (int) vecMT2lbCut->size(); ++iMT2lb) {
+                cout << "cut for iMT2lb = " << iMT2lb << " is " << vecMT2lbCut->at(iMT2lb) << endl;
             }
         }
     }        
@@ -493,11 +506,11 @@ typedef struct RunParams {
             }
             else if (strncmp (argv[k],"pathSigFile", 11) == 0) {
                 SLS.customPathSignalFile = TString(argv[k + 1]);
-//                cout << "setting sig file path to " << SLS.customPathSignalFile << endl;
+                //                cout << "setting sig file path to " << SLS.customPathSignalFile << endl;
             }
             else if (strncmp (argv[k],"pathSigNorm", 11) == 0) {
                 SLS.customPathSignalNorm = TString(argv[k + 1]);
-//                cout << "setting sig norm file path to " << SLS.customPathSignalNorm << endl;
+                //                cout << "setting sig norm file path to " << SLS.customPathSignalNorm << endl;
             }
             else if (strncmp (argv[k],"ReleaseTheKraken", 16) == 0) {
                 SLS.useUnblindedData = 1;

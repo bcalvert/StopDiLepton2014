@@ -7,7 +7,7 @@
 #include "TLorentzVector.h"
 #include "./HistogramStyleFunctions.h"
 inline float nDigits(float number, int digits) {
-  return round(number * std::pow(10.,digits)) / std::pow(10.,digits);
+    return round(number * std::pow(10.,digits)) / std::pow(10.,digits);
 }
 inline float TruncateNum(float inNum, float LB, float UB, float safetyFactor) {
     float outNum;
@@ -30,7 +30,7 @@ inline void relErrMaker( TH1F * &inputErrHist) {
     int NBins = inputErrHist->GetNbinsX();
     float binRelErr;
     for (int i = 1; i < NBins+1; ++i) {
-        binRelErr = inputErrHist->GetBinError(i)/inputErrHist->GetBinContent(i);    
+        binRelErr = inputErrHist->GetBinError(i)/inputErrHist->GetBinContent(i);
         inputErrHist->SetBinError(i, binRelErr);
     }
 }
@@ -50,14 +50,14 @@ inline TH1F * FracRatioHist(TH1F * hist1, TH1F * hist2, TString numString, TStri
     if (doAbsRatio) {
         fracRatioHist = (TH1F *) hist1->Clone(fracratioName);
         fracRatioHist->Divide(fracRatioHist, hist2, 1, 1, "");
-        HistAxisAttSet(fracRatioHist->GetYaxis(), fracRatioTitle, .15, .54, .14, .011, 1.0 - fracRatioYAxisRange, 1.0 + fracRatioYAxisRange); 
+        HistAxisAttSet(fracRatioHist->GetYaxis(), fracRatioTitle, .15, .54, .14, .011, 1.0 - fracRatioYAxisRange, 1.0 + fracRatioYAxisRange);
         
     }
     else {
         fracRatioHist = (TH1F *) hist2->Clone(fracratioName);
         fracRatioHist->Add(hist1, -1);
-        fracRatioHist->Divide(fracRatioHist, hist1, 1, 1, "");        
-        HistAxisAttSet(fracRatioHist->GetYaxis(), fracRatioTitle, .15, .54, .14, .011, -1.0 * fracRatioYAxisRange, 1.0 * fracRatioYAxisRange);        
+        fracRatioHist->Divide(fracRatioHist, hist1, 1, 1, "");
+        HistAxisAttSet(fracRatioHist->GetYaxis(), fracRatioTitle, .15, .54, .14, .011, -1.0 * fracRatioYAxisRange, 1.0 * fracRatioYAxisRange);
     }
     return fracRatioHist;
 }
@@ -107,7 +107,7 @@ inline void FixPad(TPad * &inputPad, int whichPad, TCanvas * &inputCanvas) {
         TString padname_("padhigh_");
         padname_ +=inputCanvas->GetTitle();
         xup_ = xlow_ + ww_ /W_;
-        yup_ = 1.; 
+        yup_ = 1.;
         ylow_ = (hl_ + b_ + k_ ) /H_;
         inputPad->SetPad(padname_, padname_, xlow_, ylow_, xup_, yup_, kWhite, 0, 0);
         xlow_ += (w_ + 2*e_)/W_;
@@ -127,7 +127,7 @@ inline void FixPad(TPad * &inputPad, int whichPad, TCanvas * &inputCanvas) {
         TString padname_("padlow_");
         padname_ +=inputCanvas->GetTitle();
         xup_ = xlow_ + ww_ /W_;
-        yup_ = (hl_ + b_ + k_ ) /H_; 
+        yup_ = (hl_ + b_ + k_ ) /H_;
         ylow_ = 0;
         inputPad->SetPad(padname_, padname_, xlow_, ylow_, xup_, yup_, kWhite, 0, 0);
         xlow_ += (w_ + 2*e_)/W_;
@@ -152,7 +152,7 @@ inline void FixPadSingle(TPad * &inputPad, TCanvas * &inputCanvas) {
     Double_t canvWidth = 800.;
     Double_t canvHeight = 800.;
     
-    inputCanvas->SetWindowSize(canvWidth, canvHeight);    
+    inputCanvas->SetWindowSize(canvWidth, canvHeight);
     TString padname_ = "Pad_";
     padname_ += inputCanvas->GetTitle();
     Double_t xLow = 0.;
@@ -242,12 +242,12 @@ inline void HistogramUnderflowOverflow(TH1F * inputHist, bool doUnderflow, bool 
     float newHistErr;
     int NBins = inputHist->GetNbinsX();
     if (doUnderflow) {
-        inputHist->SetBinContent(1, inputHist->GetBinContent(1) + inputHist->GetBinContent(0));           
+        inputHist->SetBinContent(1, inputHist->GetBinContent(1) + inputHist->GetBinContent(0));
         newHistErr = TMath::Sqrt(inputHist->GetBinError(1)*inputHist->GetBinError(1) + inputHist->GetBinError(0)*inputHist->GetBinError(0));
         inputHist->SetBinError(1, newHistErr);
     }
     if (doOverflow) {
-        inputHist->SetBinContent(NBins, inputHist->GetBinContent(NBins) + inputHist->GetBinContent(NBins+1)); 
+        inputHist->SetBinContent(NBins, inputHist->GetBinContent(NBins) + inputHist->GetBinContent(NBins+1));
         newHistErr = TMath::Sqrt(inputHist->GetBinError(NBins)*inputHist->GetBinError(NBins) + inputHist->GetBinError(NBins+1)*inputHist->GetBinError(NBins+1));
         inputHist->SetBinError(NBins, newHistErr);
     }
@@ -272,7 +272,7 @@ inline void BinFinder(int * address, TH1 * hist, float x, float y, float z) {
     cout << "for x, " << x << " address[0] is " << address[0] << endl;
     yAxis = hist->GetYaxis();
     if (yAxis->GetNbins() != 1) {
-        address[1] = yAxis->FindBin(y);        
+        address[1] = yAxis->FindBin(y);
         BadBinCheck(address[1], yAxis->GetNbins());
         cout << "for y, " << x << " address[1] is " << address[1] << endl;
     }
@@ -291,10 +291,10 @@ inline void PassFailCuts(vector<double> * integrals, vector<double> * integralEr
         numFailCutErr = 0;
     }
     else {
-        numFailCut = hist->IntegralAndError(1, binAddreses[0] - 1, numFailCutErr);  
+        numFailCut = hist->IntegralAndError(1, binAddreses[0] - 1, numFailCutErr);
     }
     cout << "numPass Cut " << numPassCut << endl;
-    cout << "numFail Cut " << numFailCut << endl;       
+    cout << "numFail Cut " << numFailCut << endl;
     integrals->push_back(numFailCut);
     integrals->push_back(numPassCut);
     integralErrors->push_back(numFailCutErr);
@@ -309,7 +309,7 @@ inline void PassFailCuts(vector<double> * integrals, vector<double> * integralEr
         numFailCutErr = 0;
     }
     else {
-        numFailCut = hist->IntegralAndError(1, binAddreses[0] - 1, 1, binAddreses[1] - 1, numFailCutErr);            
+        numFailCut = hist->IntegralAndError(1, binAddreses[0] - 1, 1, binAddreses[1] - 1, numFailCutErr);
     }
     cout << "numPass Cut " << numPassCut << endl;
     cout << "numFail Cut " << numFailCut << endl;
@@ -339,7 +339,7 @@ inline Double_t ElectronEffectiveArea(float elecEta) {
     
     //should check numbers here:
     //http://cmssw.cvs.cern.ch/cgi-bin/cmssw.cgi/UserCode/EGamma/EGammaAnalysisTools/interface/ElectronEffectiveArea.h?revision=1.3&view=markup
-    Double_t Aeff = 0.;    
+    Double_t Aeff = 0.;
     if (fabs(elecEta) < 1.0 )         Aeff = 0.13; // +/- 0.001
     else if (fabs(elecEta) < 1.479)    Aeff = 0.14; // +/- 0.002
     else if (fabs(elecEta) < 2.0)      Aeff = 0.07; // +/- 0.001
@@ -353,7 +353,7 @@ inline Double_t ElectronEffectiveArea(float elecEta) {
 inline TLorentzVector LeptonScaleSystShift(TLorentzVector inputLepVec, int inputLepPDGID, int shiftDirection) {
     // Shift Leptons within energy scales
     // Note that these numbers might need to be update
-    float barrelEtaEnd = 1.4442; float endcapEtaStart = 1.566; 
+    float barrelEtaEnd = 1.4442; float endcapEtaStart = 1.566;
     float electronESEB = 0.006; float electronESEE = 0.015;
     float muonES = 0.002;
     float scaleToUse = 0;
@@ -371,7 +371,8 @@ inline TLorentzVector LeptonScaleSystShift(TLorentzVector inputLepVec, int input
     return outShiftVec;
 }
 
-inline TH1F * PassCutHisto(TH1 * inputHist, vector<int> * values, vector<TString> * names, TString histNameAppend, TString SystAppendName = "") {
+TH1F * PassCutHisto(TH1 * inputHist, vector<int> * values, vector<TString> * names, TString histNameAppend, TString SystAppendName = "", int levelVerbosity = 0) {
+    //TH1F * PassCutHisto(TH1 * inputHist, vector<int> * values, vector<TString> * names, TString SystAppendName = "", int levelVerbosity = 0) {
     /// Function to make a custom "pass/fail histogram "
     // inputs are the following
     // vector of integer values which are the cut points
@@ -379,6 +380,9 @@ inline TH1F * PassCutHisto(TH1 * inputHist, vector<int> * values, vector<TString
     // appendName for what systematic if any the histogram comes from
     
     unsigned int numVals = values->size();
+    if (levelVerbosity) {
+        cout << "in PassCutHisto: number of values to cut on " << numVals << endl;
+    }
     if (numVals == 0) {
         cout << "issue with values vector: it's size 0!" << endl;
     }
@@ -396,7 +400,9 @@ inline TH1F * PassCutHisto(TH1 * inputHist, vector<int> * values, vector<TString
         baseHistName += names->at(iCut);
         baseHistName += "Cut";
         baseHistName += values->at(iCut);
-        baseHistName += "_";
+        if (iCut != values->size()) {
+            baseHistName += "_";
+        }
         
         baseAxisName += names->at(iCut);
         baseAxisName += " > ";
@@ -407,25 +413,31 @@ inline TH1F * PassCutHisto(TH1 * inputHist, vector<int> * values, vector<TString
     }
     baseHistName += SystAppendName;
     TH1F * outHist = new TH1F(baseHistName + histNameAppend, baseAxisName, 2, -0.5, 1.5);
-    
+    if (levelVerbosity) {
+        cout << "outHist name " << outHist->GetName() << endl;
+    }
     int binAddreses[3] = {1, 1, 1};
     float x = (float) values->at(0);
     float y = numVals > 1 ? (float) values->at(1) : 1e99;
     float z = numVals > 2 ? (float) values->at(2) : 1e99;
+    if (levelVerbosity) {
+        cout << "x:y:z = " << x << ":" << y << ":" << z << endl;
+        cout << "inputHist name " << inputHist->GetName() << endl;
+    }
     BinFinder(binAddreses, inputHist, x, y, z);
     vector<double> integrals;
     vector<double> integralErrors;
     if (numVals > 1) {
         if (numVals > 2) {
-            PassFailCuts(&integrals, &integralErrors, binAddreses, (TH3 *) inputHist);  
+            PassFailCuts(&integrals, &integralErrors, binAddreses, (TH3 *) inputHist);
         }
         else {
-            PassFailCuts(&integrals, &integralErrors, binAddreses, (TH2 *) inputHist); 
+            PassFailCuts(&integrals, &integralErrors, binAddreses, (TH2 *) inputHist);
         }
     }
     else {
-        PassFailCuts(&integrals, &integralErrors, binAddreses, inputHist);     
-    }       
+        PassFailCuts(&integrals, &integralErrors, binAddreses, inputHist);
+    }
     outHist->SetBinContent(1, integrals[0]);
     outHist->SetBinError(1, integralErrors[0]);
     outHist->SetBinContent(2, integrals[1]);
@@ -434,5 +446,3 @@ inline TH1F * PassCutHisto(TH1 * inputHist, vector<int> * values, vector<TString
     outHist->GetXaxis()->SetBinLabel(2, "Passed Cut");
     return outHist;
 }
-
-

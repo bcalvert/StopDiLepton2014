@@ -2,6 +2,7 @@
 // Set up the input branch address names and values for the Maryland skim input tree
 // automatically made from StopOutTreeManipulations.h by using MakeInTreeBranch.sh
 
+
 inline void SetInTreeBranch_PlotMaker_PassesCutInfo(TTree * inTree, bool passesFullCut, int whichSyst = 0) {
     TString appendStringSyst = SystString(whichSyst);
     inTree->SetBranchAddress("TEventPassesFullSelection" + appendStringSyst, &passesFullCut);
@@ -14,7 +15,7 @@ inline void SetInTreeBranch_PlotMaker_PassesCutInfo(TTree * inTree, bool passesF
  int systJetSmear = 5;
  int systUncES = 6;
  */
-inline void SetInTreeBranch_PlotMaker_LeptonInfo(TTree * inTree, EventLepInfo * inELI, int whichSyst = 0, bool isData = false) {
+inline void SetInTreeBranch_PlotMaker_LeptonInfo(TTree * inTree, EventLepInfo * inELI, int whichSyst = 0, bool isData = false, bool keepLooseLeps = false) {
     TString appendStringSyst = SystString(whichSyst);
     TString numString;
     /*
@@ -52,6 +53,10 @@ inline void SetInTreeBranch_PlotMaker_LeptonInfo(TTree * inTree, EventLepInfo * 
         inTree->SetBranchAddress(lepString + numString + TString("PDGID") + appendStringSyst,                   &inELI->vecEventLeps[iLep].PDGID);
         inTree->SetBranchAddress(lepString + numString + TString("RelPFIso") + appendStringSyst,                &inELI->vecEventLeps[iLep].relPFLepIso);
         
+        if (keepLooseLeps) {
+            inTree->SetBranchAddress(lepString + numString + TString("LepQual") + appendStringSyst,                &inELI->vecEventLeps[iLep].lepQuality);
+        }
+        
         if (!isData) {
             inTree->SetBranchAddress(lepString + numString + TString("GenMatched") + appendStringSyst,      &inELI->vecEventLeps[iLep].isGenMatched);
             inTree->SetBranchAddress(lepString + numString + TString("GM_PromptLepton") + appendStringSyst, &inELI->vecEventLeps[iLep].isPromptLepton);
@@ -86,6 +91,10 @@ inline void SetInTreeBranch_PlotMaker_JetInfo(TTree * inTree, EventJetInfo * inE
     inTree->SetBranchAddress(TString("TSumJetPhi") + stringSmear + appendStringSyst,                     &inEJI->BVC_SumJet.Vec_Phi);
     inTree->SetBranchAddress(TString("TSumJetEta") + stringSmear + appendStringSyst,                     &inEJI->BVC_SumJet.Vec_Eta);
     inTree->SetBranchAddress(TString("TSumJetEn") + stringSmear + appendStringSyst,                      &inEJI->BVC_SumJet.Vec_En);
+    inTree->SetBranchAddress(TString("TSumBJetPt") + stringSmear + appendStringSyst,                     &inEJI->BVC_SumBJet.Vec_Pt);
+    inTree->SetBranchAddress(TString("TSumBJetPhi") + stringSmear + appendStringSyst,                    &inEJI->BVC_SumBJet.Vec_Phi);
+    inTree->SetBranchAddress(TString("TSumBJetEta") + stringSmear + appendStringSyst,                    &inEJI->BVC_SumBJet.Vec_Eta);
+    inTree->SetBranchAddress(TString("TSumBJetEn") + stringSmear + appendStringSyst,                     &inEJI->BVC_SumBJet.Vec_En);
     if (whichSyst != systBMisTagSF && whichSyst != systBTagEffSF) {
         for (int iJet = 0; iJet < inEJI->numSavedJets; ++iJet) {
             numString = "";
@@ -161,6 +170,9 @@ inline void SetInTreeBranch_PlotMaker_METInfo(TTree * inTree, EventMETInfo * inE
     if (isPhiCorr) {
         inTree->SetBranchAddress(TString("T") + stringSmear + stringMETType[inEMI->METType] + TString("MT2lb_ToT") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.caseMT2lb);       
     }
+    inTree->SetBranchAddress(TString("T") + stringSmear + stringMETType[inEMI->METType] + TString("BMET") + appendStringSyst + noPhiCorrString,     &inEMI->EventBMET);
+    inTree->SetBranchAddress(TString("T") + stringSmear + stringMETType[inEMI->METType] + TString("BMET_Phi") + appendStringSyst + noPhiCorrString,     &inEMI->EventBMETPhi);
+    inTree->SetBranchAddress(TString("T") + stringSmear + stringMETType[inEMI->METType] + TString("MT2ll_BMET") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.EventMT2ll_BMET);
 }
 
 inline void SetInTreeBranch_PlotMaker_SpecialMETInfo(TTree * inTree, EventMETInfo * inEMI, int whichSyst = 0, bool isSmear = false, bool isPhiCorr = true, TString appendString = "") {
@@ -203,6 +215,9 @@ inline void SetInTreeBranch_PlotMaker_SpecialMETInfo(TTree * inTree, EventMETInf
     if (isPhiCorr) {
         inTree->SetBranchAddress(TString("T") + stringSmear + TString("MT2lb_ToT") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.caseMT2lb);       
     }
+    inTree->SetBranchAddress(TString("T") + stringSmear + TString("BMET") + appendStringSyst + noPhiCorrString,     &inEMI->EventBMET);
+    inTree->SetBranchAddress(TString("T") + stringSmear + TString("BMET_Phi") + appendStringSyst + noPhiCorrString,     &inEMI->EventBMETPhi);
+    inTree->SetBranchAddress(TString("T") + stringSmear + TString("MT2ll_BMET") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.EventMT2ll_BMET);
 }
 
 inline void SetInTreeBranch_PlotMaker_DiStructureInfo(TTree * inTree, EventDiStructureInfo * inEDSI, int whichSyst = 0, bool isSmear = false, bool isPhiCorr = true) {

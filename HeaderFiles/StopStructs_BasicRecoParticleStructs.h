@@ -47,6 +47,17 @@ typedef struct Lepton {
         }
         cout << "lepQuality " << lepQuality << endl;
     }
+    float TempEtaFixElectron() {
+        float EtaEBEnd = 1.4442;
+        float EtaEEBegin = 1.566;
+        float EtaEEEnd = 2.5;
+        float safetyFactor = 1E-3;
+        float absLepEta = fabs(BVC.Vec_Eta);
+        if (absLepEta > EtaEEEnd) {
+            return BVC.Vec_Eta < 0 ? -1 * EtaEEEnd : EtaEEEnd;
+        }
+        return BVC.Vec_Eta > 0 ? TruncateNum(BVC.Vec_Eta, EtaEBEnd, EtaEEBegin, safetyFactor) : TruncateNum(BVC.Vec_Eta, -1 * EtaEEBegin, -1 * EtaEBEnd, safetyFactor);
+    }
 } Lepton;
 
 inline bool operator<(const Lepton &a, const Lepton &b)

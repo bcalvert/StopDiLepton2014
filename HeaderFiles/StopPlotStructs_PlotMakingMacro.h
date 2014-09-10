@@ -12,7 +12,7 @@ typedef struct SignalRunSettings {
     float weightPol;
     float   massDiffThresh;
     float CharginoMassFracDiffThresh;
-    bool isT2tt, isT2ttFineBin;
+    bool isT2tt, isT2ttFineBin, isTightBin;
     
     TString stringSRS;
     
@@ -34,6 +34,7 @@ typedef struct SignalRunSettings {
         CharginoMassFracDiffThresh = 0.125;
         isT2tt = false;
         isT2ttFineBin = false;
+        isTightBin = false;
         
         stringSRS = "";
     }
@@ -102,6 +103,7 @@ typedef struct PlotSaveInfoVars {
     TString fInName;
     
     bool useOldNTuple;
+    bool useSpecialMET;
 
     bool makeGenJetCheck;
     void DefaultVarVals() {
@@ -115,6 +117,7 @@ typedef struct PlotSaveInfoVars {
         printEventNum = 0;
         
         useOldNTuple = 1;
+        useSpecialMET = 0;
 
 	makeGenJetCheck = 0;
     }
@@ -145,7 +148,8 @@ typedef struct SampMakingVariables {
     int  whichTTbarGen;
     bool doExcSamps;
     
-    bool keepLooseLeps;
+    bool keepLooseLeps; // boolean for whether or not to keep the loose leptons when running on data
+    bool estFakeLep; // boolean for whether or not to run the fake Lepton estimation (for plot making purposes)
     
     void DefaultVarVals() {
         whichTTbarGen = 2; // 0 is Madgraph, 1 is MC@NLO, 2 is Powheg (default is 2)
@@ -162,6 +166,7 @@ typedef struct SampMakingVariables {
         SmearedPlots = 0;
         
         keepLooseLeps = 0;
+        estFakeLep    = 0;
         
         whichDiLepType = -1;
         
@@ -178,7 +183,7 @@ typedef struct SampMakingVariables {
         
         stringSMV = "";        
         if (whichType == 2) {
-            if (doData) {
+            if (doData && !estFakeLep) {
                 stringSMV += doBlindData ? "MT2Leq80" : "_NOTBLIND";
             }
         }
@@ -189,11 +194,11 @@ typedef struct SampMakingVariables {
         if (typeJetSmear != 1) {
             stringSMV += "_JetsSmeared_";
         }
-        if (keepLooseLeps) {
+        if (keepLooseLeps && !estFakeLep) {
             stringSMV += "_LooseLeps";
         }
         if (whichType == 2) {
-            if (!doBookSyst) stringSMV += "_noSyst";
+            if ((!doBookSyst && !doData) || (doData && !estFakeLep)) stringSMV += "_noSyst";
             if (doOfficialSmear) stringSMV += "_OfficialSmear";
             if (abs(subLepPtCut - 10.) > 1E-3) {
                 stringSMV += "_subLepPtCut";
@@ -208,7 +213,10 @@ typedef struct SampMakingVariables {
             if (doDropFakes) {
                 stringSMV += "_noFakes";
             }
-        }        
+            if (estFakeLep) {
+                stringSMV += "_FakeLepDD";
+            }
+        }
     }
     TString SampString(int sampType) {
         TString outString = "";
@@ -294,7 +302,12 @@ typedef struct SampMakingVariables {
             else if (strncmp (argv[k],"keepLL", 6) == 0) {
                 keepLooseLeps = 1;
             }
-        }                                      
+            else if (strncmp (argv[k],"doFakeLep", 9) == 0) {
+                estFakeLep = 1;
+                keepLooseLeps = 1;
+                doBlindData = 0;
+            }
+        }
     }
 } SampMakingVariables;
 
@@ -366,6 +379,9 @@ typedef struct PlotMakingRunParams {
             else if (strncmp (argv[k],"isSig_Skim", 10) == 0) {
                 SRS.isSignal = 1;               
             }
+            else if (strncmp (argv[k],"isTightBin", 10) == 0) {
+                SRS.isTightBin = 1;
+            }
             else if (strncmp (argv[k],"isSig", 5) == 0) {
                 SRS.isSignal = 1;
                 SRS.grabStopMass = strtol(argv[k+1], NULL, 10);
@@ -381,6 +397,9 @@ typedef struct PlotMakingRunParams {
             }
             else if (strncmp (argv[k],"useNew", 6) == 0) {
                 PSIV.useOldNTuple = 0;
+            }
+            else if (strncmp (argv[k],"useSpecMET", 10) == 0) {
+                PSIV.useSpecialMET = 1;
             }
 	    else if (strncmp (argv[k],"checkDeltEn", 11) == 0) {
 	      PSIV.makeGenJetCheck = 1;

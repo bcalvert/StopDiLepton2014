@@ -78,7 +78,7 @@ int main( int argc, char* argv[]) {
     }
     
     TString channelName = "_FullCut";
-    PMS.SetYieldHistNames(&RP.SLS, &RP.HPM);
+    PMS.SetYieldHistNames(&RP.SLS, &RP.HPM, doVerb);
     //Stuff related to drawing the histograms
     
     ValError statErrData;
@@ -118,8 +118,8 @@ int main( int argc, char* argv[]) {
                     HDS_MC.DoProjection(&PMS.vecIndMCParams, &RP.API, &HDP, "MCComp", false, doVerb);
                 }
                 else {
-                    PMS.DoPassCut(&HDS_Data, 0, false);
-                    PMS.DoPassCut(&HDS_MC, 0, RP.SLS.doSyst);
+                    PMS.DoPassCut(&HDS_Data, "DataComp", &PMS.vecIndMCParams, 0, false, doVerb);
+                    PMS.DoPassCut(&HDS_MC, "MCComp", &PMS.vecIndMCParams, 0, RP.SLS.doSyst, doVerb);
                     // note the 0 here means first set of input values, the false means no Syst since Data
                 }
                 
@@ -152,7 +152,7 @@ int main( int argc, char* argv[]) {
                     HDS_Signal.DoProjection(&PMS.vecIndMCParams, &RP.API, &HDP, "Signal", false, doVerb);
                 }
                 else {
-                    PMS.DoPassCut(&HDS_Signal, 0, RP.SLS.doSyst);
+                    PMS.DoPassCut(&HDS_Signal, "Signal", &PMS.vecIndMCParams, 0, RP.SLS.doSyst);
                 }
                 if (RP.SLS.doSyst) {
                     HDS_Signal.CalculateSystsComp(kGray + 1, RP.GHS.doAbsRatio, GHPI.fracRatioADP.axisRangePart1, GHPI.fracRatioADP.axisRangePart2, false, RP.SLS.SmearedPlots, RP.HPM.doStopXSec, doVerb);                    
