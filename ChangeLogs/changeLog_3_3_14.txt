@@ -1,0 +1,179 @@
+========3/3/14========
+MAJOR UPDATE/REWRITE of many aspects of the code
+
+The overarching theme of this update has been to improve the robustness/quality of the code,
+The execution has by-and-large consisted of utilizing defined structs to facilitate centralization and modularity of different processes
+
+For the most part documentation of what individual functions/structures/classes are doing will be contained within or near the definitions of said functions/structures/classes
+
+
+I should first note that I have shifted around directory structures a little bit to facilitate organization of the github repository
+This includes making sub-directories within the HeaderFiles directory for example
+
+Added Directory 
+RandomImages -- contains random .pdf files I found in my clean-up/organization that looked at least marginally important
+
+NonDataRootFiles -- contains either .root files or subdirectories containing .root files that are relevant for various parts of the analysis, but not actually "data" files; for example, lepton scale factors and smearing templates
+
+-- HeaderFiles/StopTreeManipulations/ -- 
+contains header files related to TTree manipulations
+-- HeaderFiles/BTagSFFiles/ -- 
+contains all the various .C and .h files for BTagging SF central value and systematic variations in MC
+
+That said, here is a list of new/changed macro/header files
+
+==New Macro Files==
+PlotShowingCode/StopPlot_DYWeightCalculator.C
+PlotShowingCode/StopPlot_TTBarWeightCalculator.C
+-- Both of the above are used to automatically generate root files contain scale factors for ttbar and DY 
+-- nominally I'm going to combine them into one (if and when I get time)
+
+==Changed Macro Files==
+NewOviStopPlotSkimmer.C
+-- Reworked the skimmer to run on the new Legacy nTuples
+-- It still runs on old nTuples, just inefficiently
+-- Reworked the skimmer to utilize the restructuring in header files (non-trivial change)
+-- Split the B-tagging SF systematic into tagging efficiency and mistag rate
+-- Changed the by-hand MET smearing so that it works by looking at number of jets in the event and utilizes an appropriate smearing template based on this
+-- removed the DESY nTuple stuff (useless at this point more or less)
+
+NewOviStopPlotFillerRunOnSkim_wSyst.C
+-- Reworked the plot maker to run on the new Legacy nTuples
+-- Better structured the code to utilize the restructuring in header files (non-trivial change)
+-- Essentially, all changes in the Skimmer had analogous changes here
+-- Added in options to turn off genRecoilRW for non Top samples
+-- Added in options to only run on a certain dilepton type
+
+
+MT2CutYieldCalc.C
+StopPlotsSpectraShowNewDESY_wSyst.C
+
+Modified both to work the upgraded data structures and restructured header files
+-- The changes aren't fully done
+-- Basic functions that we have been utilizing, so 1D plotting, basic yield calculations, ore what has been saved/recovered for now
+
+==New Header Files==
+
+New header files contained in Base Header Files Directory
+
+
+-- NewOviStopPlotSkimmer_Legacy.h --
+Contains relevant header files to include for the purposes of the Legacy nTuple skimmer
+-- NewOviStopPlotFillerRunOnSkim_wSyst.h --
+Contains relevant header files for the purposes of the Stop Plot Filler Macro
+
+-- StopFunctions_PlotFilling.h -- 
+Functions used as part of filling histograms in the plot-making macro
+-- StopFunctions_PlotFillingShowing_Strings.h -- 
+Set of functions utilized as part of filling plots and showing them; these functions handle setting up strings, whether for systematics' names or for axis labels, among other things
+-- StopFunctions_PlotFillingShowing_VariableMapping.h -- 
+Set of functions that handle setting up the map<TString, float> that the plot filler uses to automatically fill histograms with the correct event variables
+-- StopFunctions_PlotFillingShowing_HistogramBooking.h -- 
+Set of functions used for booking of histograms
+
+-- StopStructs_RecoEventParticleInfo.h -- 
+Structs used for containing event info about the reco particles
+-- StopStructs_GenEventParticleInfo.h -- 
+Structs that contain information about the event as a whole related to certain classes of generator particles
+-- StopStructs_ParticlePointers.h -- 
+Structs to contain sets of particle pointers (pointers to vectors of information) present in the nTuples at Oviedo skim level -- should be more clear what I mean by that if you look at an individual one
+HistogramPlottingStructs_StopSpecific.h -- 
+Structs for plotting/booking of histograms that are specific to the Stop analysis
+HistogramPlottingStructs_StopSampleT.h --
+Will eventually contain the struct definition for the SampleT struct specific to the stop analysis
+
+
+
+-- HistogramSystematicsStructs.h --
+Structs used as part of dealing with histogram systematics
+
+
+-- GeneralPlotDrawingFunctions.h -- 
+Set of very general/basic functions used as part of making plots -- a lot of these are called in other functions/header files
+-- GeneralPlotDrawingFunctions_Set2.h -- 
+Set of slightly more specific/higher level functions used for drawing various parts of spectra and/or resolution/mean graphs
+-- GeneralPlotDrawingStructs.h --
+Structs used in very general fashions as part of drawing plots
+
+-- hackFunction.h -- 
+hack set of functions to correct not saving redundant information in the skimming process (for example, I don't bother saving the lead jet pT for BTag SF systematic shifts because it won't change)
+
+-- StopTreeManipulations/StopTreeManipulations.h -- 
+Set of functions used as part of setting up input and output branch addresses for the various TTrees used as part of making plots
+-- StopTreeManipulations/StopInTreeManipulations_Skimmer.h -- 
+Functions utilized to set input branch addresses that the Maryland Skim Code uses; (4/3/14) Names based on Legacy version of Oviedo nTuples
+-- StopTreeManipulations/StopOutTreeManipulations.h -- 
+Functions used as part of the nTuple skimming macro; set up the output branch address names and values for the skim output tree
+-- StopTreeManipulations/StopInTreeManipulations_PlotMaker.h -- 
+Functions used as part of the nTuple plot making macro; set up the input branch address names and values for the Maryland skim input tree
+Automatically made from StopOutTreeManipulations.h by using MakeInTreeBranch.sh
+
+
+-- StopFunctionDefinitions_Plots.h --
+Original Header file used for definition of functions that related to plots -- slowly being migrated into various other header files
+
+-- PlotDisplayStructs.h -- 
+Structs used as part of displaying histograms -- fairly general set of structures!
+
+
+-- StopFunctions_MapShenanigans.h -- 
+Key set of functions utilized as part of automatically grabbing the right of reco particle info when filling histograms; 
+the crux of is setting up a boolean map which specifies for a given systematic, whether or not to grab central value version of the Reco level Event Info Struct -- MET, Leptons, etc. -- or whether to grab the appropriate systematic variation
+
+-- StopSpecialFunction.h -- 
+Currently just contains the function used for calculating MT2 with given input TLorentzVectors, and a MET value
+
+-- StopPlotStructs.h -- 
+Structs used as part of plotting the final sets of histograms
+-- StopPlotStructs_PlottingMacro.h -- 
+Structs used as part of setting up the plotting macros
+
+-- StopStructs_BasicParticleStructs.h -- 
+Very basic Structs used as part of Skimming and/or plot filling
+-- StopStructs_BasicRecoParticleStructs.h -- 
+Structs for very basic reco-level particles -- leptons, jets, etc.
+-- StopStructs_BasicGenParticleStructs.h -- 
+Structs that cover very basic variables for generator-level particle
+-- StopStructs_BasicParticleFunctions.h -- 
+Set of very basic functions used as part of skimming and/or plot filling
+
+-- StopPlotSetup_FileSetup.h -- 
+Functions and typedefs used as part of setting up the stop input files
+-- StopPlotSetup_ISDPFunctions.h -- 
+See HistogramStyleFunctions.h, but utilizing some more specialized structs that aren't defined before that header file
+-- StopPlotSetup_ISPIFunctions_Set1.h -- 
+Functions that operate on either the HistogramDisplayStructs Struct or the IndSamplePlotInfo Struct; used as part of prepping the plots to show
+-- StopPlotSetup_ISPIFunctions_Set2.h -- 
+Functions that operate on either the HistogramDisplayStructs Struct or the IndSamplePlotInfo Struct; used as part of prepping the plots to show
+-- StopPlotSetup_CustomPlots.h -- 
+Functions used to make custom histograms that aren't nominally saved
+
+-- StopHistTDefinitions/StopHistTDefinitions_1D.h -- 
+Set of functions that set up the One-Dimensional histograms that will be automatically booked and filled by the plot-making macro
+-- StopHistTDefinitions/StopHistTDefinitions_2D.h -- 
+Set of functions that set up the Two-Dimensional histograms that will be automatically booked and filled by the plot-making macro
+-- StopHistTDefinitions/StopHistTDefinitions_3D.h -- 
+Set of functions that set up the Three-Dimensional histograms that will be automatically booked and filled by the plot-making macro
+
+-- StopPlottingHeaderFiles.h -- 
+Contains include statemenets for the header files used as part of showing the made plots
+
+-- StopPlotHaddInfo_Legacy.h -- 
+Relevant hadding info for combining Legacy nTuples at the end
+
+
+==Changed Header Files==
+
+StopStructDefinitions.h -- 
+General set of definitions of structs (along with some functions....) a lot of these structs have been appropriated into separate files to aid organization
+StopFunctionDefinitions_v2.h -- 
+Very general set of functions used in the stop analysis; this is the very first header file I wrote, so it's ugly and obfuscated; gradually I am moving functions out of here into more specific areas
+
+==New Shell scripts==
+PlotShowingCode/printTable.sh -- 
+Script originally from Ted...slightly modified: utilized to make the "megatable" you have it read in the output of MT2CutYieldCalc.C and it will spit out the megatable numbers in LaTeX format
+PlotShowingCode/makeMegaTable.sh -- 
+Calculates the individual systematics yields for cuts between 80 and 120 GeV, reads these in along with the header and footer part of the megatable, and outputs the megatable.tex composite file
+HeaderFiles/MakeInTreeBranch.sh -- 
+Script that auto-generates the necessary branch addresses and subsequent names to read in for the input variables when running over the Maryland SkimTrees to make plots, it reads the file StopOutTreeManipulations.h and saves to the file StopInTreeManipulations_PlotMaker.h
+Changed Shell scripts

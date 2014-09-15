@@ -1,0 +1,148 @@
+######################################
+HeaderFiles/BasicFunctions.h
+######################################
+
+1) Changed PassCutHisto function to have verbosity statements and also fixed how it was naming output histogram
+
+######################################
+HeaderFiles/HistogramPlottingStructs.h
+######################################
+
+1) Slightly altered the "found Hist" or "found channel" messages when trying to look for HistID or ChanID to make plots from
+
+######################################
+HeaderFiles/MakeInTreeBranch.sh
+######################################
+
+1) Added this shell script in
+
+######################################
+HeaderFiles/PlotDisplayStructs.h
+######################################
+
+1) Added in verbosity statements
+
+2) Slightly changed the HistogramAdderProjector to have the actual "projection" be a boolean option (so that the function can just be used to add histograms together)
+
+3) Changed the DoPassCutHisto function to actually work with calculating MT2ll/MT2lblb yields "by hands"
+
+4) Changed the SetFracRatioADPNameRange function
+4a) To allow the actual range to be a configurable option
+4b) To have the boolean "doSpecialRange" which auto sets the range for ARC's request
+
+######################################
+HeaderFiles/StopFakeLeptonFunctions.h
+######################################
+
+1) Added this header file in
+
+######################################
+HeaderFiles/StopFunctionDefinitions_v2.h
+######################################
+
+1) Removed function for "FakeLeptonHistMaker" (moved to HeaderFiles/StopFakeLeptonFunctions.h)
+
+2) Added in functions for setting pointers to event structure info (ELI, EMI, and EJI)
+
+3) Changed the HistogramAdderProjector function to allow for not always projecting the histograms (to use as part of the "calculating cut by hand" option
+
+######################################
+HeaderFiles/StopPlotStructs.h
+######################################
+
+1) Added in verbosity stuff for the "calculating cut by hand"
+
+######################################
+HeaderFiles/StopPlotStructs_PlotMakingMacro.h
+######################################
+
+1) Added in "isTightBin", a boolean used for running on the 12.5 GeV step T2tt samples
+
+2) Added in "useSpecialMET", a boolean used as part of the testing for the next round of nTuples
+
+3) Added in "keepLooseLeps" and "estFakeLep", two booleans used as part of the fake lepton estimation
+
+4) Added in corresponding name additions for output files for booleans above
+
+######################################
+HeaderFiles/StopPlotStructs_PlottingMacro.h
+######################################
+
+1) Added in verbosity statements for functions used for "calculating cut by hand"
+
+######################################
+HeaderFiles/StopRootHistoGenFunctions.h
+######################################
+
+1) Added this file in
+
+######################################
+HeaderFiles/StopStructs_BasicRecoParticleStructs.h
+######################################
+
+1) Added in the function TempEtaFixElectron, which fixes the etas used for calculating scale factors, fake/prompt rates, etc. for electrons (in particular, an issue that comes up from the discrepancy between the PF electron 4 vector and the supercluster 4 vector)
+
+######################################
+HeaderFiles/StopStructs_GenEventParticleInfo.h
+######################################
+
+1) Changed the SetMasses function to allow for float valued rounding multiples (to allow for the "isTightBin" sample)
+
+######################################
+HeaderFiles/StopStructs_RecoEventParticleInfo.h
+######################################
+
+1) Changed the scale factor calculations for electrons to use the TempEtaFixElectron function defined above
+
+2) Added in verbosity statements for the MT2lblb calculation as well as the calculation of Distructure information
+
+######################################
+HeaderFiles/StopInTreeManipulations_PlotMaker.h
+######################################
+
+1) Added in tree branch for "lepton quality", used as part of the fake lepton estimation
+
+######################################
+PlotMakingCode/NewOviStopPlotFillerRunOnSkim_wSyst.C
+######################################
+
+1) Added in loading of lepton fake and prompt rate histogram
+
+2) Added in boolean to not grab as much info when running on old nTuples
+
+3) Fixed a bug in which "doData" boolean was being used
+
+4) Added in fake lepton estimation stuff, but still need to have the statistical error and systematic error guys added in for this
+
+5) Fixed a bug where, in MC, electrons that had values in the barrel/endcap transition region on the negative eta side (-1.566 < eta < -1.4442) were getting assigned trigger efficiency scale factors equal to the first eta bin's value
+
+######################################
+PlotMakingCode/SkimmingMacro/NewOviStopPlotSkimmer.C
+######################################
+
+1) Added in the EMI stuff for the special unsmeared MET that has Type0 corrections properly done
+
+2) Tried to add in ESPI stuff for automatically handling Distructure calculation, but I decided to leave it out for now
+
+3) Added in boolean to not save as much	info when running on old nTuples
+
+4) Added in boolean for dealing with 12.5 GeV spaced T2tt samples
+
+5) Fixed a bug in the Setting of the DiStructure info where it, when running on old nTuples, was using a MET value that hadn't been set to anything (and so when it tried to calculate a MET 4 vector, it failed and complained about Eta)
+
+6) Fixed a bug where, when calculating the Smeared MT2lblb for the Jet smearing systematic, it was trying to use the unsmeared EventJetInfo_SystVarUp/Down for said systematic (spoiler alert: it hadn't been set and so it complained a lot)
+
+######################################
+PlotShowingCode/MT2CutYieldCalc.C
+######################################
+
+1) Fixed the macro so that it properly allows one to run the "Calculate Cut by hand" option, which includes adding in MT2lblb as an additional variable to cut on
+
+2) Added in verbosity statements to help debug calculating by hand
+
+
+######################################
+GeneralScripts/
+######################################
+
+1) Added in this area in general and also added in the runCondor.sh and runCondor510.sh scripts

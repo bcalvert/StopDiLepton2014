@@ -1,0 +1,16 @@
+One general change with this update is to move from using ordered maps in the plot filling code to using unordered maps
+
+This led to a speed up of about a factor of 2 --
+
+This shows up in multiple files (map -> unordered_map)
+Fortunately, the functions used by map and unordered_map are effectively the same so it is super easy to switch one for the other
+
+This included the addition of custom hash functions (which the unordered map required) which are contained in HeaderFiles/Hasher.h and HeaderFiles/HasherPart2.h
+
+As well, I moved a number of typedefs of "maps" into the header files HeaderFiles/Typedefs.h and HeaderFiles/TypedefsPart2.h
+
+######################################
+HeaderFiles/StopStructs_BasicRecoParticleStructs.h
+######################################
+
+1) Added in additional safety factors into the Electron etas used for SF/Fake rate calculations to ensure that bad binning doesn't happen
