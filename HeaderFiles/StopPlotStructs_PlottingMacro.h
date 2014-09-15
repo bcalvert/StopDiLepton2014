@@ -7,8 +7,7 @@ typedef pair<TString, intBounds> indMCParams;
 typedef struct SampLoadSettings {
     //// Struct that contains all the settings that affect which files are loaded, what kind of plots are loaded, etc.
     
-    
-    int whichNTuple;          //as with the plot making code, leave as 0 for now -- 0 is Oviedo, 1 is DESY    
+
     int whichTTbarGen;          // 0 is Madgraph, 1 is MC@NLO, 2 is Powheg (default is 2)
     bool doExcSamps;          // For grabbing exclusive (DY + N Jets, TTBar Decay modes) or inclusive samples (As of 8/5/13, only applies to Oviedo)
     bool noGenRecRW;
@@ -51,7 +50,6 @@ typedef struct SampLoadSettings {
     void DefaultVarVals() {
         whichChan = 0;
         whichChanName = "";
-        whichNTuple = 0;
         whichTTbarGen = 2;
         doExcSamps = 1;
         noGenRecRW = 0;
@@ -137,7 +135,7 @@ typedef struct SampLoadSettings {
     TString SampleStringEnd(IndSamplePlotInfo * inISPI) {
         // how to end the input file based on what kind of sample you're grabbing
         TString outString = inISPI->nameISPI;
-        TString MCAppendString = "_Oviedo";
+        TString MCAppendString = "";
         switch (inISPI->sampleType) {
             case 1:
                 outString += TTBarString();
@@ -146,8 +144,9 @@ typedef struct SampLoadSettings {
                 MCAppendString += doExcSamps ? "_Exclusive" : "";
                 break;                
         }
-        MCAppendString += doPURW ? "_PURW" : "";
-        MCAppendString += doSyst ? "_wSyst" : "";
+        MCAppendString += "_Oviedo";
+        MCAppendString += !doPURW ? "_noPURW" : "";
+        MCAppendString += doSyst ? "" : "_noSyst";
         MCAppendString += noGenRecRW ? "_noGenRecRW" : "";
         if (inISPI->sampleType > 0) {
             MCAppendString += "Haddplots.root";                       
@@ -408,9 +407,9 @@ typedef struct GlobalSaveInfo {
     }
     void SetSaveName(SampLoadSettings * inSLS, GlobalHistSettings * inGHS, HistPlotMaking * inHPM) {
         TString TTBarGenName[3] = {"_madgraph", "_mcatnlo", "_powheg"};
-        TString nameNTuple = (inSLS->whichNTuple == 0) ? "_Ovi" : "_DESY";
+        TString nameNTuple = "_Ovi";
         TString stringDDEstimate = (inHPM->useDDEstimate) ? "_wDDEst" : "";
-        TString stringExcSamp = (inSLS->doExcSamps && inSLS->whichNTuple == 0) ? "_ExcSamps" : "";
+        TString stringExcSamp = (inSLS->doExcSamps) ? "_ExcSamps" : "";
         TString stringSignal = "";
         if (inSLS->doSignal) {
             stringSignal = "_wSignal";
@@ -478,9 +477,6 @@ typedef struct RunParams {
             else if (strncmp (argv[k],"-p", 2) == 0) {
                 SLS.customPath = TString(argv[k+1]);
             }
-            else if (strncmp (argv[k],"wNTuple", 7) == 0) {
-                SLS.whichNTuple = strtol(argv[k+1], NULL, 10 );
-            }
             else if (strncmp (argv[k],"wTTbarGen", 9) == 0) {
                 SLS.whichTTbarGen = strtol(argv[k+1], NULL, 10 );
             }
@@ -520,8 +516,8 @@ typedef struct RunParams {
             else if (strncmp (argv[k],"jMT2P", 5) == 0) {
                 SLS.justMT2Plots = 1;
             }
-            else if (strncmp (argv[k],"doPURW", 6) == 0) {
-                SLS.doPURW = 1;
+            else if (strncmp (argv[k],"noPURW", 6) == 0) {
+                SLS.doPURW = 0;
             }
             else if (strncmp (argv[k],"noSyst", 6) == 0) {
                 SLS.doSyst = 0;

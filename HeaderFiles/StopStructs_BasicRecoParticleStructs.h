@@ -52,6 +52,12 @@ typedef struct Lepton {
         float EtaEEBegin = 1.566;
         float EtaEEEnd = 2.5;
         float safetyFactor = 1E-3;
+
+        //add safetyFactors to the various eta endpoints for safety purposes
+        EtaEBEnd -= safetyFactor;
+        EtaEEBegin += safetyFactor;
+        EtaEEEnd -= safetyFactor;
+        
         float absLepEta = fabs(BVC.Vec_Eta);
         if (absLepEta > EtaEEEnd) {
             return BVC.Vec_Eta < 0 ? -1 * EtaEEEnd : EtaEEEnd;

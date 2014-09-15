@@ -4,12 +4,6 @@
 
 
 using namespace std;
-typedef map<int, BasicEventInfo *> mapIntBEI;
-typedef map<int, EventMETInfo *> mapIntEMI;
-typedef map<int, EventLepInfo *> mapIntELI;
-typedef map<int, EventJetInfo *> mapIntEJI;
-typedef map<int, EventDiStructureInfo *> mapIntEDSI;
-typedef map<int, bool> mIB;
 
 inline void SetMapIntBool(mIB &inMapIntBool, int typeMapIntBool, bool isSmear = false) {
     // Set up the map of systematic integers to booleans

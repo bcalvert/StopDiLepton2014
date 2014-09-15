@@ -35,12 +35,8 @@
 //#include <vector>
 #include <cmath>
 #include <sstream>
-#include <map>
 
 using namespace std;
-typedef map<TString, TString> labelMap;
-
-
 
 /*
  currently not working with this error:

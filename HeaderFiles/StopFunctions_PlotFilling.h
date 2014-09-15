@@ -1,13 +1,6 @@
 // Functions used as part of filling histograms in the plot-making macro
 
 using namespace std;
-typedef map<TString, TString> labelMap;
-typedef map<TString, float> StV_Map;
-typedef map<histKeyString, TH1 *>      HMap_1D;
-typedef map<histKeyString, TH2 *>      HMap_2D;
-typedef map<histKeyString, TH3 *>      HMap_3D;
-typedef map<TString, bool>       passCutMap;
-
 
 #include "./StopFunctions_PlotFillingShowing_Strings.h"
 #include "./StopFunctions_PlotFillingShowing_HistogramBooking.h"

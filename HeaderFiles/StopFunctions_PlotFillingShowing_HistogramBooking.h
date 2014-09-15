@@ -1,13 +1,6 @@
 // Set of functions used for booking of histograms
 
 using namespace std;
-typedef map<TString, TString> labelMap;
-typedef map<TString, float> StV_Map;
-typedef map<histKeyString, TH1 *>      HMap_1D;
-typedef map<histKeyString, TH2 *>      HMap_2D;
-typedef map<histKeyString, TH3 *>      HMap_3D;
-typedef map<TString, bool>       passCutMap;
-
 inline void Book1DHists(HMap_1D &inHMap_1D, vector<HistogramT> * inHistVec_1D, SampleT * inSampT, vector<int> * inNBinsVec, vector<Double_t *> inBinEdgesVec) {
     TH1F * h_1DCurr;
     for (unsigned int iH1D = 0; iH1D < inHistVec_1D->size(); ++iH1D) {

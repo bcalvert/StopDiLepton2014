@@ -1,4 +1,4 @@
-// Set of functions that handle setting up the map<TString, float> that the plot filler uses 
+// Set of functions that handle setting up the unordered_map<TString, float> that the plot filler uses 
 // to automatically fill histograms with the correct event variables
 
 inline void SetStringKey_StFMap_Basic(StV_Map &inStVM, EventStructPointerInfo * inESPI, EventPileUpInfo * inEPI) {

@@ -1204,13 +1204,13 @@ typedef struct FilterTriggerInfo {
     }
 } FilterTriggerInfo;
 
-
-#include <map>
-typedef map<int, BasicEventInfo *> mapIntBEI;
-typedef map<int, EventMETInfo *> mapIntEMI;
-typedef map<int, EventLepInfo *> mapIntELI;
-typedef map<int, EventJetInfo *> mapIntEJI;
-typedef map<int, EventDiStructureInfo *> mapIntEDSI;
+#include <unordered_map>
+typedef unordered_map<int, BasicEventInfo *> mapIntBEI;
+typedef unordered_map<int, EventMETInfo *> mapIntEMI;
+typedef unordered_map<int, EventLepInfo *> mapIntELI;
+typedef unordered_map<int, EventJetInfo *> mapIntEJI;
+typedef unordered_map<int, EventDiStructureInfo *> mapIntEDSI;
+typedef unordered_map<int, bool> mIB;
 
 typedef struct EventStructPointerInfo {
     // Used as part of filling histograms
@@ -1223,7 +1223,7 @@ typedef struct EventStructPointerInfo {
     EventJetInfo * addEJI;
     EventDiStructureInfo * addEDSI;
     void SetBEI(int iSyst, mapIntBEI * inMapIntBEI) {
-        map<int, BasicEventInfo *>::iterator xIterBEI;
+        mapIntBEI::iterator xIterBEI;
         xIterBEI = inMapIntBEI->find(iSyst);
         if (xIterBEI != inMapIntBEI->end()) {
             addBEI = xIterBEI->second;

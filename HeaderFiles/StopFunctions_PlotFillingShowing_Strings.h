@@ -3,13 +3,8 @@
 
 
 using namespace std;
-typedef map<TString, TString> labelMap;
-typedef map<TString, float> StV_Map;
-typedef map<histKeyString, TH1 *>      HMap_1D;
-typedef map<histKeyString, TH2 *>      HMap_2D;
-typedef map<histKeyString, TH3 *>      HMap_3D;
-typedef map<TString, bool>       passCutMap;
 
+#include "./Typedefs.h"
 
 inline TString SystString_v4(int whichSyst = 0) {
     TString suffixSyst[10] = {"", "LepES", "JetES", "BTagEffSF", "BMisTagSF", "JetSmear", "UncES", "LepEffSF", "genRecoilRW", "genStopXSec"};

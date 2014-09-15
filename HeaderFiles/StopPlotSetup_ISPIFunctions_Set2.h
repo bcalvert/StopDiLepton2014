@@ -8,10 +8,14 @@ typedef pair<TString, intBounds> indMCParams;
 void SetFileNames(vector<IndSamplePlotInfo> * vecISPI, vector<TString> * vecBaseFileNames, SampLoadSettings * inSLS, bool isSignal = false, bool doVerbosity = false) {
     TString path = inSLS->customPath.Length() != 0 ? inSLS->customPath : "../RootFiles/";  
     if (isSignal) path = inSLS->customPathSignalFile;
-    TString baseName = path;
+    TString baseName; // = path;
     for (unsigned int iSamp = 0; iSamp < vecISPI->size(); ++iSamp) {
         vecISPI->at(iSamp).SetName(vecBaseFileNames->at(iSamp));
         vecISPI->at(iSamp).SetSampleType(doVerbosity);
+        baseName = path;
+        if (!isSignal) {
+            baseName += vecISPI->at(iSamp).sampleType == 0 ? "Data/" : "MC/";
+        }
 //        vecISPI->at(iSamp).SetInputFile(baseName + vecBaseFileNames->at(iSamp) + inSLS->SampleStringEnd(&vecISPI->at(iSamp)));
         vecISPI->at(iSamp).SetInputFile(baseName + inSLS->SampleStringEnd(&vecISPI->at(iSamp)));
     }

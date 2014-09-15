@@ -26,9 +26,7 @@
 //#include <vector>
 #include <cmath>
 #include <sstream>
-#include <map>
 using namespace std;
-typedef map<TString, bool>       passCutMap;
 
 inline float PileupRW(TH1 * nVtxSFHist, int nVtx) {
     int nVtxBin = nVtxSFHist->GetXaxis()->FindBin(nVtx);

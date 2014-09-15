@@ -50,9 +50,6 @@ typedef struct SampLoadSettings {
         multSigPts = 0;
         typeSMS = "";
         prefixT2tt = "";
-        doPURW = 1;
-        doSyst = 1;
-        
         
         multiHistList = 0;
         readHistListFile = 0;

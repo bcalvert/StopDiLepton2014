@@ -5,14 +5,13 @@
 #include <vector>
 #include <cmath>
 #include <sstream>
+#include <unordered_map>
 #include <map>
 //#ifdef __MAKECINT__
 //#pragma link C++ class vector >float< ;
 //#endif
 
 using namespace std;
-typedef map<TString, TString> labelMap;
-typedef map<TString, float> StV_Map;
 bool InSystBound(int iSyst, vector<int> * systLB, vector<int> * systUB) {
     bool outBool = false;
     for (unsigned int iBound = 0; iBound < systLB->size(); ++iBound) {
@@ -32,17 +31,12 @@ typedef struct {
     float stopProdXsecUncert;
 } StopXSec;
 typedef pair<HistogramT, TString> histKeyString;
+
 typedef map<histKeyString, TH1 *>      HMap_1D;
 typedef map<histKeyString, TH2 *>      HMap_2D;
 typedef map<histKeyString, TH3 *>      HMap_3D;
-typedef map<TString, bool>       passCutMap;
 
-typedef map<int, BasicEventInfo *> mapIntBEI;
-typedef map<int, EventMETInfo *> mapIntEMI;
-typedef map<int, EventLepInfo *> mapIntELI;
-typedef map<int, EventJetInfo *> mapIntEJI;
-typedef map<int, EventDiStructureInfo *> mapIntEDSI;
-typedef map<int, bool> mIB;
+
 
 StopXSec getCrossSectionStop(float);
 
@@ -1221,7 +1215,7 @@ int main( int argc, char* argv[] ) {
         
         
         /// Clear the Maps
-        
+        /*
         StVM_Basic.clear();
         StVM_MET_noType0.clear();
         
@@ -1241,6 +1235,7 @@ int main( int argc, char* argv[] ) {
                 }
             }
         }
+        */
         
         /******************************************************************************************************************************/        
         /******************************************************************************************************************************/

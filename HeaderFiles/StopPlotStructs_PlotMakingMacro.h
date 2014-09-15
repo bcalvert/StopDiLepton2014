@@ -156,7 +156,7 @@ typedef struct SampMakingVariables {
         doExcSamps = 1; // For grabbing exclusive (DY + N Jets, TTBar Decay modes) or inclusive samples (As of 8/5/13, only applies to Oviedo)
         
         doData = 0;     // Whether you're running on data or not
-        doBlindData = 0;
+        doBlindData = 1;
         
         doBookSyst = 1; // used for deciding whether or not to book systematics
         doGenRecoil = 1;
@@ -198,7 +198,7 @@ typedef struct SampMakingVariables {
             stringSMV += "_LooseLeps";
         }
         if (whichType == 2) {
-            if ((!doBookSyst && !doData) || (doData && !estFakeLep)) stringSMV += "_noSyst";
+            if (!doBookSyst && (!doData || (doData && estFakeLep))) stringSMV += "_noSyst";
             if (doOfficialSmear) stringSMV += "_OfficialSmear";
             if (abs(subLepPtCut - 10.) > 1E-3) {
                 stringSMV += "_subLepPtCut";
@@ -306,6 +306,7 @@ typedef struct SampMakingVariables {
                 estFakeLep = 1;
                 keepLooseLeps = 1;
                 doBlindData = 0;
+                doBookSyst = 1;
             }
         }
     }

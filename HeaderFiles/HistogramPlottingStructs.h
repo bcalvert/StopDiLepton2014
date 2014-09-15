@@ -6,10 +6,6 @@
 #include "TH3F.h"
 #include <vector>
 using namespace std;
-typedef map<TString, TString> labelMap;
-typedef map<TString, float> StV_Map;
-
-
 
 
 /// utilize the idea here for setting custom labels for plots
@@ -181,8 +177,8 @@ typedef struct HistogramT {
         }
         name += AppendString;
     }
-    void SetIndAxisLabel(TString inputString, map<TString, TString> * mapVartoLabel, int whichDim = 1) {
-        map<TString, TString>::iterator xIter;
+    void SetIndAxisLabel(TString inputString, labelMap * mapVartoLabel, int whichDim = 1) {
+        labelMap::iterator xIter;
         xIter = mapVartoLabel->find(inputString);
         TString label = "";
         if (xIter != mapVartoLabel->end()) {
@@ -321,7 +317,9 @@ inline bool operator<(const HistogramT &a, const HistogramT &b)
 {
     return (a.name < b.name) || (a.xAxis.axisLabel < b.xAxis.axisLabel);
 }
+
 typedef std::pair<HistogramT, TString> histKeyString;
+
 inline bool operator<(const histKeyString &a, const histKeyString &b)
 {
     return (a.first.name < b.first.name) || (a.first.name == b.first.name && a.second < b.second);

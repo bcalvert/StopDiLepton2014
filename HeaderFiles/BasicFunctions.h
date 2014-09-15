@@ -371,7 +371,7 @@ inline TLorentzVector LeptonScaleSystShift(TLorentzVector inputLepVec, int input
     return outShiftVec;
 }
 
-TH1F * PassCutHisto(TH1 * inputHist, vector<int> * values, vector<TString> * names, TString histNameAppend, TString SystAppendName = "", int levelVerbosity = 0) {
+inline TH1F * PassCutHisto(TH1 * inputHist, vector<int> * values, vector<TString> * names, TString histNameAppend, TString SystAppendName = "", int levelVerbosity = 0) {
     //TH1F * PassCutHisto(TH1 * inputHist, vector<int> * values, vector<TString> * names, TString SystAppendName = "", int levelVerbosity = 0) {
     /// Function to make a custom "pass/fail histogram "
     // inputs are the following

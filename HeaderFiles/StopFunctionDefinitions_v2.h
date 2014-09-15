@@ -35,8 +35,7 @@
 #include <fstream>
 //#include <vector>
 #include <cmath>
-#include <sstream>
-#include <map>
+#include <sstream>ƒ
 using namespace std;
 
 
@@ -1920,9 +1919,9 @@ inline void VecJetHighPtResolutionTF1(vector<TF1> * inTF1Vec) {
         inTF1Vec->push_back(currTF1);
     }
 }
-inline TH2F * SmearHist(TString inputFileName, std::map<string, int> * inputHistSmearMap, vector<TH2F *> * inputVecMETSmearHists) {
+inline TH2F * SmearHist(TString inputFileName, strInt_Map * inputHistSmearMap, vector<TH2F *> * inputVecMETSmearHists) {
     TH2F * outHist;
-    for(map<string, int>::iterator xIter = inputHistSmearMap->begin(); xIter != inputHistSmearMap->end(); xIter++) {
+    for(strInt_Map::iterator xIter = inputHistSmearMap->begin(); xIter != inputHistSmearMap->end(); xIter++) {
 //        cout << "inputFileName " << inputFileName << endl;
 //        cout << "xIter->first " << xIter->first << endl;
         if (inputFileName.Contains(xIter->first)) {
@@ -1943,16 +1942,16 @@ inline TH2F * SmearHist(TString inputFileName, std::map<string, int> * inputHist
     }
     return outHist;
 }
-inline int setGenRWType(TString fInName, map<string, int> * inputGenRWMap) {
+inline int setGenRWType(TString fInName, strInt_Map * inputGenRWMap) {
     int outType = -1;
-    for(map<string, int>::iterator xIter = inputGenRWMap->begin(); xIter != inputGenRWMap->end(); xIter++) {
+    for(strInt_Map::iterator xIter = inputGenRWMap->begin(); xIter != inputGenRWMap->end(); xIter++) {
         if (fInName.Contains(xIter->first)) {
             outType = xIter->second;
         }
     }
     return outType;
 }
-inline void SetMETSmearHistMap(std::map<string, int> &inputHistSmearMap) {
+inline void SetMETSmearHistMap(strInt_Map &inputHistSmearMap) {
     int TTBarIndex  = 0;
     int DYIndex     = 1;
     int WWIndex     = 2;
@@ -2019,7 +2018,7 @@ inline void SetMETSmearHistMap(std::map<string, int> &inputHistSmearMap) {
 
 
 
-inline void SetGenRWMap(std::map<string, int> &inputGenRWMap) {
+inline void SetGenRWMap(strInt_Map &inputGenRWMap) {
     int SUSYIndex   = 0;
     int TTBarIndex  = 1;
     int DYIndex     = 2;
