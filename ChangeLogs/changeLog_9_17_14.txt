@@ -1,0 +1,59 @@
+Added in RootFileGeneratingMacros and two associated macros
+
+1) RootFileGeneratingMacros/RootHistoGenerator.C
+
+-- Used for generating Lepton Fake/Prompt rates (and nominally, also the Jet Resolution histogram but this feature isn't ready yet)
+
+2) RootFileGeneratingMacros/RootHistoGenerator_StopXSec.C
+
+-- Used for taking the 5 GeV spaced 8 TeV stop xsections and turning them into interpolated cross sections for 0.5 GeV steps (for example for samples spaced in 12.5 GeV steps)
+
+######################################
+HeaderFiles/BasicFunctions.h
+######################################
+In general, added in functions as part of the Stop XSection interpolation
+
+1) Added in function LogLogGraph that makes a TGraph which is Log-Log scale from an input TH1F
+
+2) Added in function ResidualsGraph that takes an input TGraph and input TF1 and calculates the residuals
+
+3) Added in function UnLogHist that takes an input TF1 and input TH1F that one wants to set bin contents for and expands out the TF1 values into the TH1F
+
+4) Added in function UnLogXAxis that takes an input TGraph and sets its xaxis to be not log scale
+
+######################################
+HeaderFiles/StopPlottingHeaderFiles.h
+######################################
+
+1) Added in some include statements so that the plot showing code can work with the custom hashing definitions
+
+######################################
+HeaderFiles/StopRootHistoGenFunctions.h
+######################################
+
+1) Changed the 2D CombineHists to take in a "addString" to append upon the output hist name
+
+2) Added in a 1D version of the CombineHists function (note, I should be able to combine these dudes)
+
+3) Added in the function CloneVals that allows one to copy values over from one histogram into another assuming same salient values for x-axis (number of bins and relevant physical range one is trying to cover)
+
+4) Added in the structure StopXSecFitter that is used as part of the xsection interpolation
+
+######################################
+HeaderFiles/Typedefs.h
+######################################
+
+1) Added in some forward declarations of custom structures so that maps can be defined
+
+######################################
+PlotMakingCode/NewOviStopPlotFillerRunOnSkim_wSyst.C
+######################################
+
+1) Changed around how the Stop Mass to set xsection is done (probably need to debug)
+
+######################################
+PlotShowingCode/MT2CutYieldCalc.C
+######################################
+1) Added in print statement when cutting by hand (for limit setting purposes)
+
+2) Added in bool doVerb checks for whether or not to do verbosity statements

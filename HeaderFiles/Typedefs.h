@@ -1,6 +1,12 @@
 #include <unordered_map>
 #include <map>
 
+struct BasicEventInfo;
+struct EventMETInfo;
+struct EventLepInfo;
+struct EventJetInfo;
+struct EventDiStructureInfo;
+
 typedef unordered_map<TString, TString, Hasher, EqualFn> labelMap;
 typedef unordered_map<TString, float, Hasher, EqualFn> StV_Map;
 typedef unordered_map<TString, bool, Hasher, EqualFn> passCutMap;

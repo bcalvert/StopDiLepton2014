@@ -1,12 +1,16 @@
 // Contains include statemenets for the header files used as part of showing the made plots
 
+#include "./Hasher.h"
 #include "./BasicFunctions.h"
 #include "./HistogramSystematics2.h"
 #include "./HistogramSystematicsStructs.h"
+#include "./Typedefs.h"
 #include "./StopStructDefinitions.h"
 #include "./HistogramPlottingStructs_SampleCut.h"
 #include "./HistogramPlottingStructs.h"
 #include "./HistogramPlottingStructs_StopSpecific.h"
+#include "./HasherPart2.h"
+#include "./TypedefsPart2.h"
 #include "./StopFunctions_PlotFillingShowing_Strings.h"
 #include "./StopFunctionDefinitions_Plots.h"
 #include "./GeneralPlotDrawingStructs.h"

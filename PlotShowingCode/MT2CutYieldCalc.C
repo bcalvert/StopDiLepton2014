@@ -121,10 +121,19 @@ int main( int argc, char* argv[]) {
                     PMS.DoPassCut(&HDS_Data, "DataComp", &PMS.vecIndMCParams, 0, false, doVerb);
                     PMS.DoPassCut(&HDS_MC, "MCComp", &PMS.vecIndMCParams, 0, RP.SLS.doSyst, doVerb);
                     // note the 0 here means first set of input values, the false means no Syst since Data
+                    TString outString = "Running with MT2ll Cut ";
+                    outString += PMS.vecXaxisCut[0];
+                    if (RP.HPM.cutMT2lb) {
+                        outString += " and MT2lblb Cut ";
+                        outString += PMS.vecXaxisCut[1];
+                    }
+                    cout << outString << endl;
                 }
                 
+                /*
                 cout << "test 1 " << HDS_MC.compSamp.first.grabbedHist->GetBinContent(2) << endl;
                 cout << "test " << HDS_MC.compSamp.first.grabbedHist_TH1F->GetBinContent(2) << endl;
+                */
                 
                 if (RP.SLS.doSyst) {
                     HDS_MC.CalculateSystsComp(kGray + 1, RP.GHS.doAbsRatio, GHPI.fracRatioADP.axisRangePart1, GHPI.fracRatioADP.axisRangePart2, false, RP.SLS.SmearedPlots, RP.HPM.doStopXSec, doVerb);
@@ -132,11 +141,15 @@ int main( int argc, char* argv[]) {
                     // false here is for no Sym Error
                 }
                 
-                cout << "about to set individual ssi infor " << endl;
+                if (doVerb) {
+                    cout << "about to set individual ssi information " << endl;
+                }
                 //SetSSI_YieldErrors(bool doIndMC = false, int whichBin = 2, bool justStat = false, bool noSystPlusStat = true, bool doSymErr = false)
                 HDS_Data.SetSSI_YieldErrors(false, 2, true, true, false);
                 HDS_MC.SetSSI_YieldErrors(true, 2, !RP.SLS.doSyst, true, false);
-                cout << "about to print individual SSI info " << endl;
+                if (doVerb) {
+                    cout << "about to print individual SSI info " << endl;
+                }
                 //PrintSSI_YieldInfo(bool doIndMC = false, bool justStat = true, bool noSystPlusStat = true)
                 HDS_Data.PrintSSI_YieldInfo(false, true, true);
                 HDS_MC.PrintSSI_YieldInfo(true, !RP.SLS.doSyst, true);
@@ -160,10 +173,11 @@ int main( int argc, char* argv[]) {
                 }
                 
                 HDS_Signal.SetSSI_YieldErrors(false, 2, !RP.SLS.doSyst, true, false);
-                cout << "about to print Signal info " << endl;
+                if (doVerb) {
+                    cout << "about to print Signal info " << endl;
+                }
                 HDS_Signal.PrintSSI_YieldInfo(false, !RP.SLS.doSyst, true, RP.HPM.printSysLim, RP.HPM.printAveSyst);
-            }
-            
+            }            
         }
     }               
     /*

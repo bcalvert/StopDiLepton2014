@@ -30,11 +30,13 @@ typedef struct {
     float stopProdXsec;
     float stopProdXsecUncert;
 } StopXSec;
+/*
 typedef pair<HistogramT, TString> histKeyString;
 
 typedef map<histKeyString, TH1 *>      HMap_1D;
 typedef map<histKeyString, TH2 *>      HMap_2D;
 typedef map<histKeyString, TH3 *>      HMap_3D;
+*/
 
 
 
@@ -445,16 +447,20 @@ int main( int argc, char* argv[] ) {
         SetInTreeBranch_PlotMaker_GenQuark(&fileTree, &EGQPI);
         
     }
-        
     
     if (fileTree.GetBranch("TGenStop_Mass_0")){
         BEI.hasStopInfo = true;
         SetInTreeBranch_PlotMaker_SUSYInfo(&fileTree, &EGSPI);
         PMRP.SRS.isT2tt = PMRP.PSIV.fInName.Contains("T2tt");
         PMRP.SRS.isT2ttFineBin = (PMRP.SRS.isT2tt && PMRP.PSIV.fInName.Contains("FineBin"));
-        float stopMassToUseForXSec;
-        float roundedStopMass;
+        float stopMassToUseForXSec = PMRP.SRS.grabStopMass;
+        
+        
+        int roundedStopMass;
+        int massDiffInt_Twice;
         if (!PMRP.SRS.isT2ttFineBin) {
+            PMRP.SRS.massDiffThresh = 12.5;
+            if (PMRP.SRS.isTightBin) PMRP.SRS.massDiffThresh *= 0.5;
             roundedStopMass = floor((EGSPI.vecVecGenSUSYRoundMass[0][0]+12.5)/25.)*25.;
             stopMassToUseForXSec = roundedStopMass;
             PMRP.SRS.massDiffThresh = 12.5;
@@ -465,6 +471,8 @@ int main( int argc, char* argv[] ) {
             stopMassToUseForXSec = roundedStopMass;
             //      stopMassToUseForXSec = PMRP.SRS.grabStopMass ;                                                                                                                     
         }
+        massDiffInt_Twice = (int) (2 * PMRP.SRS.massDiffThresh + 0.25); //Want to make sure it gets cast to correct integer
+        roundedStopMass = floor((EGSPI.vecVecGenSUSYRoundMass[0][0]+PMRP.SRS.massDiffThresh)/(2*PMRP.SRS.massDiffThresh))*.;
         cout << "roundedStopMass " << roundedStopMass << endl;
         
         stopMassToUseForXSec = PMRP.SRS.grabStopMass ;
@@ -1215,7 +1223,7 @@ int main( int argc, char* argv[] ) {
         
         
         /// Clear the Maps
-        /*
+        
         StVM_Basic.clear();
         StVM_MET_noType0.clear();
         
@@ -1235,7 +1243,7 @@ int main( int argc, char* argv[] ) {
                 }
             }
         }
-        */
+	
         
         /******************************************************************************************************************************/        
         /******************************************************************************************************************************/

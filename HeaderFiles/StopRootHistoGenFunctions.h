@@ -6,15 +6,34 @@
 using namespace std;
 
 #include "TH2F.h"
+#include "TMath.h"
+#include "TGraph.h"
+#include "TPaveStats.h"
+#include "TCanvas.h"
 
-inline TH2F * CombineHists(TH2F * inHistBinContent, TH2F * inHistBinErr) {
-    TH2F * outHist = (TH2F *) inHistBinContent->Clone(inHistBinContent->GetName() + TString("Rate"));
-    for (int iXBin = 0; iXBin < inHistBinContent->GetNbinsX() + 1; iXBin++) {
-        for (int iYBin = 0; iYBin < inHistBinContent->GetNbinsY() + 1; iYBin++) {
+inline TH2F * CombineHists(TH2F * inHistBinContent, TH2F * inHistBinErr, TString addString) {
+    TH2F * outHist = (TH2F *) inHistBinContent->Clone(inHistBinContent->GetName() + addString);
+    for (int iXBin = 0; iXBin <= inHistBinContent->GetNbinsX() + 1; iXBin++) {
+        for (int iYBin = 0; iYBin <= inHistBinContent->GetNbinsY() + 1; iYBin++) {
             outHist->SetBinError(iXBin, iYBin, inHistBinErr->GetBinContent(iXBin,iYBin));
         }
     }
     return outHist;
+}
+
+inline TH1F * CombineHists(TH1F * inHistBinContent, TH1F * inHistBinErr, TString addString) {
+    TH1F * outHist = (TH1F *) inHistBinContent->Clone(inHistBinContent->GetName() + addString);
+    for (int iXBin = 0; iXBin <= inHistBinContent->GetNbinsX() + 1; iXBin++) {
+        outHist->SetBinError(iXBin, inHistBinErr->GetBinContent(iXBin));
+    }
+    return outHist;
+}
+
+inline void CloneVals(TH1F * inHist, TH1F * outHist) {
+    for (int iXBin = 0; iXBin <= inHist->GetNbinsX() + 1; iXBin++) {
+        outHist->SetBinContent(iXBin, inHist->GetBinContent(iXBin));
+        outHist->SetBinError(iXBin, inHist->GetBinError(iXBin));
+    }
 }
 
 inline TH2F * FakeLeptonHistMaker(TString inputFile, int whichHistType, int whichLepType, TString addString = "") {
@@ -169,4 +188,110 @@ inline TH2F * ResolutionHistMaker(TString inputFile) {
     return outHist;
 }
 
-
+struct StopXSecFitter {
+    TF1 * xsecFitFunc;
+    TGraph fitGraph;
+    TGraph residualGraph;
+    TH1F * histFineBin;
+    void InitializeFitFunc(int xLB, int xUB, bool doLog = true, int whichTypeFunc = 0) {
+        float xLBToUse = doLog ? TMath::Log(xLB) : (float) xLB;
+        float xUBToUse = doLog ? TMath::Log(xUB) : (float) xUB;
+        vector<char *> vecPolyForm;
+        vecPolyForm.push_back("pol0");
+        vecPolyForm.push_back("pol1");
+        vecPolyForm.push_back("pol2");
+        vecPolyForm.push_back("pol3");
+        vecPolyForm.push_back("pol4");
+        vecPolyForm.push_back("pol5");
+        vecPolyForm.push_back("pol6");
+        vecPolyForm.push_back("pol7");
+        vecPolyForm.push_back("pol8");
+        vecPolyForm.push_back("pol9");
+        if (whichTypeFunc >= (int) vecPolyForm.size()) {
+            cout << "no value set up for whichTypeFunc = " << whichTypeFunc << endl;
+        }
+        else {
+            xsecFitFunc = new TF1("XSecFitFunc", vecPolyForm[whichTypeFunc], xLBToUse, xUBToUse);
+        }
+        /*
+        switch (whichTypeFunc) {
+            case 0:
+                xsecFitFunc = new TF1("XSecFitFunc", "pol5", xLBToUse, xUBToUse);
+                break;
+            default :
+                cout << "no value set up for whichTypeFunc = " << whichTypeFunc << endl;
+                break;
+        }
+         */
+    }
+    void FitXSecHist(TH1F * inputHist, bool doLogLog = 1) {
+        if (doLogLog) {
+            fitGraph = LogLogGraph(inputHist);
+            fitGraph.Fit(xsecFitFunc);
+            fitGraph.SetTitle("");
+            residualGraph = ResidualsGraph(&fitGraph, xsecFitFunc);
+            residualGraph.SetTitle("");
+        }
+        else {
+            inputHist->Fit(xsecFitFunc);
+        }
+    }
+    void SetDisplayStyle() {
+        histFineBin->SetLineColor(kBlue);
+        fitGraph.SetLineColor(kBlue);
+        fitGraph.SetLineWidth(2);
+        residualGraph.SetLineColor(kRed);
+        xsecFitFunc->SetLineColor(kRed);
+        xsecFitFunc->SetLineWidth(2);
+        xsecFitFunc->SetLineStyle(3);
+    }
+    void SetXaxisStyle(int xLB, int xUB, bool isMain) {
+        fitGraph.GetXaxis()->SetTitle("Log(M_{#tilde{t}})");
+        fitGraph.GetYaxis()->SetTitle("Log(#sigma(pp#rightarrow#tilde{t}#tilde{t})");
+        if (!isMain) {
+            fitGraph.GetYaxis()->SetTitle("Log(uncert. #sigma(pp#rightarrow#tilde{t}#tilde{t})");
+        }
+        histFineBin->GetXaxis()->SetRangeUser(xLB, xUB);
+        residualGraph.GetXaxis()->SetRangeUser(xLB, xUB);
+        residualGraph.GetXaxis()->SetLabelSize(0.12);
+        residualGraph.GetXaxis()->SetTitle("M_{#tilde{t}} [GeV]");
+        residualGraph.GetXaxis()->SetTitleSize(0.2);
+        residualGraph.GetXaxis()->SetTitleOffset(0.8);
+        
+        residualGraph.GetYaxis()->SetLabelSize(0.08);
+        residualGraph.GetYaxis()->SetTitleSize(0.2);
+        residualGraph.GetYaxis()->SetTitleOffset(0.24);
+        residualGraph.GetYaxis()->SetTitle("Residual");
+    }
+    void FullFitChainLogLog(TH1F * inputHist, TH1F * inputHistFineBin) {
+        FitXSecHist(inputHist, true);
+        histFineBin = inputHistFineBin;
+        UnLogHist(xsecFitFunc, histFineBin);
+        UnLogXAxis(&residualGraph);
+        SetDisplayStyle();
+    }
+    void DrawHists(TCanvas * inputCanv1, TString saveName1, TCanvas * inputCanv2, TString saveName2, TH1F * inputHist) {
+        inputCanv1->cd();
+        fitGraph.Draw("AC");
+        xsecFitFunc->Draw("same");
+        inputCanv1->SaveAs(saveName1);
+        inputCanv2->cd();
+        BaseCanvasSetup(inputCanv2, true);
+        inputCanv2->cd(1);
+        histFineBin->Draw("hist");
+        inputHist->Draw("hist same");
+        inputCanv2->cd(2);
+        residualGraph.Draw("AC");
+        gPad->Update();
+        inputCanv2->cd(2);
+        residualGraph.Draw("AC");
+        inputCanv2->Modified();
+        gPad->Update();
+        inputCanv2->SaveAs(saveName2);
+    }
+    void FullChainLogLog(int xLB, int xUB, bool isMain, bool doLog, int whichTypeFunc, TH1F * inputHist, TH1F * inputHistFineBin) {
+        InitializeFitFunc(xLB, xUB, doLog, whichTypeFunc);
+        FullFitChainLogLog(inputHist, inputHistFineBin);
+        SetXaxisStyle(xLB, xUB, isMain);
+    }
+};

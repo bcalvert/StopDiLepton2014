@@ -6,6 +6,7 @@
 #include "TCanvas.h"
 #include "TLorentzVector.h"
 #include "./HistogramStyleFunctions.h"
+#include "TGraph.h"
 inline float nDigits(float number, int digits) {
     return round(number * std::pow(10.,digits)) / std::pow(10.,digits);
 }
@@ -445,4 +446,54 @@ inline TH1F * PassCutHisto(TH1 * inputHist, vector<int> * values, vector<TString
     outHist->GetXaxis()->SetBinLabel(1, "Failed Cut");
     outHist->GetXaxis()->SetBinLabel(2, "Passed Cut");
     return outHist;
+}
+
+
+inline TGraph LogLogGraph(TH1F * inputHist) {
+    int nBins = inputHist->GetNbinsX();
+    TGraph outGraph(nBins);
+    float x, y;
+    for (int iBin = 0; iBin < nBins; ++iBin) {
+        x = TMath::Log(inputHist->GetXaxis()->GetBinLowEdge(iBin + 1));
+        y = TMath::Log(inputHist->GetBinContent(iBin + 1));
+        outGraph.SetPoint(iBin, x, y);
+    }
+    return outGraph;
+}
+
+inline TGraph ResidualsGraph(TGraph * inputGraph, TF1 * inputTF1) {
+    TGraph outGraph(*inputGraph);
+    int nPoints = inputGraph->GetN();
+    double x, y;
+    double funcVal, residual;
+    for (int iPoint = 0; iPoint < nPoints; ++iPoint) {
+        inputGraph->GetPoint(iPoint, x, y);
+        funcVal = inputTF1->Eval(x);
+        residual = y - funcVal;
+        outGraph.SetPoint(iPoint, x, residual);
+    }
+    return outGraph;
+}
+inline void UnLogHist(TF1 * inputTF1, TH1F * inputHistToSet, bool isLogX = true, bool isLogY = true) {
+    float xBinCent, yBinVal;
+    for (int iBin = 1; iBin <= inputHistToSet->GetNbinsX(); ++iBin) {
+        xBinCent = inputHistToSet->GetXaxis()->GetBinCenter(iBin);
+        if (isLogX) {
+            xBinCent = TMath::Log(xBinCent);
+        }
+        yBinVal = inputTF1->Eval(xBinCent);
+        if (isLogY) {
+            yBinVal = TMath::Exp(yBinVal);
+        }
+        inputHistToSet->SetBinContent(iBin, yBinVal);
+    }
+}
+
+inline void UnLogXAxis(TGraph * inputGraph) {
+    int nPoints = inputGraph->GetN();
+    double x, y;
+    for (int iPoint = 0; iPoint < nPoints; ++iPoint) {
+        inputGraph->GetPoint(iPoint, x, y);
+        inputGraph->SetPoint(iPoint, TMath::Exp(x), y);
+    }
 }
