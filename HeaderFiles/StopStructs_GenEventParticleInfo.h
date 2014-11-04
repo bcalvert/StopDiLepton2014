@@ -20,15 +20,15 @@ typedef struct EventGenSUSYParticleInfo {
     
     vector<float> vecGenCharginoRoundMassFrac;
     /*
-    GenParticleSt3Info genStop0, genStop1;
-    GenParticleSt3Info genChiZero0, genChiZero1;
-    GenParticleSt3Info genChargino0, genChargino1;
-    
-    int genStopMass0, genStopMass1;
-    int genChi0Mass0, genChi0Mass1;
-    int genCharginoMass0, genCharginoMass1;
-    float MassFrac_Chargino0, MassFrac_Chargino1;
-    */
+     GenParticleSt3Info genStop0, genStop1;
+     GenParticleSt3Info genChiZero0, genChiZero1;
+     GenParticleSt3Info genChargino0, genChargino1;
+     
+     int genStopMass0, genStopMass1;
+     int genChi0Mass0, genChi0Mass1;
+     int genCharginoMass0, genCharginoMass1;
+     float MassFrac_Chargino0, MassFrac_Chargino1;
+     */
     float StopXSec, StopXSecErr;
     GenParticle * GrabGP(int whichPartType = 0, int indexPart = 0) {
         return &vecVecGenSUSYPSt3I[whichPartType][indexPart].GP;
@@ -43,7 +43,7 @@ typedef struct EventGenSUSYParticleInfo {
             vecVecGenSUSYRoundMass[iSUSY].resize(numSavedIndSUSYParts);
         }
         vecGenCharginoRoundMassFrac.resize(numSavedIndSUSYParts);
-        StopXSec = 0.; StopXSecErr = 0.;        
+        StopXSec = 0.; StopXSecErr = 0.;
     }
     void SetSUSYParticles(bool doChargino = false) {
         int numSUSYTypes = doChargino ? 3 : 2;
@@ -53,28 +53,28 @@ typedef struct EventGenSUSYParticleInfo {
             }
         }
         /*
-        GSEPs.SetGenParticleInfo_Full(0, 0, &genStop0);
-        GSEPs.SetGenParticleInfo_Full(0, 1, &genStop1);
-        GSEPs.SetGenParticleInfo_Full(1, 0, &genChiZero0);
-        GSEPs.SetGenParticleInfo_Full(1, 1, &genChiZero1);
-        if (doChargino) {
-            GSEPs.SetGenParticleInfo_Full(2, 0, &genChargino0);
-            GSEPs.SetGenParticleInfo_Full(2, 1, &genChargino1);
-        }
-        */
+         GSEPs.SetGenParticleInfo_Full(0, 0, &genStop0);
+         GSEPs.SetGenParticleInfo_Full(0, 1, &genStop1);
+         GSEPs.SetGenParticleInfo_Full(1, 0, &genChiZero0);
+         GSEPs.SetGenParticleInfo_Full(1, 1, &genChiZero1);
+         if (doChargino) {
+         GSEPs.SetGenParticleInfo_Full(2, 0, &genChargino0);
+         GSEPs.SetGenParticleInfo_Full(2, 1, &genChargino1);
+         }
+         */
     }
     float CharginoMassFrac(float genStopMass, float genChi0Mass, float genCharginoMass) {
         //currently rounding to nearest multiple of 0.25
         float estX = (genCharginoMass - genChi0Mass)/(genStopMass - genChi0Mass);
         float returnX = TMath::Nint(estX * 4) * 0.25;
-        return returnX;    
+        return returnX;
     }
     bool PassesStopBugCheck() {
         float genStopMass0 = GSEPs.genStopMass->at(0);
         float genStopMass1 = GSEPs.genStopMass->at(1);
         float genChi0Mass0 = GSEPs.genChi0Mass->at(0);
         float genChi0Mass1 = GSEPs.genChi0Mass->at(1);
-
+        
         //    return !(fabs(genStopMass0 -genStopMass1) > 0.1 || fabs(genChi0Mass0 - genChi0Mass1) > 0.1); // || (genChi0Mass0 < 0) || (genChi0Mass1< 0));
         return !(fabs(genStopMass0 - genStopMass1) > 0.1 || fabs(genChi0Mass0 - genChi0Mass1) > 0.1 || (genChi0Mass0 < 0) || (genChi0Mass1 < 0));
     }
@@ -115,35 +115,35 @@ typedef struct EventGenSUSYParticleInfo {
             passCut &= (vecVecGenSUSYRoundMass[0][iIndSUSY] >= 0 && fabs(genStopMassCut - vecVecGenSUSYRoundMass[0][iIndSUSY]) < (roundNum / 2.));
             passCut &= (vecVecGenSUSYRoundMass[1][iIndSUSY] >= 0 && fabs(genChi0MassCut - vecVecGenSUSYRoundMass[1][iIndSUSY]) < (roundNum / 2.));
         }
-//        passCut = (genStopMass0 >=0 && abs(genStopMassCut - genStopMass0) < (roundNum / 2.));
-//        passCut &= (genChi0Mass0 >=0 && abs(genChi0MassCut - genChi0Mass0) < (roundNum / 2.));
-            //                if (genCharginoMass0 >=0 && abs(genCharginoMassCut - genCharginoMass0) < (roundNum / 2.)) continue;
+        //        passCut = (genStopMass0 >=0 && abs(genStopMassCut - genStopMass0) < (roundNum / 2.));
+        //        passCut &= (genChi0Mass0 >=0 && abs(genChi0MassCut - genChi0Mass0) < (roundNum / 2.));
+        //                if (genCharginoMass0 >=0 && abs(genCharginoMassCut - genCharginoMass0) < (roundNum / 2.)) continue;
         return passCut;
     }
     
     bool PassMassCutPlotMaker(int grabStopMass, int grabChi0Mass, float grabCharginoMassFrac, float massDiffThresh, float CharginoMassFracDiffThresh, bool isT2tt) {
         bool passesCut = true;
-//        cout << "vecVecGenSUSYRoundMass[0][0] " << vecVecGenSUSYRoundMass[0][0] << endl;
-//        cout << "vecVecGenSUSYRoundMass[1][0] " << vecVecGenSUSYRoundMass[1][0] << endl;        
+        //        cout << "vecVecGenSUSYRoundMass[0][0] " << vecVecGenSUSYRoundMass[0][0] << endl;
+        //        cout << "vecVecGenSUSYRoundMass[1][0] " << vecVecGenSUSYRoundMass[1][0] << endl;
         for (int iIndSUSY = 0; iIndSUSY < 2; ++iIndSUSY) {
             if (fabs(vecVecGenSUSYRoundMass[0][iIndSUSY] - grabStopMass) > massDiffThresh) passesCut = false;
             if (fabs(vecVecGenSUSYRoundMass[1][iIndSUSY] - grabChi0Mass) > massDiffThresh) passesCut = false;
             if (!isT2tt) {
                 if (fabs(vecGenCharginoRoundMassFrac[iIndSUSY] - grabCharginoMassFrac) > CharginoMassFracDiffThresh) passesCut = false;
             }
-        }        
+        }
         return passesCut;
     }
     
     void PrintMassInfo(unsigned int EventNum, bool isT2tt) {
         if (isT2tt) {
             cout << "in format EventNum:genStopMass:genChi0Mass ";
-//            cout << EventNum << ":" << genStopMass0 << ":" << genChi0Mass0 << endl;
+            //            cout << EventNum << ":" << genStopMass0 << ":" << genChi0Mass0 << endl;
             cout << EventNum << ":" << vecVecGenSUSYRoundMass[0][0] << ":" << vecVecGenSUSYRoundMass[1][0] << endl;
         }
         else {
             cout << "in format EventNum:genStopMass:genChi0Mass:genCharginoMass:genCharginoMassFrac ";
-//            cout << EventNum << ":" << genStopMass0 << ":" << genChi0Mass0 << ":" <<  genCharginoMass0 << ":" << MassFrac_Chargino0 << endl;
+            //            cout << EventNum << ":" << genStopMass0 << ":" << genChi0Mass0 << ":" <<  genCharginoMass0 << ":" << MassFrac_Chargino0 << endl;
             cout << EventNum << ":" << vecVecGenSUSYRoundMass[0][0] << ":" << vecVecGenSUSYRoundMass[1][0] << ":" <<  vecVecGenSUSYRoundMass[2][0] << ":" << vecGenCharginoRoundMassFrac[0] << endl;
         }
     }
@@ -157,7 +157,7 @@ typedef struct EventGenSUSYParticleInfo {
 
 
 typedef struct EventGenEWKParticleInfo {
-        // Structs that contain information about the event as a whole related to gen-level EWK vec boson particles
+    // Structs that contain information about the event as a whole related to gen-level EWK vec boson particles
     GenEWKEventPointers GEWKEPs;
     //0 is W, 1 is Z, 2 is Gamma
     vector< vector<GenParticleSt3Info> > vecVecGenEWKPSt3I;
@@ -167,10 +167,10 @@ typedef struct EventGenEWKParticleInfo {
         return &vecVecGenEWKPSt3I[whichPartType][indexPart].GP;
     }
     void InitializeVecs() {
-        GEWKEPs.InitializeVecs();                
+        GEWKEPs.InitializeVecs();
     }
     void DeleteVecs() {
-        GEWKEPs.DeleteVecs();                
+        GEWKEPs.DeleteVecs();
     }
     void SetSize() {
         GEWKEPs.SetSize();
@@ -194,7 +194,7 @@ typedef struct EventGenEWKParticleInfo {
 } EventGenEWKParticleInfo;
 
 typedef struct EventGenLeptonParticleInfo {
-            // Structs that contain information about the event as a whole related to gen-level lepton particles
+    // Structs that contain information about the event as a whole related to gen-level lepton particles
     GenLeptonEventPointers GLEPs;
     
     vector< vector<GenParticleSt3Info> > vecVecGenLepPSt3I;
@@ -204,20 +204,67 @@ typedef struct EventGenLeptonParticleInfo {
     int numSt1Leps;
     int numIndLeps;
     /*
-    GenParticleSt1Info genElecSt1_0, genElecSt1_1;
-    GenParticleSt1Info genMuonSt1_0, genMuonSt1_1;
-    
-    GenParticleSt3Info genElecSt3_0, genElecSt3_1;
-    GenParticleSt3Info genMuonSt3_0, genMuonSt3_1;
-    */
+     GenParticleSt1Info genElecSt1_0, genElecSt1_1;
+     GenParticleSt1Info genMuonSt1_0, genMuonSt1_1;
+     
+     GenParticleSt3Info genElecSt3_0, genElecSt3_1;
+     GenParticleSt3Info genMuonSt3_0, genMuonSt3_1;
+     */
     void InitializeVecs() {
-        GLEPs.InitializeVecs();                
+        GLEPs.InitializeVecs();
     }
     void DeleteVecs() {
-        GLEPs.DeleteVecs();                
+        GLEPs.DeleteVecs();
     }
     void SetSize() {
         GLEPs.SetSize();
+    }
+    void PrintInfo(int whichLepType, int whichLepPos, int whichLepStat) {
+        GenParticleSt1Info * GPSt1toPrint;
+        GenParticleSt3Info * GPSt3toPrint;
+        if (whichLepStat == 1) {
+            GPSt1toPrint = &vecVecGenLepPSt1I[whichLepType][whichLepPos];
+            GPSt1toPrint->PrintInfo();
+        }
+        else if (whichLepStat == 3) {
+            GPSt3toPrint = &vecVecGenLepPSt3I[whichLepType][whichLepPos];
+            GPSt3toPrint->PrintInfo();
+        }
+        else {
+            cout << "whichLepStat needs to be either 1 or 3 -- it is " << whichLepStat << endl;
+        }
+    }
+    void SetLepPointers(GenParticle * &inGPLep0, GenParticle * &inGPLep1) {
+        //try electrons first
+        inGPLep0 = vecVecGenLepPSt1I[0][0].GetLepFromW();
+        inGPLep1 = vecVecGenLepPSt1I[0][1].GetLepFromW();
+        if (inGPLep0 == NULL) {
+            if (inGPLep1 == NULL) {
+                // try muons
+                inGPLep0 = vecVecGenLepPSt1I[1][0].GetLepFromW();
+                inGPLep1 = vecVecGenLepPSt1I[1][1].GetLepFromW();
+            }
+            else {
+                //vecVecGenLepPSt1I[0][0] is NULL and inGPLep1 = vecVecGenLepPSt1I[0][1];
+                //try one muon
+                inGPLep0 = vecVecGenLepPSt1I[1][0].GetLepFromW();
+                if (inGPLep0 == NULL) {
+                    //try other muon
+                    inGPLep0 = vecVecGenLepPSt1I[1][1].GetLepFromW();
+                }
+            }
+        }
+        else {
+            //inGPLep0 = vecVecGenLepPSt1I[0][0];
+            if (inGPLep1 == NULL) {
+                //try one muon
+                inGPLep1 = vecVecGenLepPSt1I[1][0].GetLepFromW();
+                if (inGPLep1 == NULL) {
+                    //try other muon
+                    inGPLep1 = vecVecGenLepPSt1I[1][1].GetLepFromW();
+                }
+            }
+        }
     }
     void EGLPIDefaultVarVals() {
         numSt3Leps = 2;
@@ -247,48 +294,73 @@ typedef struct EventGenLeptonParticleInfo {
             }
         }
         /*
-        GLEPs.SetGenParticleInfo_Full(0, 0, &genElecSt3_0);
-        GLEPs.SetGenParticleInfo_Full(0, 1, &genElecSt3_1);
-        GLEPs.SetGenParticleInfo_Full(1, 0, &genMuonSt3_0);
-        GLEPs.SetGenParticleInfo_Full(1, 1, &genMuonSt3_1);
-
-        GLEPs.SetGenParticleInfo_Full(0, 0, &genElecSt1_0);
-        GLEPs.SetGenParticleInfo_Full(0, 1, &genElecSt1_1);
-        GLEPs.SetGenParticleInfo_Full(1, 0, &genMuonSt1_0);
-        GLEPs.SetGenParticleInfo_Full(1, 1, &genMuonSt1_1);
+         GLEPs.SetGenParticleInfo_Full(0, 0, &genElecSt3_0);
+         GLEPs.SetGenParticleInfo_Full(0, 1, &genElecSt3_1);
+         GLEPs.SetGenParticleInfo_Full(1, 0, &genMuonSt3_0);
+         GLEPs.SetGenParticleInfo_Full(1, 1, &genMuonSt3_1);
+         
+         GLEPs.SetGenParticleInfo_Full(0, 0, &genElecSt1_0);
+         GLEPs.SetGenParticleInfo_Full(0, 1, &genElecSt1_1);
+         GLEPs.SetGenParticleInfo_Full(1, 0, &genMuonSt1_0);
+         GLEPs.SetGenParticleInfo_Full(1, 1, &genMuonSt1_1);
          */
     }
 } EventGenLeptonParticleInfo;
 
 typedef struct EventGenQuarkParticleInfo {
-            // Structs that contain information about the event as a whole related to gen-level quarks
+    // Structs that contain information about the event as a whole related to gen-level quarks
     GenQuarkEventPointers GQEPs;
     
     GenParticleSt3Info genTopSt3_0, genTopSt3_1;
     GenParticleSt3Info genBSt3_0, genBSt3_1;
-    GenParticleSt1Info genBSt1_0, genBSt1_1; 
+    GenParticleSt1Info genBSt1_0, genBSt1_1;
     
     void InitializeVecs() {
         GQEPs.InitializeVecs();
-    }    
+    }
     void DeleteVecs() {
         GQEPs.DeleteVecs();
-    } 
+    }
     void SetSize() {
         GQEPs.SetSize();
     }
+    void PrintInfo(int whichQuarkType, int whichQuarkPos, int whichQuarkStat = 1) {
+        GenParticleSt1Info * GPSt1toPrint;
+        GenParticleSt3Info * GPSt3toPrint;
+        if (whichQuarkType == 0) {
+            GPSt3toPrint = whichQuarkPos == 0 ? &genTopSt3_0 : &genTopSt3_1;
+            GPSt3toPrint->PrintInfo();
+        }
+        else if (whichQuarkType == 1) {
+            if (whichQuarkStat == 1) {
+                GPSt1toPrint = whichQuarkPos == 0 ? &genBSt1_0: &genBSt1_1;
+                GPSt1toPrint->PrintInfo();
+            }
+            else {
+                GPSt3toPrint = whichQuarkPos == 0 ? &genBSt3_0: &genBSt3_1;
+                GPSt3toPrint->PrintInfo();
+            }
+        }
+        else {
+            cout << "whichQuarkType must be either 0 or 1 -- it is " << whichQuarkType << endl;
+        }
+    }
+    void SetGenBPointers(GenParticle * &inGPB0, GenParticle * &inGPB1) {
+        inGPB0 = genBSt1_0.GetBQuarkFromTopOrChargino();
+        inGPB1 = genBSt1_1.GetBQuarkFromTopOrChargino();
+    }
     void SetParticleInfo() {
-//        cout << "test " << endl;
+        //        cout << "test " << endl;
         GQEPs.SetGenParticleInfo_Full(0, 0, &genTopSt3_0);
         GQEPs.SetGenParticleInfo_Full(0, 1, &genTopSt3_1);
-//        cout << "test 2" << endl;
+        //        cout << "test 2" << endl;
         GQEPs.SetGenParticleInfo_Full(1, 0, &genBSt3_0);
         GQEPs.SetGenParticleInfo_Full(1, 1, &genBSt3_1);
-//        cout << "test 3" << endl;
+        //        cout << "test 3" << endl;
         GQEPs.SetGenParticleInfo_Full(1, 0, &genBSt1_0);
-//        cout << "test 3a" << endl;
+        //        cout << "test 3a" << endl;
         GQEPs.SetGenParticleInfo_Full(1, 1, &genBSt1_1);
-    }    
+    }
 } EventGenQuarkParticleInfo;
 
 typedef struct EventGenWeight {
@@ -322,13 +394,13 @@ typedef struct EventGenWeight {
         }
         else {
             vecGenWeight.resize(3);
-            ParticleComboVec = vecGP->at(0)->P4;   
+            ParticleComboVec = vecGP->at(0)->P4;
             for (unsigned int iGP = 1; iGP < vecGP->size(); ++iGP) {
                 ParticleComboVec += vecGP->at(iGP)->P4;
             }
         }
         float ParticleComboPt = ParticleComboVec.Pt();
-//        cout << "combo pT " << ParticleComboPt << endl;
+        //        cout << "combo pT " << ParticleComboPt << endl;
         if (ParticleComboPt <= 120) {
             vecGenWeight[0] = 1.0;
             vecGenWeight[1] = 1.0;
@@ -347,11 +419,11 @@ typedef struct EventGenWeight {
         else if (ParticleComboPt > 250) {
             vecGenWeight[0] = 0.8;
             vecGenWeight[1] = 1.0;
-            vecGenWeight[2] = 0.6;   
+            vecGenWeight[2] = 0.6;
         }
         else {
             cout << "something weird with the particle combo pT " << ParticleComboPt << endl;
-        } 
+        }
     }
     void SetWeightGenISR(GenParticle * GP1, GenParticle * GP2) {
         vecGenWeight.resize(3);
@@ -375,14 +447,14 @@ typedef struct EventGenWeight {
         else if (ParticleComboPt > 250) {
             vecGenWeight[0] = 0.8;
             vecGenWeight[1] = 1.0;
-            vecGenWeight[2] = 0.6;   
+            vecGenWeight[2] = 0.6;
         }
         else {
             cout << "something weird with the particle combo pT " << ParticleComboPt << endl;
         }
     }
     void SetGenWeight(int genWeightType, EventGenSUSYParticleInfo * inEGSPI, EventGenQuarkParticleInfo * inEGQPI, EventGenEWKParticleInfo * inEGEWKPI) {
-//        cout << "genWeight Type " << genWeightType << endl;
+        //        cout << "genWeight Type " << genWeightType << endl;
         vector<GenParticle* > vecGPs4GenWeight;
         if (genWeightType == 1) {
             SetWeightGenTopPt(&inEGQPI->genTopSt3_0.GP, &inEGQPI->genTopSt3_1.GP);
@@ -393,24 +465,24 @@ typedef struct EventGenWeight {
                     //SUSY
                     vecGPs4GenWeight.push_back(inEGSPI->GrabGP(0, 0));
                     vecGPs4GenWeight.push_back(inEGSPI->GrabGP(0, 1));
-                    //                SetWeightGenISR(inEGSPI->GrabGP(0, 0), inEGSPI->GrabGP(0, 1));                
+                    //                SetWeightGenISR(inEGSPI->GrabGP(0, 0), inEGSPI->GrabGP(0, 1));
                     break;
                 case 2:
                     // Z+Jets
                     vecGPs4GenWeight.push_back(inEGEWKPI->GrabGP(1, 0));
                     break;
                 case 3:
-                    // WW                    
+                    // WW
                     vecGPs4GenWeight.push_back(inEGEWKPI->GrabGP(0, 0));
                     vecGPs4GenWeight.push_back(inEGEWKPI->GrabGP(0, 1));
                     break;
                 case 4:
-                    // WZ                    
+                    // WZ
                     vecGPs4GenWeight.push_back(inEGEWKPI->GrabGP(0, 0));
                     vecGPs4GenWeight.push_back(inEGEWKPI->GrabGP(1, 0));
                     break;
                 case 5:
-                    // ZZ                    
+                    // ZZ
                     vecGPs4GenWeight.push_back(inEGEWKPI->GrabGP(1, 0));
                     vecGPs4GenWeight.push_back(inEGEWKPI->GrabGP(1, 1));
                     break;
@@ -420,6 +492,142 @@ typedef struct EventGenWeight {
                     break;
             }
             SetWeightGenISR(&vecGPs4GenWeight);
-        }        
+        }
     }
 } EventGenWeight;
+
+struct EventGenMT2Info {
+    float genMT2ll;
+    vector<float> vecGenMT2lb;
+    vector<float> vecDPhiGenBLeps;
+    float TotBLepMass;
+    vector< vector<float> > vecVecGenBLepMass;
+    vector< vector<float> > vecVecGenBLepDPhi;
+    vector< vector<float> > vecVecGenBLepDEta;
+    void InitializeVecs() {
+        vecGenMT2lb.resize(2);
+        vecDPhiGenBLeps.resize(2);
+        vecVecGenBLepMass.resize(2);
+        vecVecGenBLepDPhi.resize(2);
+        vecVecGenBLepDEta.resize(2);
+        for (int iCorr = 0; iCorr < 2; ++iCorr) {
+            vecVecGenBLepMass[iCorr].resize(2);
+            vecVecGenBLepDPhi[iCorr].resize(2);
+            vecVecGenBLepDEta[iCorr].resize(2);
+        }
+    }
+    void SetBadMT2ll() {
+        genMT2ll = -9999.;
+    }
+    void SetBadMT2lb() {
+        TotBLepMass = -9999.;
+        for (int iCorr = 0; iCorr < 2; ++iCorr) {
+            vecGenMT2lb[iCorr] = -9999.;
+            vecDPhiGenBLeps[iCorr] = -9999.;
+            for (int iPair = 0; iPair < 2; ++iPair) {
+                vecVecGenBLepMass[iCorr][iPair] = -9999.;
+                vecVecGenBLepDPhi[iCorr][iPair] = -9999.;
+                vecVecGenBLepDEta[iCorr][iPair] = -9999.;
+            }
+        }
+    }
+    void DefaultVarVals() {
+        SetBadMT2ll();
+        SetBadMT2lb();
+    }
+    bool checkOppositePDGIDPair(GenParticle * inGP0, GenParticle * inGP1) {
+        int signPair = TMath::Sign(1, inGP0->PDGID * inGP1->PDGID);
+        return (signPair < 0);
+    }
+    void SetGenMT2ll(EventGenLeptonParticleInfo * inEGLPI, float genMET, float genMETPhi) {
+        GenParticle * GPLep0, * GPLep1;
+        inEGLPI->SetLepPointers(GPLep0, GPLep1);
+        if (GPLep0 == NULL || GPLep1 == NULL) {
+            SetBadMT2ll();
+        }
+        else if (!checkOppositePDGIDPair(GPLep0, GPLep1)){
+            // not opposite sign dilepton
+            SetBadMT2ll();
+        }
+        else {
+            genMT2ll = getMT2(GPLep0->P4, GPLep0->P4, genMET, genMETPhi);
+            /*
+             cout << "genMT2ll " << genMT2ll << endl;
+             */
+        }
+    }
+    void SetGenMT2lb(EventGenLeptonParticleInfo * inEGLPI, EventGenQuarkParticleInfo * inEGQPI, float genMET, float genMETPhi) {
+        GenParticle * GPLep0, * GPLep1;
+        GenParticle * GPB0, * GPB1;
+        TLorentzVector BLep0_Corr, BLep1_Corr;
+        TLorentzVector BLep0_Incorr, BLep1_Incorr;
+        inEGLPI->SetLepPointers(GPLep0, GPLep1);
+        inEGQPI->SetGenBPointers(GPB0, GPB1);
+        if (GPLep0 == NULL || GPLep1 == NULL || GPB0 == NULL || GPB1 == NULL) {
+            SetBadMT2lb();
+        }
+        else if (!checkOppositePDGIDPair(GPLep0, GPLep1)) {
+            //not opposite sign dilepton
+        }
+        else if (!checkOppositePDGIDPair(GPB0, GPB1)) {
+            // not opposite sign b quarks
+        }
+        else {
+            //Try pairing one
+            if (checkOppositePDGIDPair(GPLep0, GPB0)) {
+                //pairing of leads is good
+                if (!checkOppositePDGIDPair(GPLep1, GPB1)) {
+                    cout << "something weird with checkOppositePDGIDPair for second pairing, it's bad when it should be good " << endl;
+                }
+                else {
+                    //pairings of 0 with 0 and 1 with 1 are the correct ones
+                    BLep0_Incorr = GPLep0->P4 + GPB1->P4;
+                    BLep1_Incorr = GPLep1->P4 + GPB0->P4;
+                    vecVecGenBLepDPhi[0][0] = dPhi(&GPLep0->P4, &GPB1->P4);
+                    vecVecGenBLepDPhi[0][1] = dPhi(&GPLep1->P4, &GPB0->P4);
+                    vecVecGenBLepDEta[0][0] = GPLep0->P4.Eta() - GPB1->P4.Eta();
+                    vecVecGenBLepDEta[0][1] = GPLep1->P4.Eta() - GPB0->P4.Eta();
+                    
+                    BLep0_Corr = GPLep0->P4 + GPB0->P4;
+                    BLep1_Corr = GPLep1->P4 + GPB1->P4;
+                    vecVecGenBLepDPhi[1][0] = dPhi(&GPLep0->P4, &GPB0->P4);
+                    vecVecGenBLepDPhi[1][1] = dPhi(&GPLep1->P4, &GPB1->P4);
+                    vecVecGenBLepDEta[1][0] = GPLep0->P4.Eta() - GPB0->P4.Eta();
+                    vecVecGenBLepDEta[1][1] = GPLep1->P4.Eta() - GPB1->P4.Eta();
+                }
+            }
+            else {
+                //pairing of leads is not good
+                if (checkOppositePDGIDPair(GPLep1, GPB1)) {
+                    cout << "something weird with checkOppositePDGIDPair for second pairing, it's good when it should be bad " << endl;
+                }
+                else {
+                    //pairings of 0 with 1 and 1 with 0 are the correct ones
+                    BLep0_Incorr = GPLep0->P4 + GPB0->P4;
+                    BLep1_Incorr = GPLep1->P4 + GPB1->P4;
+                    vecVecGenBLepDPhi[0][0] = dPhi(&GPLep0->P4, &GPB0->P4);
+                    vecVecGenBLepDPhi[0][1] = dPhi(&GPLep1->P4, &GPB1->P4);
+                    vecVecGenBLepDEta[0][0] = GPLep0->P4.Eta() - GPB0->P4.Eta();
+                    vecVecGenBLepDEta[0][1] = GPLep1->P4.Eta() - GPB1->P4.Eta();
+                    
+                    BLep0_Corr = GPLep0->P4 + GPB1->P4;
+                    BLep1_Corr = GPLep1->P4 + GPB0->P4;
+                    vecVecGenBLepDPhi[1][0] = dPhi(&GPLep0->P4, &GPB1->P4);
+                    vecVecGenBLepDPhi[1][1] = dPhi(&GPLep1->P4, &GPB0->P4);
+                    vecVecGenBLepDEta[1][0] = GPLep0->P4.Eta() - GPB1->P4.Eta();
+                    vecVecGenBLepDEta[1][1] = GPLep1->P4.Eta() - GPB0->P4.Eta();
+                }
+            }
+            vecVecGenBLepMass[0][0] = BLep0_Incorr.M();
+            vecVecGenBLepMass[0][1] = BLep1_Incorr.M();
+            vecVecGenBLepMass[1][0] = BLep0_Corr.M();
+            vecVecGenBLepMass[1][1] = BLep1_Corr.M();
+            vecDPhiGenBLeps[0] = dPhi(BLep0_Incorr.Phi(), BLep1_Incorr.Phi());
+            vecDPhiGenBLeps[1] = dPhi(BLep0_Corr.Phi(), BLep1_Corr.Phi());
+            
+            TotBLepMass = (BLep0_Corr + BLep1_Corr).M();
+            vecGenMT2lb[0] = getMT2(BLep0_Incorr, BLep1_Incorr, genMET, genMETPhi);
+            vecGenMT2lb[1] = getMT2(BLep0_Corr, BLep1_Corr, genMET, genMETPhi);
+        }
+    }
+};

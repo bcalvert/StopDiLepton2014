@@ -72,7 +72,6 @@ vector<float> * ScaleBackVecCalc_Recoil(vector<TFile *> * inputFiles, bool doDou
     }
     return outVec;
 }
-
 void SignalSkimEfficiencyCalc(vector<float> * scaleBackVec, SampLoadSettings * inSLS, float intLumi, bool doVerb = false) {
     TFile * inStopNormFile;
     TH1 * inNormHist;

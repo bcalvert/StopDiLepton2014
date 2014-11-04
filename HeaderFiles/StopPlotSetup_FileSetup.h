@@ -15,8 +15,11 @@ void StopBaseFileNames_Data(vector<TString> * vecBaseFileNames_Data, SampLoadSet
 }
 void StopBaseFileNames_MC(vector<TString> * vecBaseFileNames_MC, SampLoadSettings * inSLS) {
     // sets up the input MC SM background files
-    const int numOviMC = 14;
-    TString fileInMCBaseNameSpecOviedo[numOviMC] = {"TTBarComp", "WW", "WZ", "ZZ", "SingleTop", "WToLNu", "ZDY", "WG", "ZG", "HiggsWW", "HiggsVBF", "HiggsZZ4L", "TripVecBoson", "TTBarVecBoson"};
+//    const int numOviMC = 14;
+//    TString fileInMCBaseNameSpecOviedo[numOviMC] = {"TTBarComp", "WW", "WZ", "ZZ", "SingleTop", "WToLNu", "ZDY", "WG", "ZG", "HiggsWW", "HiggsVBF", "HiggsZZ4L", "TripVecBoson", "TTBarVecBoson"};
+    
+    const int numOviMC = 16;
+    TString fileInMCBaseNameSpecOviedo[numOviMC] = {"TTBarComp", "WW", "WZ", "ZZ", "SingleTop", "WToLNu", "ZDY_MuMu", "ZDY_EE", "ZDY_EMu", "WG", "ZG", "HiggsWW", "HiggsVBF", "HiggsZZ4L", "TripVecBoson", "TTBarVecBoson"};
     for (int iIndMC = 0; iIndMC < numOviMC; ++iIndMC) {
         vecBaseFileNames_MC->push_back(fileInMCBaseNameSpecOviedo[iIndMC]);
     }
@@ -45,7 +48,8 @@ void SampleStartPositionsNames(vector<indMCParams> * vecIndMCParams, SampLoadSet
     int numVV               = 3;
     int numSingTop          = 1;
     int numWJ               = 1;
-    int numZDY              = 1;
+//    int numZDY              = 1;
+    int numZDY              = 3;
     //    int numQCD              = 1;
     int numVG               = 2;
     int numHiggs            = 3;

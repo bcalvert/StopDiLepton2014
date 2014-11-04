@@ -1,0 +1,87 @@
+######################################
+HeaderFiles/StopPlotSetup.h
+######################################
+
+1) Added in a space on line 72...?
+
+######################################
+HeaderFiles/StopPlotSetup_FileSetup.h
+######################################
+
+1) Added in stuff to facilitate having the multiple dilepton channels for DY
+
+######################################
+HeaderFiles/StopStructs_BasicGenParticleStructs.h
+######################################
+
+A) Stuff added to GenParticleSt1Info struct
+1) Added in the function PrintInfo() -- it prints out Gen Particle information
+
+2) Added in functions used for Reco level MT2lblb checks
+2a) GetBQuarkFromTopOrChargino() -- checks if the GenParticle contained in the struct is a b-quark and came from top or chargino -- if it is, it returns it, otherwise returns a null pointer
+2b) GetLepFromW() same thing as 2a) but checks if particle is electron or muon and if it came from W boson
+
+######################################
+HeaderFiles/StopStructs_BasicParticleFunctions.h
+######################################
+
+1) A bunch of functions got spaces thrown around
+
+2) Added in functions to help with checking whether a MT2lblb pairing is correct
+2a) CheckPairing -- checks if a MT2lblb pairing is correct based upon the signs of input jets and leptons
+2b) CheckMT2lblbPairing -- Calls the CheckPairing function based upon input integer dictating which pairing to check from input jet and lepton information
+2c) Changed around MT2lbCalculator function, but I feel that this function is defined elsewhere....
+
+######################################
+HeaderFiles/StopStructs_GenEventParticleInfo.h
+######################################
+
+1) Added in functions into the EventGenLeptonParticleInfo struct
+1a) PrintInfo -- prints out gen lepton info
+1b) SetLepPointers -- tries to set up gen leptons as if they're coming from a W
+
+2) Added in functions into the EventGenQuarkParticleInfo struct
+2a) PrintInfo -- prints	out get quark info
+2b) SetGenBPointers -- tries to set up gen quarks as if they're coming from top or chargino
+
+3) Added in struct EventGenMT2Info that handles various aspects of the gen-level MT2 information, including angles between input particles at gen-level and "correct" and "incorrect" lepton/b-quark pairings
+
+######################################
+HeaderFiles/StopStructs_RecoEventParticleInfo.h
+######################################
+
+Added in things into the EventMT2Info struct
+1) EventMassBLep(0/1)_BLepsUsed variable -- this variable will keep the mass of the B-lepton system used in MT2lblb calculations
+2) SetValsMT2lbPairing -- a function that picks out the correct b-lepton systems and also sets the correct MT2lblb to return
+3) MT2lbPairingCheck -- a function that makes all of the various pairing checks metrics and also then calls SetValsMT2lbPairing based upon which one I want to use
+4) CalcMT2lblb -- changed this function to also run the reco-level "correct pairing" check
+
+######################################
+PlotMakingCode/SkimmingMacro/NewOviStopPlotSkimmer.C
+######################################
+
+1) Added in DefaultVarVals() calls for all the EventMETInfo structs
+
+2) Added in using the EventGenMT2Info structure, including initialization and setting up its values for each event.
+
+3) Added in an addition to the output name if the checks aren't the default one
+
+4) Added in a boolean check, PMRP.SMV.doBookSyst, to decide whether or not to bother booking systematics (allows me to run MC just central value when I only care to check something there)
+
+######################################
+PlotShowingCode/MT2CutYieldCalc.C
+######################################
+
+1) Fixed a minor bug for what string was being used for saving the output string when cutting on both MT2ll and MT2lblb
+
+2) Added in RP.HPM.whichIntType into proper places (i.e. to use ANDs or ORs)
+
+3) Added in RP.HPM.printSysLim and RP.HPM.printAveSyst for helping modify the limit outputs
+
+######################################
+HeaderFiles/HistogramSystematicsStructs.h
+######################################
+
+1) Added in verbosity options for printing out systematic errors in the ValError Struct
+
+2) Fixed an issue in the ValError struct where the up and down error weren't calculated properly when the upshift was 0 but the downshift wasn't

@@ -26,7 +26,7 @@ inline bool operator>(const GenJet &a, const GenJet &b)
 {
     return (a.BVC.Vec_Pt > b.BVC.Vec_Pt);
 }
-typedef struct GenParticle{    
+typedef struct GenParticle{
     //struct to contain info for generator-level particles
     TLorentzVector P4;
     BasicVecComponents BVC;
@@ -35,7 +35,7 @@ typedef struct GenParticle{
     int            MomPDGID;
     int            MomPDGStatus;
     float          Mass;
-    void ClearVals() {        
+    void ClearVals() {
         DefaultLorentzVector(&P4);
         BVC.ExtractParams(&P4);
         PDGID = 0;
@@ -111,10 +111,18 @@ typedef struct GenParticleSt3Info {
         GP_FirstMomPt = -1.;
     }
     void SetP4() {
-        GP.BVC.SetP4Vals(&GP.P4);        
+        GP.BVC.SetP4Vals(&GP.P4);
     }
     void ExtractP4Params() {
-        GP.BVC.ExtractParams(&GP.P4);    
+        GP.BVC.ExtractParams(&GP.P4);
+    }
+    void PrintInfo() {
+        cout << "print Gen Particle Info in Status 3" << endl;
+        GP.PrintVals();
+        cout << "GP_Index " << GP_Index << endl;
+        cout << "GP_FirstMom " << GP_FirstMom << endl;
+        cout << "GP_FirstMomPDGID " << GP_FirstMomPDGID << endl;
+        cout << "GP_FirstMomPt " << GP_FirstMomPt << endl;
     }
     // functions used as part of saving or loading the gen particle info
     void SetOutBranches(TTree * outTree, TString prefixBranchName) {
@@ -156,7 +164,27 @@ typedef struct GenParticleSt1Info {
     }
     void ExtractP4Params() {
         GP.BVC.ExtractParams(&GP.P4);
-        GP_Mom.BVC.ExtractParams(&GP_Mom.P4);       
+        GP_Mom.BVC.ExtractParams(&GP_Mom.P4);
+    }
+    void PrintInfo() {
+        cout << "print Gen Particle Info in Status 1" << endl;
+        GP.PrintVals();
+        cout << "print Gen Mom Particle Info in Status 1" << endl;
+        GP_Mom.PrintVals();
+    }
+    GenParticle * GetBQuarkFromTopOrChargino() {
+        GenParticle * nullGP = NULL;
+        if (abs(GP.PDGID) == 5 && (abs(GP.MomPDGID) == 6 || abs(GP.MomPDGID) == 1000006)) {
+            return &GP;
+        }
+        return nullGP;
+    }
+    GenParticle * GetLepFromW() {
+        GenParticle * nullGP = NULL;
+        if ((abs(GP.PDGID) == 11 || abs(GP.PDGID) == 13) && abs(GP.MomPDGID) == 24) {
+            return &GP;
+        }
+        return nullGP;
     }
     // functions used as part of saving or loading the gen particle info
     void SetOutBranches(TTree * outTree, TString prefixBranchName) {

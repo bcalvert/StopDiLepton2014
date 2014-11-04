@@ -2,7 +2,7 @@
 #include "TVector2.h"
 using namespace std;
 typedef struct BasicEventInfo {
-    // Contains very basic info -- weights, run number, event number, etc    
+    // Contains very basic info -- weights, run number, event number, etc
     int   nVtx, nVtxTrue;
     bool  passTrigDoubleMu, passTrigDoubleEl, passTrigElMu;
     float weight, preNVtxRWWeight, basicWeight;
@@ -37,7 +37,7 @@ typedef struct BasicEventInfo {
     void  SetVars(BasicEventInfo * inBEI) {
         doData              = inBEI->doData;
         blindData           = inBEI->blindData;
-        doReReco            = inBEI->doReReco; 
+        doReReco            = inBEI->doReReco;
         doPhiCorr           = inBEI->doPhiCorr;
         isSignal            = inBEI->isSignal;
         doPURW              = inBEI->doPURW;
@@ -133,17 +133,17 @@ typedef struct EventLepInfo {
     int DiLeptonEventType(int Lep0PDGID, int Lep1PDGID) {
         int productPdgId = Lep0PDGID * Lep1PDGID;
         if (productPdgId == -169) {
-            return 0;  
+            return 0;
         }
         else if (productPdgId == -121) {
-            return 1;  
+            return 1;
         }
         else if (productPdgId == -143) {
             return 2;
         }
         else {
             std::cout << "funky business in productPdgId " << productPdgId << std::endl;
-        } 
+        }
         return -1;
     }
     void ELIDefaultVarVals(int setNumSavedLeps = 2) {
@@ -152,7 +152,7 @@ typedef struct EventLepInfo {
         vecEventLeps.resize(numSavedLeps);
         for (int i = 0; i < numSavedLeps; ++i) {
             vecEventLeps[i].ClearVars();
-        }        
+        }
         ELI_LC.ClearVals();
         doEvent = false;
         EventDiLepinZMass = false;
@@ -164,7 +164,7 @@ typedef struct EventLepInfo {
         EventDiLepMass = -99999.; EventDiLepType = -1; EventLepST = -1.;
         for (int iLep = 0; iLep < numSavedLeps; ++iLep) {
             vecEventLeps[iLep].isBadLep();
-        }        
+        }
         ELI_LC.BadVals();
         doEvent = false;
         EventDiLepinZMass = false;
@@ -181,7 +181,7 @@ typedef struct EventLepInfo {
     void EventPasses(vector<int> * indexLeps, std::vector<Lepton> * inputLepVec) {
         for (int iLep = 0; iLep < numSavedLeps; ++iLep) {
             vecEventLeps[iLep] = inputLepVec->at(indexLeps->at(iLep));
-        }      
+        }
         EventDiLepType = DiLeptonEventType(vecEventLeps[0].PDGID, vecEventLeps[1].PDGID);
         EventDiLepMass = (vecEventLeps[0].P4 + vecEventLeps[1].P4).M();
         EventDiLepinZMass = EventDiLepMass > 76 && EventDiLepMass < 106;
@@ -191,10 +191,10 @@ typedef struct EventLepInfo {
     void GrabbedFromTree() {
         for (int iLep = 0; iLep < numSavedLeps; ++iLep) {
             vecEventLeps[iLep].BVC.SetP4Vals(&vecEventLeps[iLep].P4);
-        } 
+        }
         SetLepST();
         EventDiLepinZMass = EventDiLepMass > 76 && EventDiLepMass < 106;
-    }    
+    }
     void ScaleFactorTrigMC(vector<TH2F *> * vecTrigSF, bool doVerbosity = false) {
         float EtaEBEnd = 1.4442;
         float EtaEEBegin = 1.566;
@@ -208,10 +208,10 @@ typedef struct EventLepInfo {
         tempLepEta1 = vecEventLeps[1].isElec() ? vecEventLeps[1].TempEtaFixElectron() : vecEventLeps[1].BVC.Vec_Eta;
         
         /*
-        tempLepEta0 = vecEventLeps[0].isElec() ? TruncateNum(vecEventLeps[0].BVC.Vec_Eta, EtaEBEnd, EtaEEBegin, safetyFactor) : vecEventLeps[0].BVC.Vec_Eta;
-        tempLepEta1 = vecEventLeps[1].isElec() ? TruncateNum(vecEventLeps[1].BVC.Vec_Eta, EtaEBEnd, EtaEEBegin, safetyFactor) : vecEventLeps[1].BVC.Vec_Eta;
-        */
-
+         tempLepEta0 = vecEventLeps[0].isElec() ? TruncateNum(vecEventLeps[0].BVC.Vec_Eta, EtaEBEnd, EtaEEBegin, safetyFactor) : vecEventLeps[0].BVC.Vec_Eta;
+         tempLepEta1 = vecEventLeps[1].isElec() ? TruncateNum(vecEventLeps[1].BVC.Vec_Eta, EtaEBEnd, EtaEEBegin, safetyFactor) : vecEventLeps[1].BVC.Vec_Eta;
+         */
+        
         if (abs(vecEventLeps[0].PDGID) == abs(vecEventLeps[1].PDGID)) {
             //same flavor leptons -- utlize lead lepton for etaX
             LepEtaX = tempLepEta0;
@@ -230,14 +230,14 @@ typedef struct EventLepInfo {
         else {
             cout << "issue with setting LepEtaX and LepEtaY" << endl;
         }
-
+        
         XBin = vecTrigSF->at(EventDiLepType)->GetXaxis()->FindBin(fabs(LepEtaX));
         YBin = vecTrigSF->at(EventDiLepType)->GetXaxis()->FindBin(fabs(LepEtaY));
         if (XBin > vecTrigSF->at(EventDiLepType)->GetNbinsX()) XBin = vecTrigSF->at(EventDiLepType)->GetNbinsX();
         if (XBin < 1) XBin = 1;
         if (YBin > vecTrigSF->at(EventDiLepType)->GetNbinsY()) YBin = vecTrigSF->at(EventDiLepType)->GetNbinsY();
         if (YBin < 1) YBin = 1;
-//        cout << "TrigMC test 5 " << endl;
+        //        cout << "TrigMC test 5 " << endl;
         //    DiLeptonTrigSFCentVal = vecTrigSF->at(EventDiLepType)->GetBinContent(XBin, YBin);
         //    DiLeptonTrigSFErr = vecTrigSF->at(EventDiLepType)->GetBinError(XBin, YBin);
         //    return DiLeptonTrigSFCentVal + Syst * DiLeptonTrigSFErr;
@@ -266,12 +266,12 @@ typedef struct EventLepInfo {
         if (inputLep->isElec()) {
             tempLepEta = inputLep->TempEtaFixElectron();
             /*
-            if (tempLepEta > EtaEBEnd && tempLepEta < EtaEEBegin) {
-                tempLepEta = TruncateNum(tempLepEta, EtaEBEnd, EtaEEBegin, safetyFactor);
-            }
-            if (tempLepEta > -1 * EtaEEBegin && tempLepEta < -1 * EtaEBEnd) {
-                tempLepEta = TruncateNum(tempLepEta, -1 * EtaEEBegin, -1 * EtaEBEnd, safetyFactor);
-            }
+             if (tempLepEta > EtaEBEnd && tempLepEta < EtaEEBegin) {
+             tempLepEta = TruncateNum(tempLepEta, EtaEBEnd, EtaEEBegin, safetyFactor);
+             }
+             if (tempLepEta > -1 * EtaEEBegin && tempLepEta < -1 * EtaEBEnd) {
+             tempLepEta = TruncateNum(tempLepEta, -1 * EtaEEBegin, -1 * EtaEBEnd, safetyFactor);
+             }
              */
         }
         int XBin = histToUse->GetXaxis()->FindBin(tempLepEta);
@@ -297,11 +297,11 @@ typedef struct EventLepInfo {
     }
     void ScaleFactorIDIsoMC(TH2F * histElecSF, TH2F * histMuonSF, bool doVerbosity = false) {
         float Lep0SF[2], Lep1SF[2];
-//        cout << "setting lep 0 " << endl;
+        //        cout << "setting lep 0 " << endl;
         SingLepIDIsoSF(Lep0SF, &vecEventLeps[0], histElecSF, histMuonSF, doVerbosity);
-//        cout << "setting lep 1 " << endl;
+        //        cout << "setting lep 1 " << endl;
         SingLepIDIsoSF(Lep1SF, &vecEventLeps[1], histElecSF, histMuonSF, doVerbosity);
-        DiLeptonIDIsoSF.resize(3);        
+        DiLeptonIDIsoSF.resize(3);
         DiLeptonIDIsoSF[0] = Lep0SF[0] * Lep1SF[0];
         
         DiLeptonIDIsoSF[1] = (Lep0SF[0] + Lep0SF[1]) * (Lep1SF[0] + Lep1SF[1]);
@@ -329,7 +329,7 @@ typedef struct EventLepInfo {
         TH2F * Lep0FastSimHist, * Lep1FastSimHist;
         float SF_IDISO[3]           = {0.997, 0.975, 0.986};
         float SF_IDISOSystUp[3]     = {0.00085, 0.006, 0.007};
-        float SF_IDISOSystDown[3]   = {0.00085, 0.006, 0.007};        
+        float SF_IDISOSystDown[3]   = {0.00085, 0.006, 0.007};
         
         float baseSF = SF_IDISO[EventDiLepType];
         float baseSFUpErr = 0, baseSFDownErr = 0;
@@ -364,13 +364,13 @@ typedef struct EventLepInfo {
             TotLepFastSimSFDownErr = fabs(TotLepFastSimSFDownErr);
             
             DiLeptonIDIsoSF[0] = baseSF * TotLepFastSimSF;
-            DiLeptonIDIsoSF[1] = TotLepFastSimSFUpErr * baseSFUpErr; 
+            DiLeptonIDIsoSF[1] = TotLepFastSimSFUpErr * baseSFUpErr;
             DiLeptonIDIsoSF[1] += TotLepFastSimSF * baseSFUpErr + TotLepFastSimSFUpErr * baseSF;
             DiLeptonIDIsoSF[2] = TotLepFastSimSFDownErr * baseSFDownErr;
             DiLeptonIDIsoSF[2] -= TotLepFastSimSF * baseSFDownErr + TotLepFastSimSFDownErr * baseSF;
             DiLeptonIDIsoSF[2] = fabs(DiLeptonIDIsoSF[2]);
         }
-        else {        
+        else {
             DiLeptonIDIsoSF[0] = baseSF;
             DiLeptonIDIsoSF[1] = baseSFUpErr;
             DiLeptonIDIsoSF[2] = baseSFDownErr;
@@ -404,11 +404,11 @@ typedef struct EventLepInfo {
     
     
     void SetScaleFactorsOld(bool doSignal, std::vector<TH2F *> * vecTrigSF, TH2F * histElecSF, TH2F * histMuonSF) {
-//        cout << "SF Old test 1 " << endl;
+        //        cout << "SF Old test 1 " << endl;
         ScaleFactorTrigMC(vecTrigSF);
-//        cout << "SF Old test 2 " << endl;
+        //        cout << "SF Old test 2 " << endl;
         ScaleFactorIDIsoMCPieter(doSignal, histElecSF, histMuonSF);
-//        cout << "SF Old test 3 " << endl;
+        //        cout << "SF Old test 3 " << endl;
         DiLeptonTotSF.resize(3);
         if (DiLeptonIDIsoSF.size() < 3 || DiLeptonTrigSF.size() < 3) {
             cout << "issue: sizes are less than 3! check that they got set " << endl;
@@ -429,7 +429,7 @@ typedef struct EventLepInfo {
             DiLeptonTotSF[1] = TMath::Sqrt(DiLeptonTrigSF[1] * DiLeptonTrigSF[1] + DiLeptonIDIsoSF[1] * DiLeptonIDIsoSF[1]);
             DiLeptonTotSF[2] = TMath::Sqrt(DiLeptonTrigSF[2] * DiLeptonTrigSF[2] + DiLeptonIDIsoSF[2] * DiLeptonIDIsoSF[2]);
         }
-//        cout << "SF Old test 4 " << endl;
+        //        cout << "SF Old test 4 " << endl;
     }
     
     void SetScaleFactorsFailedEvent() {
@@ -468,14 +468,14 @@ typedef struct EventLepInfo {
             }
             else {
                 vecEventLeps[iLep].GP.BVC.ExtractParams(&vecEventLeps[iLep].GP.P4);
-//                cout << " for iLep " << iLep << endl;
-//                vecEventLeps[iLep].PrintVals();  
-            }            
+                //                cout << " for iLep " << iLep << endl;
+                //                vecEventLeps[iLep].PrintVals();
+            }
             vecEventLeps[iLep].SetPromptLeptonStatus();
-//            cout << " for iLep " << iLep << endl;
-//            vecEventLeps[iLep].PrintVals();            
+            //            cout << " for iLep " << iLep << endl;
+            //            vecEventLeps[iLep].PrintVals();
         }
-//        cout << endl;
+        //        cout << endl;
     }
     void GrabbedGenParticlesFromTree() {
         for (int iLep = 0; iLep < numSavedLeps; ++iLep) {
@@ -512,7 +512,7 @@ typedef struct EventJetInfo {
     void SetJetST() {
         EventJetST = 0.;
         for (int iJet = 0; iJet < 2; ++iJet) {
-            EventJetST += vecEventJets[iJet].BVC.Vec_Pt;            
+            EventJetST += vecEventJets[iJet].BVC.Vec_Pt;
         }
     }
     void SetNonBTagInfo(EventJetInfo * inEJI) {
@@ -539,7 +539,7 @@ typedef struct EventJetInfo {
         DefaultLorentzVector(&EventSumBJetP4);
         BVC_SumBJet.ExtractParams(&EventSumBJetP4);
         
-        vecEventJets.resize(numSavedJets);;        
+        vecEventJets.resize(numSavedJets);;
         vecEventBTagJets.resize(numSavedBJets);
         vecEventBTagJets_Index.resize(numSavedBJets);
         
@@ -552,7 +552,7 @@ typedef struct EventJetInfo {
         }
     }
     void EJISetValsInput(float inputHT, TLorentzVector * inSumJetVec, TLorentzVector * inSumBJetVec, int inputNJets, vector<int> * vecInJetIndex, int inputNBtagJets, vector<int> * vecInBJetIndex, vector<int> * vecInBJetSubIndex, vector<PFJet> * inputPFJetVec) {
-        EventHT = inputHT; 
+        EventHT = inputHT;
         BVC_SumJet.ExtractParams(inSumJetVec);
         BVC_SumJet.SetP4Vals(&EventSumJetP4);
         
@@ -563,30 +563,30 @@ typedef struct EventJetInfo {
         
         for (int iJet = 0; iJet < numSavedJets; ++iJet) {
             if (vecInJetIndex->at(iJet) > -1) {
-                vecEventJets[iJet] = inputPFJetVec->at(vecInJetIndex->at(iJet));   
+                vecEventJets[iJet] = inputPFJetVec->at(vecInJetIndex->at(iJet));
             }
             else {
-                    vecEventJets[iJet].ClearVars();
+                vecEventJets[iJet].ClearVars();
             }
         }
         for (int iBJet = 0; iBJet < numSavedBJets; ++iBJet) {
             if (vecInBJetIndex->at(iBJet) > -1) {
-                vecEventBTagJets[iBJet] = inputPFJetVec->at(vecInBJetIndex->at(iBJet));   
+                vecEventBTagJets[iBJet] = inputPFJetVec->at(vecInBJetIndex->at(iBJet));
                 vecEventBTagJets_Index[iBJet] = vecInBJetSubIndex->at(iBJet);
             }
             else {
                 vecEventBTagJets[iBJet].ClearVars();
-                vecEventBTagJets_Index[iBJet] = -1;                 
+                vecEventBTagJets_Index[iBJet] = -1;
             }
-        }        
+        }
         SetJetST();
     }
     
     void EJISetValsInput(float inputHT, TLorentzVector * inSumJetVec, TLorentzVector * inSumBJetVec, int inputNJets, vector<int> * vecInJetIndex, int inputNBtagJets, vector<int> * vecInBJetIndex, vector<int> * vecInBJetSubIndex, vector<SmearPFJet> * inputSmearPFJetVec) {
-        EventHT = inputHT; 
+        EventHT = inputHT;
         BVC_SumJet.ExtractParams(inSumJetVec);
         BVC_SumJet.SetP4Vals(&EventSumJetP4);
-
+        
         BVC_SumBJet.ExtractParams(inSumBJetVec);
         BVC_SumBJet.SetP4Vals(&EventSumBJetP4);
         
@@ -602,24 +602,24 @@ typedef struct EventJetInfo {
         }
         for (int iBJet = 0; iBJet < numSavedBJets; ++iBJet) {
             if (vecInBJetIndex->at(iBJet) > -1) {
-                vecEventBTagJets[iBJet] = inputSmearPFJetVec->at(vecInBJetIndex->at(iBJet)).intPFJet;   
+                vecEventBTagJets[iBJet] = inputSmearPFJetVec->at(vecInBJetIndex->at(iBJet)).intPFJet;
                 vecEventBTagJets_Index[iBJet] = vecInBJetSubIndex->at(iBJet);
             }
             else {
                 vecEventBTagJets[iBJet].ClearVars();
-                vecEventBTagJets_Index[iBJet] = -1;                 
+                vecEventBTagJets_Index[iBJet] = -1;
             }
-        }        
+        }
         SetJetST();
-    } 
+    }
     
     
     void GrabbedFromTree() {
         for (int iJet = 0; iJet < numSavedJets; ++iJet) {
-            vecEventJets[iJet].BVC.SetP4Vals(&vecEventJets[iJet].P4);            
+            vecEventJets[iJet].BVC.SetP4Vals(&vecEventJets[iJet].P4);
         }
         for (int iBJet = 0; iBJet < numSavedBJets; ++iBJet) {
-             vecEventBTagJets[iBJet].BVC.SetP4Vals(&vecEventBTagJets[iBJet].P4);
+            vecEventBTagJets[iBJet].BVC.SetP4Vals(&vecEventBTagJets[iBJet].P4);
         }
     }
 } EventJetInfo;
@@ -681,23 +681,35 @@ typedef struct EventMT2Info {
     
     float EventMT2ll, EventMT2lb, EventMT2ll_BMET;
     float EventDeltaPhiMT2lb_JetsUsed, EventDeltaPhiMT2lb_BLepsUsed;
+    float EventMassBLep0_BLepsUsed, EventMassBLep1_BLepsUsed;
     vector<TLorentzVector> EventVecBLepsMT2lb;
     int caseMT2lb;
+    vector<int> vecCorrPairValMT2lblb;
+    // 0 is minMT2lb, 1 is minMaxMass, 2 is minAbsMassDiff, 3 is AND of 0 and 1, 4 is OR of 0 and 1
+    // 5 is AND of 0 and 2, 6 is OR of 0 and 2, 7 is AND of 1 and 2, 8 is OR of 1 and 2, 9 is AND of 0, 1, and 2; 10 is OR of 0, 1, and 2
     float MT_Lep0, MT_Lep1, MT_HTVec, MT_BHTVec;
     void EMT2IDefaultVarVals() {
         EventMT2ll = 0.; EventMT2lb = 0.; EventMT2ll_BMET = 0.;
-        EventDeltaPhiMT2lb_JetsUsed = 0.; EventDeltaPhiMT2lb_BLepsUsed= 0.;
+        EventDeltaPhiMT2lb_JetsUsed = -99.; EventDeltaPhiMT2lb_BLepsUsed= -99.;
+        EventMassBLep0_BLepsUsed = -99.; EventMassBLep1_BLepsUsed = -99.;
         EventVecBLepsMT2lb.clear();
         EventVecBLepsMT2lb.resize(2);
-                caseMT2lb = 0;
-        
+        caseMT2lb = -1;
         MT_Lep0 = 0.; MT_Lep1 = 0.; MT_HTVec = 0.; MT_BHTVec = 0.;
+        
+        vecCorrPairValMT2lblb.resize(16);
+        for (int iCorrPair = 0; iCorrPair < (int) vecCorrPairValMT2lblb.size(); ++iCorrPair) {
+            vecCorrPairValMT2lblb[iCorrPair] = -3;
+        }
     }
     void SetBadMT2lblb() {
         caseMT2lb = -1;
         EventMT2lb = -99.;
         EventDeltaPhiMT2lb_JetsUsed = -99.;
         EventDeltaPhiMT2lb_BLepsUsed = -99.;
+        for (int iCorrPair = 0; iCorrPair < (int) vecCorrPairValMT2lblb.size(); ++iCorrPair) {
+            vecCorrPairValMT2lblb[iCorrPair] = -3;
+        }
     }
     void SetBadMT2ll() {
         EventMT2ll = -99.;
@@ -716,16 +728,16 @@ typedef struct EventMT2Info {
         MT_BHTVec = -99.;
     }
     void SetMTLep(TLorentzVector * inLepton, float EventMET, float EventMETPhi, int whichMT = 1) {
-//        float Angle = dPhi(inLepton->Phi(), EventMETPhi);
-//        float MTSq = 2*EventMET*inLepton->Pt()*(1-TMath::Cos(Angle));
+        //        float Angle = dPhi(inLepton->Phi(), EventMETPhi);
+        //        float MTSq = 2*EventMET*inLepton->Pt()*(1-TMath::Cos(Angle));
         TLorentzVector METvec; METvec.SetPtEtaPhiM(EventMET, 0., EventMETPhi, 0);
         switch (whichMT) {
             case 1:
-//                MT_Lep0 = TMath::Sqrt(MTSq);
+                //                MT_Lep0 = TMath::Sqrt(MTSq);
                 MT_Lep0 = GetMT(inLepton, &METvec);
                 break;
             case 2:
-//                MT_Lep1 = TMath::Sqrt(MTSq);
+                //                MT_Lep1 = TMath::Sqrt(MTSq);
                 MT_Lep1 = GetMT(inLepton, &METvec);
                 break;
             default:
@@ -738,7 +750,7 @@ typedef struct EventMT2Info {
         //        float Angle = dPhi(inJet->Phi(), EventMETPhi);
         //        float MTSq = 2*EventMET*inJet->Pt()*(1-TMath::Cos(Angle));
         TLorentzVector METvec; METvec.SetPtEtaPhiM(EventMET, 0., EventMETPhi, 0);
-//        cout << "inJet Pt " << inJet->Pt() << endl;
+        //        cout << "inJet Pt " << inJet->Pt() << endl;
         MT_HTVec = GetMT(inJet, &METvec);
     }
     
@@ -755,38 +767,132 @@ typedef struct EventMT2Info {
     void CalcMT2ll_BMET(EventLepInfo * inELI, float EventMET, float EventMETPhi) {
         EventMT2ll_BMET = getMT2(inELI->vecEventLeps[0].P4, inELI->vecEventLeps[1].P4, EventMET, EventMETPhi);
     }
-    float MT2lbCalculator(vector<TLorentzVector> * vecLeps, vector<TLorentzVector> * vecJets, float MET, float METPhi, vector<TLorentzVector> &vecBLeps) {
-        float MT2lbPair1;
-        float MT2lbPair2;
-        TLorentzVector vecBLeadLep, vecBSubLep;
+    void SetValsMT2lbPairing(float MT2lbPair1, float MT2lbPair2, float &returnMT2lb, vector<TLorentzVector> * vecBLeps_Pair1, vector<TLorentzVector> * vecBLeps_Pair2, vector<TLorentzVector> * vec_GoodBLeps, int corrPairCheckIndex) {
+        if (corrPairCheckIndex == 0) {
+            returnMT2lb = MT2lbPair1;
+            vec_GoodBLeps->at(0) = vecBLeps_Pair1->at(0);
+            vec_GoodBLeps->at(1) = vecBLeps_Pair1->at(1);
+        }
+        else if (corrPairCheckIndex == 1) {
+            returnMT2lb = MT2lbPair2;
+            vec_GoodBLeps->at(0) = vecBLeps_Pair2->at(0);
+            vec_GoodBLeps->at(1) = vecBLeps_Pair2->at(1);
+        }
+        else {
+            cout << "corrPairCheckIndex != 0 or 1; it is " << corrPairCheckIndex << endl;
+        }
+    }
+    float MT2lbPairingCheck(vector<TLorentzVector> * vecBLeps_Pair1, vector<TLorentzVector> * vecBLeps_Pair2, vector<TLorentzVector> * vec_GoodBLeps, float MET, float METPhi, vector<int> * vecCorrPairCheckIndex, int whichCheck = 0) {
+        
+        float topMass = 176;
+        
+        float MT2lbPair1 = getMT2(vecBLeps_Pair1->at(0), vecBLeps_Pair1->at(1), MET, METPhi);
+        float MT2lbPair2 = getMT2(vecBLeps_Pair2->at(0), vecBLeps_Pair2->at(1), MET, METPhi);
+        
+        bool minMT2lbPair2 = (MT2lbPair1 > MT2lbPair2);
+        
+        float massBLeadLep_Pair1 = vecBLeps_Pair1->at(0).M();
+        float massBSubLep_Pair1 = vecBLeps_Pair1->at(1).M();
+        
+        float massBLeadLep_Pair2 = vecBLeps_Pair2->at(0).M();
+        float massBSubLep_Pair2 = vecBLeps_Pair2->at(1).M();
+        
+        float maxBLepMassPair1 = TMath::Max(massBLeadLep_Pair1, massBSubLep_Pair1);
+        float maxBLepMassPair2 = TMath::Max(massBLeadLep_Pair2, massBSubLep_Pair2);
+        bool minMaxBLepMassPair2 = (maxBLepMassPair1 > maxBLepMassPair2);
+        
+        float absDiffBLepMassPair1 = abs(massBLeadLep_Pair1 - massBSubLep_Pair1);
+        float absDiffBLepMassPair2 = abs(massBLeadLep_Pair2 - massBSubLep_Pair2);
+        bool minAbsDiffBLepMassPair2 = (absDiffBLepMassPair1 > absDiffBLepMassPair2);
+        
+        float minAbsDiffBLepMassTopMassPair1 = TMath::Min(abs(massBLeadLep_Pair1 - topMass), abs(massBSubLep_Pair1 - topMass));
+        float minAbsDiffBLepMassTopMassPair2 = TMath::Min(abs(massBLeadLep_Pair2 - topMass), abs(massBSubLep_Pair2 - topMass));
+        bool minAbsDiffBLepMassTopMassIsPair2 = minAbsDiffBLepMassTopMassPair1 > minAbsDiffBLepMassTopMassPair2;
+        float returnMT2lb;
+        
+        // 0 is minMT2lb, 1 is minMaxMass, 2 is minAbsMassDiff, 3 is AND of 0 and 1, 4 is OR of 0 and 1
+        // 5 is AND of 0 and 2, 6 is OR of 0 and 2, 7 is AND of 1 and 2, 8 is OR of 1 and 2, 9 is AND of 0, 1, and 2; 10 is OR of 0, 1, and 2
+        
+        vecCorrPairCheckIndex->at(0) = minMT2lbPair2;
+        vecCorrPairCheckIndex->at(1) = minMaxBLepMassPair2;
+        vecCorrPairCheckIndex->at(2) = minAbsDiffBLepMassPair2;
+        vecCorrPairCheckIndex->at(3) = (minMT2lbPair2 && minMaxBLepMassPair2);
+        vecCorrPairCheckIndex->at(4) = (minMT2lbPair2 || minMaxBLepMassPair2);
+        vecCorrPairCheckIndex->at(5) = (minMT2lbPair2 && minAbsDiffBLepMassPair2);
+        vecCorrPairCheckIndex->at(6) = (minMT2lbPair2 || minAbsDiffBLepMassPair2);
+        vecCorrPairCheckIndex->at(7) = (minMaxBLepMassPair2 && minAbsDiffBLepMassPair2);
+        vecCorrPairCheckIndex->at(8) = (minMaxBLepMassPair2 || minAbsDiffBLepMassPair2);
+        vecCorrPairCheckIndex->at(9) = (minMT2lbPair2 && minMaxBLepMassPair2 && minAbsDiffBLepMassPair2);
+        vecCorrPairCheckIndex->at(10) = (minMT2lbPair2 || minMaxBLepMassPair2 || minAbsDiffBLepMassPair2);
+        vecCorrPairCheckIndex->at(11) = minAbsDiffBLepMassTopMassIsPair2;
+        vecCorrPairCheckIndex->at(12) = (minAbsDiffBLepMassTopMassIsPair2 || minAbsDiffBLepMassPair2);
+        vecCorrPairCheckIndex->at(13) = (minAbsDiffBLepMassTopMassIsPair2 && minAbsDiffBLepMassPair2);
+        vecCorrPairCheckIndex->at(14) = (minAbsDiffBLepMassTopMassIsPair2 || minMT2lbPair2);
+        vecCorrPairCheckIndex->at(15) = (minAbsDiffBLepMassTopMassIsPair2 && minMT2lbPair2);
+        
+        SetValsMT2lbPairing(MT2lbPair1, MT2lbPair2, returnMT2lb, vecBLeps_Pair1, vecBLeps_Pair2, vec_GoodBLeps, vecCorrPairCheckIndex->at(whichCheck));
+        return returnMT2lb;
+    }
+    float MT2lbCalculator(vector<TLorentzVector> * vecLeps, vector<TLorentzVector> * vecJets, float MET, float METPhi, vector<TLorentzVector> &vecBLeps_Good, int whichCheck, bool doVerbosity, vector<int> * inVecCorrPairVal, vector<int> * inputJetPartFlavor = 0, vector<int> * inputLepPDGIDs = 0) {
+        
+        vector<int> vecCorrPairCheckIndex;
+        vecCorrPairCheckIndex.resize(inVecCorrPairVal->size());
+        
+        for (int iCorrPair = 0; iCorrPair < (int) vecCorrPairCheckIndex.size(); ++iCorrPair) {
+            vecCorrPairCheckIndex[iCorrPair] = -1;
+        }
+        
+        float MT2lbPair1, MT2lbPair2, returnMT2lb;
+        float massBLeadLep_Pair1, massBSubLep_Pair1, maxMassBLep_Pair1;
+        float massBLeadLep_Pair2, massBSubLep_Pair2, maxMassBLep_Pair2;
+        vector<TLorentzVector> vecBLeps_Pair1(0);
+        vector<TLorentzVector> vecBLeps_Pair2(0);
         if (vecLeps->size() < 2 || vecJets->size() < 2) {
             cout << "Houston, we've had a problem here: one of the two vectors is less than 2!" << endl;
             cout << "vecLep size " << vecLeps->size() << endl;
             cout << "vecJet size " << vecJets->size() << endl;
         }
-        MT2lbPair1 = getMT2(vecLeps->at(0) + vecJets->at(0), vecLeps->at(1) + vecJets->at(1), MET, METPhi);
-        MT2lbPair2 = getMT2(vecLeps->at(0) + vecJets->at(1), vecLeps->at(1) + vecJets->at(0), MET, METPhi);
-        if (MT2lbPair1 > MT2lbPair2) {
-            vecBLeadLep = vecLeps->at(0) + vecJets->at(1);
-            vecBSubLep = vecLeps->at(1) + vecJets->at(0);
+        vecBLeps_Pair1.push_back(vecLeps->at(0) + vecJets->at(0));
+        vecBLeps_Pair1.push_back(vecLeps->at(1) + vecJets->at(1));
+        
+        vecBLeps_Pair2.push_back(vecLeps->at(0) + vecJets->at(1));
+        vecBLeps_Pair2.push_back(vecLeps->at(1) + vecJets->at(0));
+        
+        returnMT2lb = MT2lbPairingCheck(&vecBLeps_Pair1, &vecBLeps_Pair2, &vecBLeps_Good, MET, METPhi, &vecCorrPairCheckIndex, whichCheck);
+        if (inputJetPartFlavor == NULL || inputLepPDGIDs == NULL) {
+            for (int iCorrPair = 0; iCorrPair < (int) inVecCorrPairVal->size(); ++iCorrPair) {
+                inVecCorrPairVal->at(iCorrPair) = -2;
+            }
         }
         else {
-            vecBLeadLep = vecLeps->at(0) + vecJets->at(0);
-            vecBSubLep = vecLeps->at(1) + vecJets->at(1);               
+            for (int iCorrPair = 0; iCorrPair < (int) inVecCorrPairVal->size(); ++iCorrPair) {
+                if (doVerbosity) {
+                    cout << "setting corr pair check for iCorrPair = " << iCorrPair << endl;
+                }
+                inVecCorrPairVal->at(iCorrPair) = CheckMT2lblbPairing(vecCorrPairCheckIndex[iCorrPair], inputJetPartFlavor, inputLepPDGIDs, doVerbosity);
+                if (doVerbosity) {
+                    cout << "inVecCorrPairVal->at(iCorrPair) " << inVecCorrPairVal->at(iCorrPair) << endl;
+                }
+            }
         }
-        vecBLeps[0] = vecBLeadLep;
-        vecBLeps[1] = vecBSubLep;
-        return TMath::Min(MT2lbPair1, MT2lbPair2);
+        return returnMT2lb;
     }
-    void CalcMT2lblb(EventLepInfo * inELI, EventJetInfo * inEJI, float EventMET, float EventMETPhi, int levelVerbosity = 0) {
+    void CalcMT2lblb(EventLepInfo * inELI, EventJetInfo * inEJI, float EventMET, float EventMETPhi, int whichCheck, int levelVerbosity = 0) {
         // Set the events M_{T2}(lb)(lb)
-        vector<TLorentzVector> vecLepMT2lb(2), vecJetMT2lb(2); 
+        vector<TLorentzVector> vecLepMT2lb(2), vecJetMT2lb(2);
+        vector<int> vecJetPartFlavor(2), vecLepPDGID(2);
         if (levelVerbosity > 0) {
             cout << "inEJI->EventNJets " << inEJI->EventNJets << endl;
         }
         if (inEJI->EventNJets > 1) {
             vecLepMT2lb[0] = inELI->vecEventLeps[0].P4;
             vecLepMT2lb[1] = inELI->vecEventLeps[1].P4;
+            
+            // grab PDGID and jet parton flavor for purposes of determining correct MT2lblb pairing
+            vecLepPDGID[0] = inELI->vecEventLeps[0].PDGID;
+            vecLepPDGID[1] = inELI->vecEventLeps[1].PDGID;
+            vecJetPartFlavor[0] = inEJI->vecEventJets[0].partonFlavor;
+            vecJetPartFlavor[1] = inEJI->vecEventJets[1].partonFlavor;
             if (inEJI->EventNBtagJets > 1) {
                 vecJetMT2lb[0] = inEJI->vecEventBTagJets[0].P4;
                 vecJetMT2lb[1] = inEJI->vecEventBTagJets[1].P4;
@@ -801,7 +907,7 @@ typedef struct EventMT2Info {
                 else {
                     vecJetMT2lb[1] = inEJI->vecEventJets[0].P4;
                     caseMT2lb = 2;
-                }            
+                }
             }
             else {
                 vecJetMT2lb[0] = inEJI->vecEventJets[0].P4;
@@ -815,12 +921,20 @@ typedef struct EventMT2Info {
             }
             
             /*
-            cout << "about to try and calculate MT2lblb " << endl;
-            cout << "do event? " << inELI->doEvent << endl;
-            */
-            EventMT2lb = MT2lbCalculator(&vecLepMT2lb, &vecJetMT2lb, EventMET, EventMETPhi, EventVecBLepsMT2lb);
+             cout << "about to try and calculate MT2lblb " << endl;
+             cout << "do event? " << inELI->doEvent << endl;
+             */
+            if (vecJetPartFlavor[0] == -999999 || vecJetPartFlavor[1] == -999999) {
+                EventMT2lb = MT2lbCalculator(&vecLepMT2lb, &vecJetMT2lb, EventMET, EventMETPhi, EventVecBLepsMT2lb, whichCheck, levelVerbosity, &vecCorrPairValMT2lblb);
+            }
+            else {
+                EventMT2lb = MT2lbCalculator(&vecLepMT2lb, &vecJetMT2lb, EventMET, EventMETPhi, EventVecBLepsMT2lb, whichCheck, levelVerbosity, &vecCorrPairValMT2lblb, &vecJetPartFlavor, &vecLepPDGID);
+            }
             EventDeltaPhiMT2lb_JetsUsed = dPhi(vecJetMT2lb[0].Phi(), vecJetMT2lb[1].Phi());
             EventDeltaPhiMT2lb_BLepsUsed = dPhi(EventVecBLepsMT2lb[0].Phi(), EventVecBLepsMT2lb[1].Phi());
+            
+            EventMassBLep0_BLepsUsed = EventVecBLepsMT2lb[0].M();
+            EventMassBLep1_BLepsUsed = EventVecBLepsMT2lb[1].M();
         }
         else {
             SetBadMT2lblb();
@@ -839,9 +953,9 @@ typedef struct EventMETInfo {
     float EventMETdivMeff;
     float EventMETdivHT;
     int METType;
-    void EMIDefaultVarVals() {   
-        EventMET = 0.; EventMETPhi = 0.; 
-        EventMETX = 0.; EventMETY = 0.; 
+    void EMIDefaultVarVals() {
+        EventMET = 0.; EventMETPhi = 0.;
+        EventMETX = 0.; EventMETY = 0.;
         EventSumET = 0.; EventMETSig = 0.;
         MET_EMT2I.EMT2IDefaultVarVals();
         MET_ERI.ERIDefaultVarVals();
@@ -869,9 +983,9 @@ typedef struct EventMETInfo {
         EventMETY = P3.Py();
     }
     void SetVarsfromXY() {
-//        cout << "setting stuff " << endl;
-//        cout << "EventMETX " << EventMETX << endl;
-//        cout << "EventMETY " << EventMETY << endl;        
+        //        cout << "setting stuff " << endl;
+        //        cout << "EventMETX " << EventMETX << endl;
+        //        cout << "EventMETY " << EventMETY << endl;
         P3.SetXYZ(EventMETX, EventMETY, 0.);
         EventMET = P3.Pt();
         EventMETPhi = P3.Phi();
@@ -893,8 +1007,8 @@ typedef struct EventMETInfo {
     }
     void PhiCorrection(bool doData, int nVtx, bool isSmearMET, bool isOld) {
         SetVarsfromPtPhi();
-//        cout << "EventMETX " << EventMETX << endl;
-//        cout << "EventMETY " << EventMETY << endl;
+        //        cout << "EventMETX " << EventMETX << endl;
+        //        cout << "EventMETY " << EventMETY << endl;
         if (isSmearMET) {
             MetPhiCorrectSmear(EventMETX, EventMETY, nVtx);
         }
@@ -903,26 +1017,26 @@ typedef struct EventMETInfo {
                 MetPhiCorrect_noType0(doData, EventMETX, EventMETY, nVtx);
             }
             else {
-                MetPhiCorrect(doData, EventMETX, EventMETY, nVtx, METType);   
+                MetPhiCorrect(doData, EventMETX, EventMETY, nVtx, METType);
             }
         }
-//        cout << "EventMETX " << EventMETX << endl;
-//        cout << "EventMETY " << EventMETY << endl;
+        //        cout << "EventMETX " << EventMETX << endl;
+        //        cout << "EventMETY " << EventMETY << endl;
         SetVarsfromXY();
     }
     void PhiCorrection(BasicEventInfo * inBEI, EventPileUpInfo * inEPUI, bool isSmearMET, bool isOld) {
-//        MetPhiCorrect(METType, inBEI->doData, EventMETX, EventMETY, inEPUI->nVtx);
+        //        MetPhiCorrect(METType, inBEI->doData, EventMETX, EventMETY, inEPUI->nVtx);
         PhiCorrection(inBEI->doData, inEPUI->nVtx, isSmearMET, isOld);
         SetVarsfromXY();
     }
     void SystShiftMET(vector<TLorentzVector> * inputObjVec, vector<TLorentzVector> * shiftObjVec, EventMETInfo * inEMI) {
-        METSystShift(inputObjVec, shiftObjVec, EventMET, EventMETPhi, inEMI->EventMET, inEMI->EventMETPhi); 
+        METSystShift(inputObjVec, shiftObjVec, EventMET, EventMETPhi, inEMI->EventMET, inEMI->EventMETPhi);
     }
     void SystShiftMET(vector<Lepton> * inputLepVec, vector<Lepton> * shiftLepVec, EventMETInfo * inEMI) {
-        METSystShift(inputLepVec, shiftLepVec, EventMET, EventMETPhi, inEMI->EventMET, inEMI->EventMETPhi); 
+        METSystShift(inputLepVec, shiftLepVec, EventMET, EventMETPhi, inEMI->EventMET, inEMI->EventMETPhi);
     }
     void SystShiftMET(vector<PFJet> * inputJetVec, vector<PFJet> * shiftJetVec, EventMETInfo * inEMI, int doVerbosity = 0) {
-        METSystShift(inputJetVec, shiftJetVec, EventMET, EventMETPhi, inEMI->EventMET, inEMI->EventMETPhi, doVerbosity); 
+        METSystShift(inputJetVec, shiftJetVec, EventMET, EventMETPhi, inEMI->EventMET, inEMI->EventMETPhi, doVerbosity);
     }
     void SetERIBadProbe() {
         MET_ERI.SetRecoilVarsBadProbe();
@@ -934,9 +1048,9 @@ typedef struct EventMETInfo {
     void SetERI(EventLepInfo * inELI) {
         if (inELI->doEvent) {
             TVector3 DiLepVec3 = (inELI->vecEventLeps[0].P4 + inELI->vecEventLeps[1].P4).Vect();
-//            cout << "DiLepVec3.Pt " << DiLepVec3.Pt() << endl;
+            //            cout << "DiLepVec3.Pt " << DiLepVec3.Pt() << endl;
             SetERI(DiLepVec3);
-        } 
+        }
         else {
             SetERIBadProbe();
         }
@@ -953,7 +1067,7 @@ typedef struct EventMETInfo {
     void SetMTJet(EventLepInfo * inELI, EventJetInfo * inEJI) {
         if (inELI->doEvent && inEJI->EventNJets > 0) {
             MET_EMT2I.SetMTJet(&inEJI->EventSumJetP4, EventMET, EventMETPhi);
-//            cout << "MET_EMT2I " << MET_EMT2I.MT_HTVec << endl;
+            //            cout << "MET_EMT2I " << MET_EMT2I.MT_HTVec << endl;
         }
         else {
             MET_EMT2I.SetMTBadJet();
@@ -983,9 +1097,9 @@ typedef struct EventMETInfo {
             MET_EMT2I.SetBadMT2ll_BMET();
         }
     }
-    void CalcMT2lblb(EventLepInfo * inELI, EventJetInfo * inEJI, int levelVerbosity = 0) {
+    void CalcMT2lblb(EventLepInfo * inELI, EventJetInfo * inEJI, int whichCheck, int levelVerbosity = 0) {
         if (inELI->doEvent) {
-            MET_EMT2I.CalcMT2lblb(inELI, inEJI, EventMET, EventMETPhi, levelVerbosity);
+            MET_EMT2I.CalcMT2lblb(inELI, inEJI, EventMET, EventMETPhi, whichCheck, levelVerbosity);
         }
         else {
             MET_EMT2I.SetBadMT2lblb();
@@ -993,9 +1107,9 @@ typedef struct EventMETInfo {
     }
     void CalcBMET(EventJetInfo * inEJI) {
         TVector2 vecMET; vecMET.SetMagPhi(EventMET, EventMETPhi);
-        TVector2 vecBJetTrans; 
+        TVector2 vecBJetTrans;
         if (inEJI->EventNBtagJets > 0) {
-            vecBJetTrans.SetMagPhi(inEJI->BVC_SumBJet.Vec_Pt, inEJI->BVC_SumBJet.Vec_Phi);                                                      
+            vecBJetTrans.SetMagPhi(inEJI->BVC_SumBJet.Vec_Pt, inEJI->BVC_SumBJet.Vec_Phi);
             vecMET += vecBJetTrans;
             EventBMET = vecMET.Mod();
             EventBMETPhi = vecMET.Phi();
@@ -1005,7 +1119,7 @@ typedef struct EventMETInfo {
             EventBMETPhi = EventMETPhi;
         }
     }
-    void CalcMETVariations(EventLepInfo * inELI, EventJetInfo * inEJI, int levelVerbosity = 0) {
+    void CalcMETVariations(EventLepInfo * inELI, EventJetInfo * inEJI, int whichCheck, int levelVerbosity = 0) {
         MET_EMT2I.EMT2IDefaultVarVals();
         CalcBMET(inEJI);
         SetERI(inELI);
@@ -1013,7 +1127,7 @@ typedef struct EventMETInfo {
         SetMTJet(inELI, inEJI);
         SetMTBJet(inELI, inEJI);
         CalcMT2ll(inELI);
-        CalcMT2lblb(inELI, inEJI, levelVerbosity);
+        CalcMT2lblb(inELI, inEJI, whichCheck, levelVerbosity);
         CalcMT2ll_BMET(inELI);
         EventMETdivMeff = EventMET / (inEJI->EventJetST + EventMET + inELI->EventLepST);
         EventMETdivHT = EventMET / (inEJI->EventHT);
@@ -1056,10 +1170,10 @@ typedef struct EventDiStructureInfo {
         numBJets = 2;
         
         vecDP_LepMET.resize(numLeps);
-
+        
         vecVecDP_LepJet.resize(numLeps);
         vecVecDP_LepBJet.resize(numLeps);
-        vecVecDP_JetBJet.resize(numJets);            
+        vecVecDP_JetBJet.resize(numJets);
         
         for (int iLep = 0; iLep < numLeps; ++iLep) {
             vecDP_LepMET[iLep].DPDefaultVarVals(nameLep[iLep] + "MET");
@@ -1071,7 +1185,7 @@ typedef struct EventDiStructureInfo {
             for (int iBJet = 0; iBJet < numBJets; ++iBJet) {
                 vecVecDP_LepBJet[iLep][iBJet].DPDefaultVarVals(nameLep[iLep] + nameBJet[iBJet]);
             }
-        }        
+        }
         for (int iJet = 0; iJet < numJets; ++iJet) {
             vecVecDP_JetBJet[iJet].resize(numBJets);
             for (int iBJet = 0; iBJet < numBJets; ++iBJet) {
@@ -1129,7 +1243,7 @@ typedef struct EventDiStructureInfo {
                 }
                 vecVecDP_LepBJet[iLep][iBJet].SetDPVals(&inELI->vecEventLeps[iLep].P4, &inEJI->vecEventBTagJets[iBJet].P4);
             }
-        }        
+        }
         for (int iJet = 0; iJet < numJets; ++iJet) {
             for (int iBJet = 0; iBJet < numBJets; ++iBJet) {
                 if (levelVerbosity > 0) {
@@ -1146,12 +1260,12 @@ typedef struct EventDiStructureInfo {
             if (inEJI->EventNJets > 1) {
                 ELepMinEJet += -1 * inEJI->vecEventJets[1].BVC.Vec_En;
             }
-        }        
+        }
     }
     void SetMETVars(EventLepInfo * inELI, EventMETInfo * inEMI) {
         for (int iLep = 0; iLep < numLeps; ++iLep) {
             vecDP_LepMET[iLep].DPhiInputObjects = dPhi(inELI->vecEventLeps[iLep].BVC.Vec_Phi, inEMI->EventMETPhi);
-        }  
+        }
         DP_ZMET.DPhiInputObjects = dPhi(DP_DiLepton.BVC.Vec_Phi, inEMI->EventMETPhi);
     }
     void SetDiLepVals(EventDiStructureInfo * inEDSI) {
@@ -1162,7 +1276,7 @@ typedef struct EventDiStructureInfo {
 typedef struct FilterTriggerInfo {
     // Contains MET filter and lepton trigger information
     
-    bool filterECalDeadCell, filterLogErrorTooManyClusters, filterTrackingFailure, filterHCalLaser, filterECalLaserCorr, filterTooManyStripClus, filterManyStripClus, filterEEBadSC;    
+    bool filterECalDeadCell, filterLogErrorTooManyClusters, filterTrackingFailure, filterHCalLaser, filterECalLaserCorr, filterTooManyStripClus, filterManyStripClus, filterEEBadSC;
     vector<bool> regularMETFilterVec;
     vector<bool> oppositeMETFilterVec;
     
@@ -1198,7 +1312,7 @@ typedef struct FilterTriggerInfo {
                 default:
                     cout << "oddity with EventDiLepType for input ELI" << endl;
                     break;
-            }        
+            }
         }
         return stillDoEvent;
     }

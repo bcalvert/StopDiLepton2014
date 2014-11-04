@@ -23,7 +23,7 @@ inline vector<TH1F *> * OneDProjectionReturnVec(TH1 * inputHist, int numDims, in
             break;
         default:
             break;
-    }    
+    }
     for (int ib = 1; ib <= NBins; ++ib) {
         axis1LB = (whichAxisToMix > whichAxisForDist) ? ib : axisProjLB;
         axis1UB = (whichAxisToMix > whichAxisForDist) ? ib : axisProjUB;
@@ -37,29 +37,29 @@ inline vector<TH1F *> * OneDProjectionReturnVec(TH1 * inputHist, int numDims, in
             case 1:
                 if (numDims > 2) {
                     projPatsy3DHist = (TH3F *) inputHist->Clone(patsyName);
-                    projHist = (TH1F *) projPatsy3DHist->ProjectionX(name, axis1LB, axis1UB, axis2LB, axis2UB);   
+                    projHist = (TH1F *) projPatsy3DHist->ProjectionX(name, axis1LB, axis1UB, axis2LB, axis2UB);
                 }
                 else {
                     projPatsy2DHist = (TH2F *) inputHist->Clone(patsyName);
                     
-                    projHist = (TH1F *) projPatsy2DHist->ProjectionX(name, axis1LB, axis1UB);   
+                    projHist = (TH1F *) projPatsy2DHist->ProjectionX(name, axis1LB, axis1UB);
                 }
                 break;
             case 2:
                 if (numDims > 2) {
                     projPatsy3DHist = (TH3F *) inputHist->Clone(patsyName);
-                    projHist = (TH1F *) projPatsy3DHist->ProjectionY(name, axis1LB, axis1UB, axis2LB, axis2UB);   
+                    projHist = (TH1F *) projPatsy3DHist->ProjectionY(name, axis1LB, axis1UB, axis2LB, axis2UB);
                 }
                 else {
                     projPatsy2DHist = (TH2F *) inputHist->Clone(patsyName);
                     
-                    projHist = (TH1F *) projPatsy2DHist->ProjectionY(name, axis1LB, axis1UB);   
+                    projHist = (TH1F *) projPatsy2DHist->ProjectionY(name, axis1LB, axis1UB);
                 }
                 break;
             case 3:
                 if (numDims > 2) {
                     projPatsy3DHist = (TH3F *) inputHist->Clone(patsyName);
-                    projHist = (TH1F *) projPatsy3DHist->ProjectionZ(name, axis1LB, axis1UB, axis2LB, axis2UB);   
+                    projHist = (TH1F *) projPatsy3DHist->ProjectionZ(name, axis1LB, axis1UB, axis2LB, axis2UB);
                 }
                 break;
             default:
@@ -120,7 +120,7 @@ int main( int argc, char* argv[] ) {
     vector<float> * vecDeltaEnUnsmearJetSmearJet_NotGenMatch = new vector<float>;
     
     
-    std::map<string, int> mapGenRW;
+    std::unordered_map<string, int> mapGenRW;
     int genWeightType;
     SetGenRWMap(mapGenRW);
     
@@ -207,10 +207,10 @@ int main( int argc, char* argv[] ) {
      vector<TH2F * > * METYSmearJERUpHistVec     = SetMETXYSmearHistVec(0, METSmearFiles, 1, 1);
      vector<TH2F * > * METYSmearJERDownHistVec   = SetMETXYSmearHistVec(0, METSmearFiles, 1, -1);
      vector<TH2F * > * METYSmearUncESUpHistVec   = SetMETXYSmearHistVec(0, METSmearFiles, 2, 2);
-     vector<TH2F * > * METYSmearUncESDownHistVec = SetMETXYSmearHistVec(0, METSmearFiles, 2, -2);    
+     vector<TH2F * > * METYSmearUncESDownHistVec = SetMETXYSmearHistVec(0, METSmearFiles, 2, -2);
      
-     std::map<string, int> METXSmearMap;
-     std::map<string, int> METYSmearMap;
+     std::unordered_map<string, int> METXSmearMap;
+     std::unordered_map<string, int> METYSmearMap;
      
      SetMETSmearHistMap(METXSmearMap);
      SetMETSmearHistMap(METYSmearMap);
@@ -247,13 +247,13 @@ int main( int argc, char* argv[] ) {
     vector<TH2F * > * METSmearUncESUpHistVec_LowJet   = SetMETSmearHistVec(1, METSmearFiles_LowJet, 2, 2);
     vector<TH2F * > * METSmearUncESDownHistVec_LowJet = SetMETSmearHistVec(1, METSmearFiles_LowJet, 2, -2);
     
-    vector<TH2F * > * METPhiSmearHistVec_HighJet          = SetMETSmearHistVec(0, METSmearFiles_HighJet);        
+    vector<TH2F * > * METPhiSmearHistVec_HighJet          = SetMETSmearHistVec(0, METSmearFiles_HighJet);
     vector<TH2F * > * METPhiSmearJERUpHistVec_HighJet     = SetMETSmearHistVec(0, METSmearFiles_HighJet, 1, 1);
     vector<TH2F * > * METPhiSmearJERDownHistVec_HighJet   = SetMETSmearHistVec(0, METSmearFiles_HighJet, 1, -1);
     vector<TH2F * > * METPhiSmearUncESUpHistVec_HighJet   = SetMETSmearHistVec(0, METSmearFiles_HighJet, 2, 2);
     vector<TH2F * > * METPhiSmearUncESDownHistVec_HighJet = SetMETSmearHistVec(0, METSmearFiles_HighJet, 2, -2);
     
-    vector<TH2F * > * METPhiSmearHistVec_LowJet          = SetMETSmearHistVec(0, METSmearFiles_LowJet);        
+    vector<TH2F * > * METPhiSmearHistVec_LowJet          = SetMETSmearHistVec(0, METSmearFiles_LowJet);
     vector<TH2F * > * METPhiSmearJERUpHistVec_LowJet     = SetMETSmearHistVec(0, METSmearFiles_LowJet, 1, 1);
     vector<TH2F * > * METPhiSmearJERDownHistVec_LowJet   = SetMETSmearHistVec(0, METSmearFiles_LowJet, 1, -1);
     vector<TH2F * > * METPhiSmearUncESUpHistVec_LowJet   = SetMETSmearHistVec(0, METSmearFiles_LowJet, 2, 2);
@@ -261,8 +261,8 @@ int main( int argc, char* argv[] ) {
     
     // maps between file names and the appropriate smearing topology to apply -- so "TTBar" datasets get smearing from the TTBar template
     // "DY" and "Z+Jets" get smearing from the Z->2l template, etc.
-    std::map<string, int> METSmearMap;
-    std::map<string, int> METPhiSmearMap;
+    std::unordered_map<string, int> METSmearMap;
+    std::unordered_map<string, int> METPhiSmearMap;
     SetMETSmearHistMap(METSmearMap);
     SetMETSmearHistMap(METPhiSmearMap);
     
@@ -354,13 +354,22 @@ int main( int argc, char* argv[] ) {
     TString BTagSFAlgorithm = "CSVM", BTagSFDataPeriod = "ABCD", BTagSFSignalString;
     
     //Vertex info (both for nVtx info and also muon dZ)
-    vector<float> * VertZ, * VertNDOF, * VertRho; 
+    vector<float> * VertZ, * VertNDOF, * VertRho;
     vector<bool> * VertIsFake;
     float firstGoodVertZ = 0.0;
     
     VertZ = new vector<float>; VertNDOF = new vector<float>;
-    VertRho = new vector<float>; 
+    VertRho = new vector<float>;
     VertIsFake = new vector<bool>;
+    
+    int whichCheckBaseVal = 0;
+    
+    int whichCheck = 0;
+    for (int k = 0; k < argc; ++k) {
+        if (strncmp (argv[k],"-wCheck", 7) == 0) {
+            whichCheck = strtol(argv[k+1], NULL, 10);
+        }
+    }
     
     BasicEventInfo BEI;
     
@@ -432,13 +441,27 @@ int main( int argc, char* argv[] ) {
     int numSavedJets  = 3;
     int numSavedBJets = 2;
     
-    EventLepInfo ELI; ELI.ELIDefaultVarVals(numSavedLeps);  
+    EventLepInfo ELI; ELI.ELIDefaultVarVals(numSavedLeps);
     EventJetInfo EJI; EJI.EJIDefaultVarVals(numSavedJets, numSavedBJets);
     EventMETInfo EMI_PF_noPhiCorr, EMI_PF_noPhiCorr_Old, EMI_PF_Old, EMI_PF, SmearEMI_PF, SmearEMI_PF_noPhiCorr, SmearHackEMI_PF, SmearHackEMI_PF_Old;
     EventMETInfo EMI_Calo_noPhiCorr, EMI_Calo;
     
+    EMI_PF_noPhiCorr.EMIDefaultVarVals();
+    EMI_PF_noPhiCorr_Old.EMIDefaultVarVals();
+    EMI_PF_Old.EMIDefaultVarVals();
+    EMI_PF.EMIDefaultVarVals();
+    SmearEMI_PF.EMIDefaultVarVals();
+    SmearEMI_PF_noPhiCorr.EMIDefaultVarVals();
+    SmearHackEMI_PF.EMIDefaultVarVals();
+    SmearHackEMI_PF_Old.EMIDefaultVarVals();
+    EMI_Calo_noPhiCorr.EMIDefaultVarVals();
+    EMI_Calo.EMIDefaultVarVals();
+    
     
     EventMETInfo EMI_PF_Special_noPhiCorr, EMI_PF_Special;
+    
+    EMI_PF_Special_noPhiCorr.EMIDefaultVarVals();
+    EMI_PF_Special.EMIDefaultVarVals();
     
     //should make a function that sets what the guy is by reading in string
     EMI_PF_Special_noPhiCorr.METType = 0;
@@ -456,56 +479,56 @@ int main( int argc, char* argv[] ) {
     EMI_Calo.METType = 4;
     
     /*
-    EventStructPointerInfo ESPI, ESPI_NoType0, ESPI_Calo;
-    EventStructPointerInfo SmearESPI, SmearHackESPI, SmearHackESPI_noType0;
-    ESPI.ZeroPointers();
-    ESPI_NoType0.ZeroPointers();
-    ESPI_Calo.ZeroPointers();
-    
-    SmearESPI.ZeroPointers();
-    SmearHackESPI.ZeroPointers();
-    SmearHackESPI_noType0.ZeroPointers();
-    
-    vector<EventStructPointerInfo> ESPI_SystVarUp; ESPI_SystVarUp.resize(numSysts + 1);
-    vector<EventStructPointerInfo> ESPI_SystVarDown; ESPI_SystVarDown.resize(numSysts + 1);
-    
-    for (int iSyst = 0; iSyst <= numSysts; ++iSyst) {
-        ESPI_SystVarUp[iSyst].ZeroPointers();
-        ESPI_SystVarDown[iSyst].ZeroPointers();
-    }
-    
-    vector<EventStructPointerInfo> ESPI_NoType0_SystVarUp; ESPI_NoType0_SystVarUp.resize(numSysts + 1);
-    vector<EventStructPointerInfo> ESPI_NoType0_SystVarDown; ESPI_NoType0_SystVarDown.resize(numSysts + 1);
-    
-    for (int iSyst = 0; iSyst <= numSysts; ++iSyst) {
-        ESPI_NoType0_SystVarUp[iSyst].ZeroPointers();
-        ESPI_NoType0_SystVarDown[iSyst].ZeroPointers();
-    }
-    
-    vector<EventStructPointerInfo> SmearESPI_SystVarUp; SmearESPI_SystVarUp.resize(numSysts + 1);
-    vector<EventStructPointerInfo> SmearESPI_SystVarDown; SmearESPI_SystVarDown.resize(numSysts + 1);
-    
-    for (int iSyst = 0; iSyst <= numSysts; ++iSyst) {
-        SmearESPI_SystVarUp[iSyst].ZeroPointers();
-        SmearESPI_SystVarDown[iSyst].ZeroPointers();
-    }
-    
-    vector<EventStructPointerInfo> SmearHackESPI_SystVarUp; SmearHackESPI_SystVarUp.resize(numSysts + 1);
-    vector<EventStructPointerInfo> SmearHackESPI_SystVarDown; SmearHackESPI_SystVarDown.resize(numSysts + 1);
-    
-    for (int iSyst = 0; iSyst <= numSysts; ++iSyst) {
-        SmearHackESPI_SystVarUp[iSyst].ZeroPointers();
-        SmearHackESPI_SystVarDown[iSyst].ZeroPointers();
-    }
-    
-    vector<EventStructPointerInfo> SmearHackESPI_NoType0_SystVarUp; SmearHackESPI_NoType0_SystVarUp.resize(numSysts + 1);
-    vector<EventStructPointerInfo> SmearHackESPI_NoType0_SystVarDown; SmearHackESPI_NoType0_SystVarDown.resize(numSysts + 1);
-    
-    for (int iSyst = 0; iSyst <= numSysts; ++iSyst) {
-        SmearHackESPI_NoType0_SystVarUp[iSyst].ZeroPointers();
-        SmearHackESPI_NoType0_SystVarDown[iSyst].ZeroPointers();
-    }
-*/
+     EventStructPointerInfo ESPI, ESPI_NoType0, ESPI_Calo;
+     EventStructPointerInfo SmearESPI, SmearHackESPI, SmearHackESPI_noType0;
+     ESPI.ZeroPointers();
+     ESPI_NoType0.ZeroPointers();
+     ESPI_Calo.ZeroPointers();
+     
+     SmearESPI.ZeroPointers();
+     SmearHackESPI.ZeroPointers();
+     SmearHackESPI_noType0.ZeroPointers();
+     
+     vector<EventStructPointerInfo> ESPI_SystVarUp; ESPI_SystVarUp.resize(numSysts + 1);
+     vector<EventStructPointerInfo> ESPI_SystVarDown; ESPI_SystVarDown.resize(numSysts + 1);
+     
+     for (int iSyst = 0; iSyst <= numSysts; ++iSyst) {
+     ESPI_SystVarUp[iSyst].ZeroPointers();
+     ESPI_SystVarDown[iSyst].ZeroPointers();
+     }
+     
+     vector<EventStructPointerInfo> ESPI_NoType0_SystVarUp; ESPI_NoType0_SystVarUp.resize(numSysts + 1);
+     vector<EventStructPointerInfo> ESPI_NoType0_SystVarDown; ESPI_NoType0_SystVarDown.resize(numSysts + 1);
+     
+     for (int iSyst = 0; iSyst <= numSysts; ++iSyst) {
+     ESPI_NoType0_SystVarUp[iSyst].ZeroPointers();
+     ESPI_NoType0_SystVarDown[iSyst].ZeroPointers();
+     }
+     
+     vector<EventStructPointerInfo> SmearESPI_SystVarUp; SmearESPI_SystVarUp.resize(numSysts + 1);
+     vector<EventStructPointerInfo> SmearESPI_SystVarDown; SmearESPI_SystVarDown.resize(numSysts + 1);
+     
+     for (int iSyst = 0; iSyst <= numSysts; ++iSyst) {
+     SmearESPI_SystVarUp[iSyst].ZeroPointers();
+     SmearESPI_SystVarDown[iSyst].ZeroPointers();
+     }
+     
+     vector<EventStructPointerInfo> SmearHackESPI_SystVarUp; SmearHackESPI_SystVarUp.resize(numSysts + 1);
+     vector<EventStructPointerInfo> SmearHackESPI_SystVarDown; SmearHackESPI_SystVarDown.resize(numSysts + 1);
+     
+     for (int iSyst = 0; iSyst <= numSysts; ++iSyst) {
+     SmearHackESPI_SystVarUp[iSyst].ZeroPointers();
+     SmearHackESPI_SystVarDown[iSyst].ZeroPointers();
+     }
+     
+     vector<EventStructPointerInfo> SmearHackESPI_NoType0_SystVarUp; SmearHackESPI_NoType0_SystVarUp.resize(numSysts + 1);
+     vector<EventStructPointerInfo> SmearHackESPI_NoType0_SystVarDown; SmearHackESPI_NoType0_SystVarDown.resize(numSysts + 1);
+     
+     for (int iSyst = 0; iSyst <= numSysts; ++iSyst) {
+     SmearHackESPI_NoType0_SystVarUp[iSyst].ZeroPointers();
+     SmearHackESPI_NoType0_SystVarDown[iSyst].ZeroPointers();
+     }
+     */
     
     
     
@@ -528,8 +551,8 @@ int main( int argc, char* argv[] ) {
     vector<EventMETInfo> EMI_PF_SystVarUp;   EMI_PF_SystVarUp.resize(numSysts + 1);
     vector<EventMETInfo> EMI_PF_SystVarDown; EMI_PF_SystVarDown.resize(numSysts + 1);
     
-    vector<EventDiStructureInfo> EDSI_SystVarUp; EDSI_SystVarUp.resize(numSysts + 1);                                                                       
-    vector<EventDiStructureInfo> EDSI_SystVarDown; EDSI_SystVarDown.resize(numSysts + 1);                                                                       
+    vector<EventDiStructureInfo> EDSI_SystVarUp; EDSI_SystVarUp.resize(numSysts + 1);
+    vector<EventDiStructureInfo> EDSI_SystVarDown; EDSI_SystVarDown.resize(numSysts + 1);
     
     vector<EventJetInfo> SmearEJI_SystVarUp;   SmearEJI_SystVarUp.resize(numSysts + 1);
     vector<EventJetInfo> SmearEJI_SystVarDown; SmearEJI_SystVarDown.resize(numSysts + 1);
@@ -543,7 +566,7 @@ int main( int argc, char* argv[] ) {
     vector<EventMETInfo> SmearHackEMI_PF_Old_SystVarUp;   SmearHackEMI_PF_Old_SystVarUp.resize(numSysts + 1);
     vector<EventMETInfo> SmearHackEMI_PF_Old_SystVarDown; SmearHackEMI_PF_Old_SystVarDown.resize(numSysts + 1);
     
-    vector<EventDiStructureInfo> SmearEDSI_SystVarUp; SmearEDSI_SystVarUp.resize(numSysts + 1);                                                                       
+    vector<EventDiStructureInfo> SmearEDSI_SystVarUp; SmearEDSI_SystVarUp.resize(numSysts + 1);
     vector<EventDiStructureInfo> SmearEDSI_SystVarDown; SmearEDSI_SystVarDown.resize(numSysts + 1);
     
     for (int iSyst = 1; iSyst <= numSysts; ++iSyst) {
@@ -562,13 +585,21 @@ int main( int argc, char* argv[] ) {
         SmearEDSI_SystVarUp[iSyst].EDSIDefaultVarVals();
         SmearEDSI_SystVarDown[iSyst].EDSIDefaultVarVals();
         
+        EMI_PF_SystVarUp[iSyst].EMIDefaultVarVals();
+        EMI_PF_SystVarDown[iSyst].EMIDefaultVarVals();
         
+        SmearEMI_PF_SystVarUp[iSyst].EMIDefaultVarVals();
+        SmearEMI_PF_SystVarDown[iSyst].EMIDefaultVarVals();
         SmearEMI_PF_SystVarUp[iSyst].METType = 0;
         SmearEMI_PF_SystVarDown[iSyst].METType = 0;
         
+        SmearHackEMI_PF_SystVarUp[iSyst].EMIDefaultVarVals();
+        SmearHackEMI_PF_SystVarDown[iSyst].EMIDefaultVarVals();
         SmearHackEMI_PF_SystVarUp[iSyst].METType = 0;
         SmearHackEMI_PF_SystVarDown[iSyst].METType = 0;
         
+        SmearHackEMI_PF_Old_SystVarUp[iSyst].EMIDefaultVarVals();
+        SmearHackEMI_PF_Old_SystVarDown[iSyst].EMIDefaultVarVals();
         SmearHackEMI_PF_Old_SystVarUp[iSyst].METType = 0;
         SmearHackEMI_PF_Old_SystVarDown[iSyst].METType = 0;
     }
@@ -578,7 +609,7 @@ int main( int argc, char* argv[] ) {
     float METX_Corr, METY_Corr, MET_Corr, MET_Phi_Corr;
     float METX_Corr_Old, METY_Corr_Old, MET_Corr_Old, MET_Phi_Corr_Old;
     
-    //SUSY particle Gen Mass stuff    
+    //SUSY particle Gen Mass stuff
     float genStopMassCut = 0., genChi0MassCut = 0.;
     float genCharginoMassCut = 0.;
     
@@ -602,10 +633,13 @@ int main( int argc, char* argv[] ) {
     EGEWKPI.DefaultVarVals();
     EGEWKPI.InitializeVecs();
     
+    EventGenMT2Info EGMT2I;
+    EGMT2I.InitializeVecs();
+    EGMT2I.DefaultVarVals();
     
     float genMET, genMETPhi;
     
-    bool doEvent, doEvent_LepESDown, doEvent_LepESUp;    
+    bool doEvent, doEvent_LepESDown, doEvent_LepESUp;
     
     float weight;
     
@@ -633,6 +667,10 @@ int main( int argc, char* argv[] ) {
     }
     
     fOutName += PMRP.OutStringAdd();
+    if (whichCheck != whichCheckBaseVal) {
+        fOutName += "_wCheck";
+        fOutName += whichCheck;
+    }
     fOutName += "_SkimOutput.root";
     cout << "saving to " << fOutName << endl;
     TFile * outputFile;
@@ -663,14 +701,14 @@ int main( int argc, char* argv[] ) {
          doSmearHack = (METXSmearHist2D->Integral() > 0);
          vecOneDeeMETXSmearHist          = OneDProjectionReturnVec(METXSmearHist2D,          2, 2, 1, 1, 2, "METXSmearHist");
          vecOneDeeMETXSmearJERUpHist     = OneDProjectionReturnVec(METXSmearJERUpHist2D,     2, 2, 1, 1, 2, "METXSmearJERUpHist");
-         vecOneDeeMETXSmearJERDownHist   = OneDProjectionReturnVec(METXSmearJERDownHist2D,   2, 2, 1, 1, 2, "METXSmearJERDownHist");        
+         vecOneDeeMETXSmearJERDownHist   = OneDProjectionReturnVec(METXSmearJERDownHist2D,   2, 2, 1, 1, 2, "METXSmearJERDownHist");
          vecOneDeeMETXSmearUncESUpHist   = OneDProjectionReturnVec(METXSmearUncESUpHist2D,   2, 2, 1, 1, 2, "METXSmearUncESUpHist");
          vecOneDeeMETXSmearUncESDownHist = OneDProjectionReturnVec(METXSmearUncESDownHist2D, 2, 2, 1, 1, 2, "METXSmearUncESDownHist");
          
          doSmearHack = (METYSmearHist2D->Integral() > 0);
          vecOneDeeMETYSmearHist          = OneDProjectionReturnVec(METYSmearHist2D,          2, 2, 1, 1, 2, "METYSmearHist");
          vecOneDeeMETYSmearJERUpHist     = OneDProjectionReturnVec(METYSmearJERUpHist2D,     2, 2, 1, 1, 2, "METYSmearJERUpHist");
-         vecOneDeeMETYSmearJERDownHist   = OneDProjectionReturnVec(METYSmearJERDownHist2D,   2, 2, 1, 1, 2, "METYSmearJERDownHist");        
+         vecOneDeeMETYSmearJERDownHist   = OneDProjectionReturnVec(METYSmearJERDownHist2D,   2, 2, 1, 1, 2, "METYSmearJERDownHist");
          vecOneDeeMETYSmearUncESUpHist   = OneDProjectionReturnVec(METYSmearUncESUpHist2D,   2, 2, 1, 1, 2, "METYSmearUncESUpHist");
          vecOneDeeMETYSmearUncESDownHist = OneDProjectionReturnVec(METYSmearUncESDownHist2D, 2, 2, 1, 1, 2, "METYSmearUncESDownHist");
          */
@@ -706,25 +744,25 @@ int main( int argc, char* argv[] ) {
         // chop the TH2Fs into TH1Fs and place into the vectors
         vecOneDeeMETSmearHist_HighJet          = OneDProjectionReturnVec(METSmearHist2D_HighJet,          2, 2, 1, 1, 2, "METSmearHist_HighJet");
         vecOneDeeMETSmearJERUpHist_HighJet     = OneDProjectionReturnVec(METSmearJERUpHist2D_HighJet,     2, 2, 1, 1, 2, "METSmearJERUpHist_HighJet");
-        vecOneDeeMETSmearJERDownHist_HighJet   = OneDProjectionReturnVec(METSmearJERDownHist2D_HighJet,   2, 2, 1, 1, 2, "METSmearJERDownHist_HighJet");        
+        vecOneDeeMETSmearJERDownHist_HighJet   = OneDProjectionReturnVec(METSmearJERDownHist2D_HighJet,   2, 2, 1, 1, 2, "METSmearJERDownHist_HighJet");
         vecOneDeeMETSmearUncESUpHist_HighJet   = OneDProjectionReturnVec(METSmearUncESUpHist2D_HighJet,   2, 2, 1, 1, 2, "METSmearUncESUpHist_HighJet");
         vecOneDeeMETSmearUncESDownHist_HighJet = OneDProjectionReturnVec(METSmearUncESDownHist2D_HighJet, 2, 2, 1, 1, 2, "METSmearUncESDownHist_HighJet");
         
         vecOneDeeMETSmearHist_LowJet          = OneDProjectionReturnVec(METSmearHist2D_LowJet,          2, 2, 1, 1, 2, "METSmearHist_LowJet");
         vecOneDeeMETSmearJERUpHist_LowJet     = OneDProjectionReturnVec(METSmearJERUpHist2D_LowJet,     2, 2, 1, 1, 2, "METSmearJERUpHist_LowJet");
-        vecOneDeeMETSmearJERDownHist_LowJet   = OneDProjectionReturnVec(METSmearJERDownHist2D_LowJet,   2, 2, 1, 1, 2, "METSmearJERDownHist_LowJet");        
+        vecOneDeeMETSmearJERDownHist_LowJet   = OneDProjectionReturnVec(METSmearJERDownHist2D_LowJet,   2, 2, 1, 1, 2, "METSmearJERDownHist_LowJet");
         vecOneDeeMETSmearUncESUpHist_LowJet   = OneDProjectionReturnVec(METSmearUncESUpHist2D_LowJet,   2, 2, 1, 1, 2, "METSmearUncESUpHist_LowJet");
         vecOneDeeMETSmearUncESDownHist_LowJet = OneDProjectionReturnVec(METSmearUncESDownHist2D_LowJet, 2, 2, 1, 1, 2, "METSmearUncESDownHist_LowJet");
         
         vecOneDeeMETPhiSmearHist_HighJet          = OneDProjectionReturnVec(METPhiSmearHist2D_HighJet,          2, 2, 1, 1, 2, "METPhiSmearHist_HighJet");
         vecOneDeeMETPhiSmearJERUpHist_HighJet     = OneDProjectionReturnVec(METPhiSmearJERUpHist2D_HighJet,     2, 2, 1, 1, 2, "METPhiSmearJERUpHist_HighJet");
-        vecOneDeeMETPhiSmearJERDownHist_HighJet   = OneDProjectionReturnVec(METPhiSmearJERDownHist2D_HighJet,   2, 2, 1, 1, 2, "METPhiSmearJERDownHist_HighJet");        
+        vecOneDeeMETPhiSmearJERDownHist_HighJet   = OneDProjectionReturnVec(METPhiSmearJERDownHist2D_HighJet,   2, 2, 1, 1, 2, "METPhiSmearJERDownHist_HighJet");
         vecOneDeeMETPhiSmearUncESUpHist_HighJet   = OneDProjectionReturnVec(METPhiSmearUncESUpHist2D_HighJet,   2, 2, 1, 1, 2, "METPhiSmearUncESUpHist_HighJet");
         vecOneDeeMETPhiSmearUncESDownHist_HighJet = OneDProjectionReturnVec(METPhiSmearUncESDownHist2D_HighJet, 2, 2, 1, 1, 2, "METPhiSmearUncESDownHist_HighJet");
         
         vecOneDeeMETPhiSmearHist_LowJet          = OneDProjectionReturnVec(METPhiSmearHist2D_LowJet,          2, 2, 1, 1, 2, "METPhiSmearHist_LowJet");
         vecOneDeeMETPhiSmearJERUpHist_LowJet     = OneDProjectionReturnVec(METPhiSmearJERUpHist2D_LowJet,     2, 2, 1, 1, 2, "METPhiSmearJERUpHist_LowJet");
-        vecOneDeeMETPhiSmearJERDownHist_LowJet   = OneDProjectionReturnVec(METPhiSmearJERDownHist2D_LowJet,   2, 2, 1, 1, 2, "METPhiSmearJERDownHist_LowJet");        
+        vecOneDeeMETPhiSmearJERDownHist_LowJet   = OneDProjectionReturnVec(METPhiSmearJERDownHist2D_LowJet,   2, 2, 1, 1, 2, "METPhiSmearJERDownHist_LowJet");
         vecOneDeeMETPhiSmearUncESUpHist_LowJet   = OneDProjectionReturnVec(METPhiSmearUncESUpHist2D_LowJet,   2, 2, 1, 1, 2, "METPhiSmearUncESUpHist_LowJet");
         vecOneDeeMETPhiSmearUncESDownHist_LowJet = OneDProjectionReturnVec(METPhiSmearUncESDownHist2D_LowJet, 2, 2, 1, 1, 2, "METPhiSmearUncESDownHist_LowJet");
     }
@@ -803,12 +841,14 @@ int main( int argc, char* argv[] ) {
          SetInTreeBranchMETSmeared(&fileTree, &SmearEMI_PF_SystVarUp[systLepES],    1 * systLepES);
          SetInTreeBranchMETSmeared(&fileTree, &SmearEMI_PF_SystVarDown[systLepES], -1 * systLepES);
          */
-        SetInTreeBranchMETSmeared(&fileTree, &SmearEMI_PF_SystVarUp[systJetES],    1 * systJetES);
-        SetInTreeBranchMETSmeared(&fileTree, &SmearEMI_PF_SystVarDown[systJetES], -1 * systJetES);
-        SetInTreeBranchMETSmeared(&fileTree, &SmearEMI_PF_SystVarUp[systJetSmear],    1 * systJetSmear);
-        SetInTreeBranchMETSmeared(&fileTree, &SmearEMI_PF_SystVarDown[systJetSmear], -1 * systJetSmear);
-        SetInTreeBranchMETSmeared(&fileTree, &SmearEMI_PF_SystVarUp[systUncES],    1 * systUncES);
-        SetInTreeBranchMETSmeared(&fileTree, &SmearEMI_PF_SystVarDown[systUncES], -1 * systUncES);
+        if (PMRP.SMV.doBookSyst) {
+            SetInTreeBranchMETSmeared(&fileTree, &SmearEMI_PF_SystVarUp[systJetES],    1 * systJetES);
+            SetInTreeBranchMETSmeared(&fileTree, &SmearEMI_PF_SystVarDown[systJetES], -1 * systJetES);
+            SetInTreeBranchMETSmeared(&fileTree, &SmearEMI_PF_SystVarUp[systJetSmear],    1 * systJetSmear);
+            SetInTreeBranchMETSmeared(&fileTree, &SmearEMI_PF_SystVarDown[systJetSmear], -1 * systJetSmear);
+            SetInTreeBranchMETSmeared(&fileTree, &SmearEMI_PF_SystVarUp[systUncES],    1 * systUncES);
+            SetInTreeBranchMETSmeared(&fileTree, &SmearEMI_PF_SystVarDown[systUncES], -1 * systUncES);
+        }
     }
     //run information
     fileTree.SetBranchAddress( "T_Event_RunNumber",       &BEI.runNumber );
@@ -818,10 +858,10 @@ int main( int argc, char* argv[] ) {
     fileTree.SetBranchAddress( "T_Event_nTruePU",   &EPI.nPUTrue );
     fileTree.SetBranchAddress( "T_Event_nPU",       &EPI.nPUBX0 );
     fileTree.SetBranchAddress( "T_Event_nPUp",      &EPI.nPUBXP );
-    fileTree.SetBranchAddress( "T_Event_nPUm",      &EPI.nPUBXM );  
+    fileTree.SetBranchAddress( "T_Event_nPUm",      &EPI.nPUBXM );
     
     fileTree.SetBranchAddress( "T_METPF_Sig",       &METSig_Raw);
-    //event Rho variable (used for electron Isolation)        
+    //event Rho variable (used for electron Isolation)
     fileTree.SetBranchAddress( "T_Event_RhoIso", &EPI.eventRhoIso );
     
     SetInTreeBranchFilterTrigger(&fileTree, &FTI);
@@ -871,7 +911,7 @@ int main( int argc, char* argv[] ) {
     
     /*
      not done yet
-     SetOutTreeBranchPassesCutInfo(outTree, passesFullSelection, 0);    
+     SetOutTreeBranchPassesCutInfo(outTree, passesFullSelection, 0);
      */
     if (PMRP.SRS.isSignal) {
         if (PMRP.PSIV.fInName.Contains("T2tt")) {
@@ -883,7 +923,7 @@ int main( int argc, char* argv[] ) {
         else {
             BTagSFSignalString = "";
         }
-        doBugCheckSignal = (PMRP.PSIV.fInName.Contains("FineBin") || PMRP.PSIV.fInName.Contains("LSP0"));        
+        doBugCheckSignal = (PMRP.PSIV.fInName.Contains("FineBin") || PMRP.PSIV.fInName.Contains("LSP0"));
         BTagSFUtilSignal = new BTagSFUtil(BTagSFAlgorithm, BTagSFDataPeriod, BTagSFSignalString);
         BTagSFUtilToUse = BTagSFUtilSignal;
         
@@ -906,74 +946,76 @@ int main( int argc, char* argv[] ) {
         }
         SetOutTreeBranchJetInfo(outTree, &SmearEJI, 0, true);
         SetOutTreeBranchDiStructureInfo(outTree, &SmearEDSI, 0, true, true);
-        for (int iSyst = 1; iSyst <= numSysts; ++iSyst) {
-            if (InSystBound(iSyst, &systLB_Lepton, &systUB_Lepton)) {
-                SetOutTreeBranchLeptonInfo(outTree, &ELI_SystVarUp[iSyst],    1 * iSyst, PMRP.SMV.doData);
-                SetOutTreeBranchLeptonInfo(outTree, &ELI_SystVarDown[iSyst], -1 * iSyst, PMRP.SMV.doData);
-            }            
-            if (InSystBound(iSyst, &systLB_Jet, &systUB_Jet)) {
-                SetOutTreeBranchJetInfo(outTree, &EJI_SystVarUp[iSyst],    1 * iSyst, false);
-                SetOutTreeBranchJetInfo(outTree, &EJI_SystVarDown[iSyst], -1 * iSyst, false);
-            }
-            //            cout << "iSyst b" << iSyst << endl;
-            if (InSystBound(iSyst, &systLB_MET, &systUB_MET)) {
-                SetOutTreeBranchMETInfo(outTree, &EMI_PF_SystVarUp[iSyst],    1 * iSyst, false, true);
-                SetOutTreeBranchMETInfo(outTree, &EMI_PF_SystVarDown[iSyst], -1 * iSyst, false, true);
-            }
-            //            cout << "iSyst c" << iSyst << endl;
-            if (InSystBound(iSyst, &systLB_SmearMET, &systUB_SmearMET)) {
-                SetOutTreeBranchMETInfo(outTree, &SmearEMI_PF_SystVarUp[iSyst],    1 * iSyst, true, true);
-                SetOutTreeBranchMETInfo(outTree, &SmearEMI_PF_SystVarDown[iSyst], -1 * iSyst, true, true);
-            }
-            
-            if (InSystBound(iSyst, &systLB_SmearMET, &systUB_SmearMET)) {
-                SetOutTreeBranchSpecialMETInfo(outTree, &SmearHackEMI_PF_SystVarUp[iSyst],    1 * iSyst, true, true);
-                SetOutTreeBranchSpecialMETInfo(outTree, &SmearHackEMI_PF_SystVarDown[iSyst], -1 * iSyst, true, true);
-            }
-            if (!PMRP.PSIV.useOldNTuple) {
-                if (InSystBound(iSyst, &systLB_SmearMET, &systUB_SmearMET)) {
-                    SetOutTreeBranchSpecialMETInfo(outTree, &SmearHackEMI_PF_Old_SystVarUp[iSyst],    1 * iSyst, true, true, "_noType0");
-                    SetOutTreeBranchSpecialMETInfo(outTree, &SmearHackEMI_PF_Old_SystVarDown[iSyst], -1 * iSyst, true, true, "_noType0");
+        if (PMRP.SMV.doBookSyst) {
+            for (int iSyst = 1; iSyst <= numSysts; ++iSyst) {
+                if (InSystBound(iSyst, &systLB_Lepton, &systUB_Lepton)) {
+                    SetOutTreeBranchLeptonInfo(outTree, &ELI_SystVarUp[iSyst],    1 * iSyst, PMRP.SMV.doData);
+                    SetOutTreeBranchLeptonInfo(outTree, &ELI_SystVarDown[iSyst], -1 * iSyst, PMRP.SMV.doData);
                 }
+                if (InSystBound(iSyst, &systLB_Jet, &systUB_Jet)) {
+                    SetOutTreeBranchJetInfo(outTree, &EJI_SystVarUp[iSyst],    1 * iSyst, false);
+                    SetOutTreeBranchJetInfo(outTree, &EJI_SystVarDown[iSyst], -1 * iSyst, false);
+                }
+                //            cout << "iSyst b" << iSyst << endl;
+                if (InSystBound(iSyst, &systLB_MET, &systUB_MET)) {
+                    SetOutTreeBranchMETInfo(outTree, &EMI_PF_SystVarUp[iSyst],    1 * iSyst, false, true);
+                    SetOutTreeBranchMETInfo(outTree, &EMI_PF_SystVarDown[iSyst], -1 * iSyst, false, true);
+                }
+                //            cout << "iSyst c" << iSyst << endl;
+                if (InSystBound(iSyst, &systLB_SmearMET, &systUB_SmearMET)) {
+                    SetOutTreeBranchMETInfo(outTree, &SmearEMI_PF_SystVarUp[iSyst],    1 * iSyst, true, true);
+                    SetOutTreeBranchMETInfo(outTree, &SmearEMI_PF_SystVarDown[iSyst], -1 * iSyst, true, true);
+                }
+                
+                if (InSystBound(iSyst, &systLB_SmearMET, &systUB_SmearMET)) {
+                    SetOutTreeBranchSpecialMETInfo(outTree, &SmearHackEMI_PF_SystVarUp[iSyst],    1 * iSyst, true, true);
+                    SetOutTreeBranchSpecialMETInfo(outTree, &SmearHackEMI_PF_SystVarDown[iSyst], -1 * iSyst, true, true);
+                }
+                if (!PMRP.PSIV.useOldNTuple) {
+                    if (InSystBound(iSyst, &systLB_SmearMET, &systUB_SmearMET)) {
+                        SetOutTreeBranchSpecialMETInfo(outTree, &SmearHackEMI_PF_Old_SystVarUp[iSyst],    1 * iSyst, true, true, "_noType0");
+                        SetOutTreeBranchSpecialMETInfo(outTree, &SmearHackEMI_PF_Old_SystVarDown[iSyst], -1 * iSyst, true, true, "_noType0");
+                    }
+                }
+                //            cout << "iSyst d" << iSyst << endl;
+                if (InSystBound(iSyst, &systLB_SmearJet, &systUB_SmearJet)) {
+                    SetOutTreeBranchJetInfo(outTree, &SmearEJI_SystVarUp[iSyst],    1 * iSyst, true);
+                    SetOutTreeBranchJetInfo(outTree, &SmearEJI_SystVarDown[iSyst], -1 * iSyst, true);
+                }
+                
+                if (InSystBound(iSyst, &systLB_EDSI, &systUB_EDSI)) {
+                    SetOutTreeBranchDiStructureInfo(outTree, &EDSI_SystVarUp[iSyst],    1 * iSyst, false, true);
+                    SetOutTreeBranchDiStructureInfo(outTree, &EDSI_SystVarDown[iSyst], -1 * iSyst, false, true);
+                }
+                
+                if (InSystBound(iSyst, &systLB_SmearEDSI, &systUB_SmearEDSI)) {
+                    SetOutTreeBranchDiStructureInfo(outTree, &SmearEDSI_SystVarUp[iSyst],    1 * iSyst, true, true);
+                    SetOutTreeBranchDiStructureInfo(outTree, &SmearEDSI_SystVarDown[iSyst], -1 * iSyst, true, true);
+                }
+                /*
+                 not done yet
+                 if (InSystBound(iSyst, &systLB_SmearEDSI, &systUB_SmearEDSI)) {
+                 SetOutTreeBranchPassesCutInfo(outTree, &vecPFS_SystVarUp[iSyst],    1 * iSyst);
+                 SetOutTreeBranchPassesCutInfo(outTree, &vecPFS_SystVarDown[iSyst], -1 * iSyst);
+                 }
+                 */
             }
-            //            cout << "iSyst d" << iSyst << endl;
-            if (InSystBound(iSyst, &systLB_SmearJet, &systUB_SmearJet)) {
-                SetOutTreeBranchJetInfo(outTree, &SmearEJI_SystVarUp[iSyst],    1 * iSyst, true);
-                SetOutTreeBranchJetInfo(outTree, &SmearEJI_SystVarDown[iSyst], -1 * iSyst, true);
-            }
-            
-            if (InSystBound(iSyst, &systLB_EDSI, &systUB_EDSI)) {                
-                SetOutTreeBranchDiStructureInfo(outTree, &EDSI_SystVarUp[iSyst],    1 * iSyst, false, true);
-                SetOutTreeBranchDiStructureInfo(outTree, &EDSI_SystVarDown[iSyst], -1 * iSyst, false, true);
-            }
-            
-            if (InSystBound(iSyst, &systLB_SmearEDSI, &systUB_SmearEDSI)) {                
-                SetOutTreeBranchDiStructureInfo(outTree, &SmearEDSI_SystVarUp[iSyst],    1 * iSyst, true, true);
-                SetOutTreeBranchDiStructureInfo(outTree, &SmearEDSI_SystVarDown[iSyst], -1 * iSyst, true, true);
-            }
-            /*
-             not done yet
-             if (InSystBound(iSyst, &systLB_SmearEDSI, &systUB_SmearEDSI)) {                
-             SetOutTreeBranchPassesCutInfo(outTree, &vecPFS_SystVarUp[iSyst],    1 * iSyst);
-             SetOutTreeBranchPassesCutInfo(outTree, &vecPFS_SystVarDown[iSyst], -1 * iSyst);
-             }
-             */
         }
-        
         
         
         //        cout << "test5c " << endl;
         ///###GENMET Branches###/////
         outTree->Branch("TGenMET",                      &genMET);
-        outTree->Branch("TGenMETPhi",                   &genMETPhi);                
+        outTree->Branch("TGenMETPhi",                   &genMETPhi);
         
         SetOutTreeBranchGenLepton(outTree, &EGLPI);
         SetOutTreeBranchGenQuark(outTree, &EGQPI);
+        SetOutTreeBranchGenMT2Info(outTree, &EGMT2I);
     }
     cout << "--- Processing: " << fileTree.GetEntries() << " events" << endl;
     h_eventCount->Fill(1);
     h_eventCount->SetEntries(fileTree.GetEntries());
-    outputFile->cd();    
+    outputFile->cd();
     
     vector<PFJet> Jets;     // Will contain all jets not overlapping with isolated electrons or muons
     vector<Lepton> * vecIsoLeptons;
@@ -982,7 +1024,7 @@ int main( int argc, char* argv[] ) {
     
     vector< vector<Lepton> *> vecVecIsoLeptons_SystVarUp, vecVecIsoLeptons_SystVarDown, vecVecIsoLeptonsCentValMETPatsy_SystVarUp, vecVecIsoLeptonsCentValMETPatsy_SystVarDown;
     
-    vecVecIsoLeptons_SystVarUp.resize(numSysts + 1); 
+    vecVecIsoLeptons_SystVarUp.resize(numSysts + 1);
     vecVecIsoLeptons_SystVarDown.resize(numSysts + 1);
     vecVecIsoLeptonsCentValMETPatsy_SystVarUp.resize(numSysts + 1);
     vecVecIsoLeptonsCentValMETPatsy_SystVarDown.resize(numSysts + 1);
@@ -1003,7 +1045,7 @@ int main( int argc, char* argv[] ) {
     
     vector< vector<SmearPFJet>> vecVecGoodSmearJets_SystVarUp, vecVecGoodSmearJets_SystVarDown;
     vecVecGoodSmearJets_SystVarUp.resize(numSysts + 1);
-    vecVecGoodSmearJets_SystVarDown.resize(numSysts + 1);    
+    vecVecGoodSmearJets_SystVarDown.resize(numSysts + 1);
     
     vector<GenJet> * vecGoodGenJets;
     
@@ -1018,16 +1060,16 @@ int main( int argc, char* argv[] ) {
             roundMult = 10;
         }
     }
-    /////Iterate over events  
+    /////Iterate over events
     //    for (Long64_t ievt=0; ievt < 10;ievt++) {
     int modFactor = 1E4;
     //    int modFactor = 1;
     if (PMRP.RRL.nEvents < 0) {
-        cout << "running over all events " << endl;  
+        cout << "running over all events " << endl;
         PMRP.RRL.nEvents = fileTree.GetEntries();
     }
     else {
-        if (PMRP.RRL.nEvents > fileTree.GetEntries()) PMRP.RRL.nEvents = fileTree.GetEntries();        
+        if (PMRP.RRL.nEvents > fileTree.GetEntries()) PMRP.RRL.nEvents = fileTree.GetEntries();
         cout << "running on just " << PMRP.RRL.nEvents << " events " << endl;
     }
     if (PMRP.RRL.startPoint >= PMRP.RRL.nEvents) {
@@ -1048,19 +1090,16 @@ int main( int argc, char* argv[] ) {
         //    for (Long64_t ievt=0; ievt<100;ievt++) {
         vecIsoLeptons = new vector<Lepton>;
         //        Jets = new vector<PFJet>;
-        doEvent = true;        
+        doEvent = true;
         if (!PMRP.SMV.doData) {
-            
-            
             for (int iSyst = 1; iSyst <= numSysts; ++iSyst) {
-                if (InSystBound(iSyst, &systLB_Lepton, &systUB_Lepton)) {            
-                    vecVecIsoLeptonsCentValMETPatsy_SystVarUp[iSyst] = new vector<Lepton>;                    
-                    vecVecIsoLeptonsCentValMETPatsy_SystVarDown[iSyst] = new vector<Lepton>;                    
+                if (InSystBound(iSyst, &systLB_Lepton, &systUB_Lepton)) {
+                    vecVecIsoLeptonsCentValMETPatsy_SystVarUp[iSyst] = new vector<Lepton>;
+                    vecVecIsoLeptonsCentValMETPatsy_SystVarDown[iSyst] = new vector<Lepton>;
                     vecVecIsoLeptons_SystVarUp[iSyst] = new vector<Lepton>;
                     vecVecIsoLeptons_SystVarDown[iSyst] = new vector<Lepton>;
                 }
             }
-            
             doEvent_LepESUp = true;
             doEvent_LepESDown = true;
         }
@@ -1105,18 +1144,37 @@ int main( int argc, char* argv[] ) {
         }
         firstGoodVertZ = goodVertexSelection(VertZ, VertRho, VertNDOF,VertIsFake, EPI.nVtx);
         if (EPI.nVtx < 1) {
-            cout << "failed vertex cut " << endl; 
+            cout << "failed vertex cut " << endl;
             continue;
         }
         weight = 1.;
         //            cout << "test a " << endl;
         if (!PMRP.SMV.doData) {
             EGLPI.SetParticleInfo();
+            /*
+             cout << endl;
+             cout << "going to print electron info " << endl;
+             EGLPI.PrintInfo(0, 0, 1);
+             EGLPI.PrintInfo(0, 1, 1);
+             cout << "going to print gen muon info " << endl;
+             EGLPI.PrintInfo(1, 0, 1);
+             EGLPI.PrintInfo(1, 1, 1);
+             */
             //                cout << "test b " << endl;
             EGQPI.SetParticleInfo();
             //                cout << "test c " << endl;
             EGEWKPI.SetParticleInfo();
             //                cout << "test d " << endl;
+            /*
+             cout << "going to print lead b-quark status 1 " << endl;
+             EGQPI.PrintInfo(1, 0);
+             cout << "going to print sublead b-quark status 1 " << endl;
+             EGQPI.PrintInfo(1, 1);
+             
+             cout << "about to do MT2 calcs " << endl;
+             */
+            EGMT2I.SetGenMT2ll(&EGLPI, genMET, genMETPhi);
+            EGMT2I.SetGenMT2lb(&EGLPI, &EGQPI, genMET, genMETPhi);
         }
         /*
          for (unsigned int i = 0; i < genStopSt3En->size(); ++i) {
@@ -1140,7 +1198,7 @@ int main( int argc, char* argv[] ) {
          cout << "curr phi " << phi << endl;
          cout << "curr eta " << eta << endl;
          cout << "curr mass " << M << endl;
-         float ESq = E * E;                
+         float ESq = E * E;
          float MSq = M * M;
          float PZ = pt * TMath::SinH(eta);
          float PSq = PZ * PZ + pt * pt;
@@ -1157,7 +1215,7 @@ int main( int argc, char* argv[] ) {
             //                cout << "For RunNum " << RunNum << ", doEvent before? " << doEvent << endl;
             doEvent &= BadTrigRunCheck(BEI.runNumber);
             //                cout << "doEvent after? " << doEvent << endl;
-        }        
+        }
         h_CutFlow->Fill(1.);
         if (!PMRP.SMV.doData) {
             h_CutFlow_LepESUp->Fill(1);
@@ -1195,15 +1253,17 @@ int main( int argc, char* argv[] ) {
             EMI_PF_Special.PhiCorrection(PMRP.SMV.doData, EPI.nVtx, false, true);
         }
         
-        if (!PMRP.PSIV.useOldNTuple) {        
+        if (!PMRP.PSIV.useOldNTuple) {
             EMI_PF_Old.SetVars(&EMI_PF_noPhiCorr_Old);
             EMI_PF_Old.PhiCorrection(PMRP.SMV.doData, EPI.nVtx, false, true);
         }
         
         if (!PMRP.SMV.doData) {
-            for (int iSyst = 1; iSyst <= numSysts; ++iSyst) {
-                EMI_PF_SystVarUp[iSyst].SetVars(&EMI_PF);
-                EMI_PF_SystVarDown[iSyst].SetVars(&EMI_PF);
+            if (PMRP.SMV.doBookSyst) {
+                for (int iSyst = 1; iSyst <= numSysts; ++iSyst) {
+                    EMI_PF_SystVarUp[iSyst].SetVars(&EMI_PF);
+                    EMI_PF_SystVarDown[iSyst].SetVars(&EMI_PF);
+                }
             }
         }
         //        ElectronPickOvi(EEPs, EPI.eventRhoIso, vecIsoLeptons, PMRP.PSIV.levelLepVerbosity);
@@ -1212,35 +1272,37 @@ int main( int argc, char* argv[] ) {
         sort(vecIsoLeptons->begin(), vecIsoLeptons->end(), greater<Lepton>());
         LeptonPair(&ELI, vecIsoLeptons, PMRP.PSIV.levelLepVerbosity);
         doEvent = ELI.doEvent;
-        if (!PMRP.SMV.doData) {              
-            for (int iSyst = 1; iSyst <= numSysts; ++iSyst) {
-                if (InSystBound(iSyst, &systLB_Lepton, &systUB_Lepton)) {
-                    systLepESShiftUp =  iSyst == systLepES;
-                    systLepESShiftDown = -1 * systLepESShiftUp;                      
-                    //                    ElectronPickOviSyst(EEPs, EPI.eventRhoIso,  systLepESShiftUp, vecVecIsoLeptons_SystVarUp[iSyst], PMRP.PSIV.levelLepVerbosity, vecVecIsoLeptonsCentValMETPatsy_SystVarUp[iSyst]); 
-                    //                    MuonPickOviSyst(MEPs, firstGoodVertZ, systLepESShiftUp, vecVecIsoLeptons_SystVarUp[iSyst], PMRP.PSIV.levelLepVerbosity, vecVecIsoLeptonsCentValMETPatsy_SystVarUp[iSyst]);
-                    ElectronPickOviNew(EEPs, EPI.eventRhoIso, vecVecIsoLeptons_SystVarUp[iSyst], &ECI_Main, PMRP.SMV.keepLooseLeps, &ECI_Loose, PMRP.PSIV.levelLepVerbosity, systLepESShiftUp, vecVecIsoLeptonsCentValMETPatsy_SystVarUp[iSyst]); 
-                    MuonPickOviNew(MEPs, firstGoodVertZ, vecVecIsoLeptons_SystVarUp[iSyst], PMRP.SMV.keepLooseLeps, PMRP.PSIV.levelLepVerbosity, systLepESShiftUp, vecVecIsoLeptonsCentValMETPatsy_SystVarUp[iSyst]);                                                                        
-                    sort(vecVecIsoLeptons_SystVarUp[iSyst]->begin(), vecVecIsoLeptons_SystVarUp[iSyst]->end(), greater<Lepton>());
-                    LeptonPair(&ELI_SystVarUp[iSyst], vecVecIsoLeptons_SystVarUp[iSyst], PMRP.PSIV.levelLepVerbosity);
-                    //                        EMI_PF_SystVarUp[iSyst].SetVars(&EMI_PF);
-                    EMI_PF_SystVarUp[iSyst].SystShiftMET(vecVecIsoLeptonsCentValMETPatsy_SystVarUp[iSyst], vecVecIsoLeptons_SystVarUp[iSyst], &EMI_PF);                        
-                    
-                    ElectronPickOviNew(EEPs, EPI.eventRhoIso, vecVecIsoLeptons_SystVarDown[iSyst], &ECI_Main, PMRP.SMV.keepLooseLeps, &ECI_Loose, PMRP.PSIV.levelLepVerbosity, systLepESShiftDown, vecVecIsoLeptonsCentValMETPatsy_SystVarDown[iSyst]); 
-                    MuonPickOviNew(MEPs, firstGoodVertZ, vecVecIsoLeptons_SystVarDown[iSyst], PMRP.SMV.keepLooseLeps, PMRP.PSIV.levelLepVerbosity, systLepESShiftDown, vecVecIsoLeptonsCentValMETPatsy_SystVarDown[iSyst]);
-                    //ElectronPickOviSyst(EEPs, EPI.eventRhoIso, systLepESShiftDown, vecVecIsoLeptons_SystVarDown[iSyst], PMRP.PSIV.levelLepVerbosity, vecVecIsoLeptonsCentValMETPatsy_SystVarDown[iSyst]);                    
-                    //                    MuonPickOviSyst(MEPs, firstGoodVertZ, systLepESShiftDown, vecVecIsoLeptons_SystVarDown[iSyst], PMRP.PSIV.levelLepVerbosity, vecVecIsoLeptonsCentValMETPatsy_SystVarDown[iSyst]);                          
-                    sort(vecVecIsoLeptons_SystVarDown[iSyst]->begin(), vecVecIsoLeptons_SystVarDown[iSyst]->end(), greater<Lepton>());
-                    LeptonPair(&ELI_SystVarDown[iSyst], vecVecIsoLeptons_SystVarDown[iSyst], PMRP.PSIV.levelLepVerbosity);
-                    //                        EMI_PF_SystVarDown[iSyst].SetVars(&EMI_PF);
-                    EMI_PF_SystVarDown[iSyst].SystShiftMET(vecVecIsoLeptonsCentValMETPatsy_SystVarDown[iSyst], vecVecIsoLeptons_SystVarDown[iSyst], &EMI_PF);
+        if (!PMRP.SMV.doData) {
+            if (PMRP.SMV.doBookSyst) {
+                for (int iSyst = 1; iSyst <= numSysts; ++iSyst) {
+                    if (InSystBound(iSyst, &systLB_Lepton, &systUB_Lepton)) {
+                        systLepESShiftUp =  iSyst == systLepES;
+                        systLepESShiftDown = -1 * systLepESShiftUp;
+                        //                    ElectronPickOviSyst(EEPs, EPI.eventRhoIso,  systLepESShiftUp, vecVecIsoLeptons_SystVarUp[iSyst], PMRP.PSIV.levelLepVerbosity, vecVecIsoLeptonsCentValMETPatsy_SystVarUp[iSyst]);
+                        //                    MuonPickOviSyst(MEPs, firstGoodVertZ, systLepESShiftUp, vecVecIsoLeptons_SystVarUp[iSyst], PMRP.PSIV.levelLepVerbosity, vecVecIsoLeptonsCentValMETPatsy_SystVarUp[iSyst]);
+                        ElectronPickOviNew(EEPs, EPI.eventRhoIso, vecVecIsoLeptons_SystVarUp[iSyst], &ECI_Main, PMRP.SMV.keepLooseLeps, &ECI_Loose, PMRP.PSIV.levelLepVerbosity, systLepESShiftUp, vecVecIsoLeptonsCentValMETPatsy_SystVarUp[iSyst]);
+                        MuonPickOviNew(MEPs, firstGoodVertZ, vecVecIsoLeptons_SystVarUp[iSyst], PMRP.SMV.keepLooseLeps, PMRP.PSIV.levelLepVerbosity, systLepESShiftUp, vecVecIsoLeptonsCentValMETPatsy_SystVarUp[iSyst]);
+                        sort(vecVecIsoLeptons_SystVarUp[iSyst]->begin(), vecVecIsoLeptons_SystVarUp[iSyst]->end(), greater<Lepton>());
+                        LeptonPair(&ELI_SystVarUp[iSyst], vecVecIsoLeptons_SystVarUp[iSyst], PMRP.PSIV.levelLepVerbosity);
+                        //                        EMI_PF_SystVarUp[iSyst].SetVars(&EMI_PF);
+                        EMI_PF_SystVarUp[iSyst].SystShiftMET(vecVecIsoLeptonsCentValMETPatsy_SystVarUp[iSyst], vecVecIsoLeptons_SystVarUp[iSyst], &EMI_PF);
+                        
+                        ElectronPickOviNew(EEPs, EPI.eventRhoIso, vecVecIsoLeptons_SystVarDown[iSyst], &ECI_Main, PMRP.SMV.keepLooseLeps, &ECI_Loose, PMRP.PSIV.levelLepVerbosity, systLepESShiftDown, vecVecIsoLeptonsCentValMETPatsy_SystVarDown[iSyst]);
+                        MuonPickOviNew(MEPs, firstGoodVertZ, vecVecIsoLeptons_SystVarDown[iSyst], PMRP.SMV.keepLooseLeps, PMRP.PSIV.levelLepVerbosity, systLepESShiftDown, vecVecIsoLeptonsCentValMETPatsy_SystVarDown[iSyst]);
+                        //ElectronPickOviSyst(EEPs, EPI.eventRhoIso, systLepESShiftDown, vecVecIsoLeptons_SystVarDown[iSyst], PMRP.PSIV.levelLepVerbosity, vecVecIsoLeptonsCentValMETPatsy_SystVarDown[iSyst]);
+                        //                    MuonPickOviSyst(MEPs, firstGoodVertZ, systLepESShiftDown, vecVecIsoLeptons_SystVarDown[iSyst], PMRP.PSIV.levelLepVerbosity, vecVecIsoLeptonsCentValMETPatsy_SystVarDown[iSyst]);
+                        sort(vecVecIsoLeptons_SystVarDown[iSyst]->begin(), vecVecIsoLeptons_SystVarDown[iSyst]->end(), greater<Lepton>());
+                        LeptonPair(&ELI_SystVarDown[iSyst], vecVecIsoLeptons_SystVarDown[iSyst], PMRP.PSIV.levelLepVerbosity);
+                        //                        EMI_PF_SystVarDown[iSyst].SetVars(&EMI_PF);
+                        EMI_PF_SystVarDown[iSyst].SystShiftMET(vecVecIsoLeptonsCentValMETPatsy_SystVarDown[iSyst], vecVecIsoLeptons_SystVarDown[iSyst], &EMI_PF);
+                    }
                 }
             }
         }
         doEvent_LepESUp = ELI_SystVarUp[systLepES].doEvent;
         doEvent_LepESDown = ELI_SystVarDown[systLepES].doEvent;
         if (!doEvent) {
-            if (PMRP.SMV.doData) { 
+            if (PMRP.SMV.doData || !PMRP.SMV.doBookSyst) {
                 continue;
             }
             else if (!doEvent_LepESUp && !doEvent_LepESDown) {
@@ -1249,15 +1311,17 @@ int main( int argc, char* argv[] ) {
         }
         if (!PMRP.SMV.doData) {
             ELI.FindMatchingGenLeps(&EGLPI.GLEPs);
-            for (int iSyst = 1; iSyst <= numSysts; ++iSyst) {
-                if (InSystBound(iSyst, &systLB_Lepton, &systUB_Lepton)) {
-                    ELI_SystVarUp[iSyst].FindMatchingGenLeps(&EGLPI.GLEPs);
-                    ELI_SystVarDown[iSyst].FindMatchingGenLeps(&EGLPI.GLEPs);
+            if (PMRP.SMV.doBookSyst) {
+                for (int iSyst = 1; iSyst <= numSysts; ++iSyst) {
+                    if (InSystBound(iSyst, &systLB_Lepton, &systUB_Lepton)) {
+                        ELI_SystVarUp[iSyst].FindMatchingGenLeps(&EGLPI.GLEPs);
+                        ELI_SystVarDown[iSyst].FindMatchingGenLeps(&EGLPI.GLEPs);
+                    }
                 }
             }
         }
         Jets.resize(0);
-        JetInfo(&Jets, vecIsoLeptons, PFJEPs, &JCI,  0., h_JetESUp);            
+        JetInfo(&Jets, vecIsoLeptons, PFJEPs, &JCI,  0., h_JetESUp);
         sort(Jets.begin(), Jets.end(), greater<PFJet>());
         JetKinematicsCut(&EJI, &Jets, BTagSFUtilToUse, PMRP.SMV.doData);
         if (!PMRP.SMV.doData) {
@@ -1279,7 +1343,7 @@ int main( int argc, char* argv[] ) {
                     JetSmearMatchUnSmear(&SmearJets, SmearPFJEPs, &Jets, vecGoodGenJets, vecDeltaEnUnsmearJetSmearJet_GenMatch, vecDeltaEnUnsmearJetSmearJet_NotGenMatch, vecDeltaEnUnsmearJetGenMatchJet_SmearMatch, vecGoodUnsmearJetEn_SmearMatch);
                 }
                 else {
-                    JetSmearMatchUnSmear(&SmearJets, SmearPFJEPs, &Jets, vecGoodGenJets, h_DeltaPtSmearUnsmear_GenMatched, h_DeltaPtSmearUnsmear_NotGenMatched);                    
+                    JetSmearMatchUnSmear(&SmearJets, SmearPFJEPs, &Jets, vecGoodGenJets, h_DeltaPtSmearUnsmear_GenMatched, h_DeltaPtSmearUnsmear_NotGenMatched);
                 }
                 Jet_ScaleUpSmearing_SF(&SmearJets, &SmearJets_Scaled, SmearJetSF);
                 
@@ -1310,7 +1374,7 @@ int main( int argc, char* argv[] ) {
              cout << "SmearEJI_SystVarUp[systJetSmear] NJets " << SmearEJI_SystVarUp[systJetSmear].EventNJets << endl;
              cout << "SmearEJI_SystVarDown[systJetSmear] Jet 0 Pt " << SmearEJI_SystVarDown[systJetSmear].vecEventJets[0].BVC.Vec_Pt << endl;
              cout << "SmearEJI_SystVarDown[systJetSmear] NJets " << SmearEJI_SystVarDown[systJetSmear].EventNJets << endl;
-             */                   
+             */
             SmearHackEMI_PF.SetVars(&EMI_PF);
             
             if (!PMRP.PSIV.useOldNTuple) {
@@ -1331,82 +1395,85 @@ int main( int argc, char* argv[] ) {
             SmearEMI_PF_SystVarDown[systLepES].SetVars(&SmearEMI_PF);
             
             
-            
-            for (int iSyst = 1; iSyst <= numSysts; ++iSyst) {          
-                if (InSystBound(iSyst, &systLB_Jet, &systUB_Jet)) {
-                    systJetESShiftUp =  iSyst == systJetES;
-                    systJetESShiftDown = -1 * systJetESShiftUp;
-                    systBTagEffSFShiftUp = iSyst == systBTagEffSF;
-                    systBTagEffSFShiftDown = -1 * systBTagEffSFShiftUp;
-                    systBMisTagSFShiftUp = iSyst == systBMisTagSF;
-                    systBMisTagSFShiftDown = -1 * systBMisTagSFShiftUp;
-                    
-                    systJetSmearShiftUp = iSyst == systJetSmear;
-                    systJetSmearShiftDown = -1 * systJetSmearShiftUp;
-                    
-                    if (systBMisTagSFShiftUp || systBTagEffSFShiftUp) {
-                        JetKinematicsCutBTagSyst(&EJI_SystVarUp[iSyst], &Jets, BTagSFUtilToUse, systBTagEffSFShiftUp, systBMisTagSFShiftUp, PMRP.SRS.isSignal);
-                        JetKinematicsCutBTagSyst(&EJI_SystVarDown[iSyst], &Jets, BTagSFUtilToUse, systBTagEffSFShiftDown, systBMisTagSFShiftDown, PMRP.SRS.isSignal);
+            if (PMRP.SMV.doBookSyst) {
+                for (int iSyst = 1; iSyst <= numSysts; ++iSyst) {
+                    if (InSystBound(iSyst, &systLB_Jet, &systUB_Jet)) {
+                        systJetESShiftUp =  iSyst == systJetES;
+                        systJetESShiftDown = -1 * systJetESShiftUp;
+                        systBTagEffSFShiftUp = iSyst == systBTagEffSF;
+                        systBTagEffSFShiftDown = -1 * systBTagEffSFShiftUp;
+                        systBMisTagSFShiftUp = iSyst == systBMisTagSF;
+                        systBMisTagSFShiftDown = -1 * systBMisTagSFShiftUp;
                         
+                        systJetSmearShiftUp = iSyst == systJetSmear;
+                        systJetSmearShiftDown = -1 * systJetSmearShiftUp;
                         
-                        //smeared jet guys
-                        JetKinematicsCutSmearedJetBTagSyst(&SmearEJI_SystVarUp[iSyst], &SmearJets_Scaled, BTagSFUtilToUse, systBTagEffSFShiftUp, systBMisTagSFShiftUp, PMRP.SRS.isSignal);
-                        JetKinematicsCutSmearedJetBTagSyst(&SmearEJI_SystVarDown[iSyst], &SmearJets_Scaled, BTagSFUtilToUse, systBTagEffSFShiftDown, systBMisTagSFShiftDown, PMRP.SRS.isSignal);
-                    }
-                    if (systJetESShiftUp) {
-                        if (PMRP.PSIV.levelJetVerbosity) {
-                            cout << "line 1274 " << endl;
+                        if (systBMisTagSFShiftUp || systBTagEffSFShiftUp) {
+                            JetKinematicsCutBTagSyst(&EJI_SystVarUp[iSyst], &Jets, BTagSFUtilToUse, systBTagEffSFShiftUp, systBMisTagSFShiftUp, PMRP.SRS.isSignal);
+                            JetKinematicsCutBTagSyst(&EJI_SystVarDown[iSyst], &Jets, BTagSFUtilToUse, systBTagEffSFShiftDown, systBMisTagSFShiftDown, PMRP.SRS.isSignal);
+                            
+                            
+                            //smeared jet guys
+                            JetKinematicsCutSmearedJetBTagSyst(&SmearEJI_SystVarUp[iSyst], &SmearJets_Scaled, BTagSFUtilToUse, systBTagEffSFShiftUp, systBMisTagSFShiftUp, PMRP.SRS.isSignal);
+                            JetKinematicsCutSmearedJetBTagSyst(&SmearEJI_SystVarDown[iSyst], &SmearJets_Scaled, BTagSFUtilToUse, systBTagEffSFShiftDown, systBMisTagSFShiftDown, PMRP.SRS.isSignal);
                         }
-                        vecVecGoodJets_SystVarUp[iSyst].resize(0);
-                        JetInfo(&vecVecGoodJets_SystVarUp[iSyst], vecIsoLeptons, PFJEPs, &JCI, systJetESShiftUp, h_JetESUp);
-                        sort(vecVecGoodJets_SystVarUp[iSyst].begin(), vecVecGoodJets_SystVarUp[iSyst].end(), greater<PFJet>());
-                        JetKinematicsCut(&EJI_SystVarUp[iSyst], &vecVecGoodJets_SystVarUp[iSyst], BTagSFUtilToUse, PMRP.SMV.doData);
-                        EMI_PF_SystVarUp[iSyst].SystShiftMET(&Jets, &vecVecGoodJets_SystVarUp[iSyst], &EMI_PF, PMRP.PSIV.levelJetVerbosity);
-                        
-                        
-                        if (PMRP.PSIV.levelJetVerbosity) {
-                            cout << "line 1284 " << endl;
+                        if (systJetESShiftUp) {
+                            if (PMRP.PSIV.levelJetVerbosity) {
+                                cout << "line 1274 " << endl;
+                            }
+                            vecVecGoodJets_SystVarUp[iSyst].resize(0);
+                            JetInfo(&vecVecGoodJets_SystVarUp[iSyst], vecIsoLeptons, PFJEPs, &JCI, systJetESShiftUp, h_JetESUp);
+                            sort(vecVecGoodJets_SystVarUp[iSyst].begin(), vecVecGoodJets_SystVarUp[iSyst].end(), greater<PFJet>());
+                            JetKinematicsCut(&EJI_SystVarUp[iSyst], &vecVecGoodJets_SystVarUp[iSyst], BTagSFUtilToUse, PMRP.SMV.doData);
+                            EMI_PF_SystVarUp[iSyst].SystShiftMET(&Jets, &vecVecGoodJets_SystVarUp[iSyst], &EMI_PF, PMRP.PSIV.levelJetVerbosity);
+                            
+                            
+                            if (PMRP.PSIV.levelJetVerbosity) {
+                                cout << "line 1284 " << endl;
+                            }
+                            vecVecGoodJets_SystVarDown[iSyst].resize(0);
+                            JetInfo(&vecVecGoodJets_SystVarDown[iSyst], vecIsoLeptons, PFJEPs, &JCI, systJetESShiftDown, h_JetESDown);
+                            sort(vecVecGoodJets_SystVarDown[iSyst].begin(), vecVecGoodJets_SystVarDown[iSyst].end(), greater<PFJet>());
+                            JetKinematicsCut(&EJI_SystVarDown[iSyst], &vecVecGoodJets_SystVarDown[iSyst], BTagSFUtilToUse, PMRP.SMV.doData);
+                            EMI_PF_SystVarDown[iSyst].SystShiftMET(&Jets, &vecVecGoodJets_SystVarDown[iSyst], &EMI_PF, PMRP.PSIV.levelJetVerbosity);
+                            
+                            
+                            // smeared jets
+                            JetKinematicsCutSmearedJetESSyst(&SmearEJI_SystVarUp[iSyst], &SmearJets, BTagSFUtilToUse, systJetESShiftUp, h_JetESUp);
+                            JetKinematicsCutSmearedJetESSyst(&SmearEJI_SystVarDown[iSyst], &SmearJets, BTagSFUtilToUse, systJetESShiftDown, h_JetESDown);
                         }
-                        vecVecGoodJets_SystVarDown[iSyst].resize(0);
-                        JetInfo(&vecVecGoodJets_SystVarDown[iSyst], vecIsoLeptons, PFJEPs, &JCI, systJetESShiftDown, h_JetESDown);
-                        sort(vecVecGoodJets_SystVarDown[iSyst].begin(), vecVecGoodJets_SystVarDown[iSyst].end(), greater<PFJet>());
-                        JetKinematicsCut(&EJI_SystVarDown[iSyst], &vecVecGoodJets_SystVarDown[iSyst], BTagSFUtilToUse, PMRP.SMV.doData);
-                        EMI_PF_SystVarDown[iSyst].SystShiftMET(&Jets, &vecVecGoodJets_SystVarDown[iSyst], &EMI_PF, PMRP.PSIV.levelJetVerbosity);                            
-                        
-                        
-                        // smeared jets
-                        JetKinematicsCutSmearedJetESSyst(&SmearEJI_SystVarUp[iSyst], &SmearJets, BTagSFUtilToUse, systJetESShiftUp, h_JetESUp);
-                        JetKinematicsCutSmearedJetESSyst(&SmearEJI_SystVarDown[iSyst], &SmearJets, BTagSFUtilToUse, systJetESShiftDown, h_JetESDown);
                     }
-                }
-                if (iSyst == systJetSmear) {
-                    if (PMRP.PSIV.levelJetVerbosity) {
-                        cout << "setting these guys to equal EJI " << endl;                        
+                    if (iSyst == systJetSmear) {
+                        if (PMRP.PSIV.levelJetVerbosity) {
+                            cout << "setting these guys to equal EJI " << endl;
+                        }
+                        EJI_SystVarUp[iSyst] = EJI;
+                        EJI_SystVarDown[iSyst] = EJI;
                     }
-                    EJI_SystVarUp[iSyst] = EJI;
-                    EJI_SystVarDown[iSyst] = EJI;
-                }
-                if (InSystBound(iSyst, &systLB_SmearMET, &systUB_SmearMET)) {
-                    SmearHackEMI_PF_SystVarUp[iSyst].SetVars(&EMI_PF);
-                    SmearHackEMI_PF_SystVarDown[iSyst].SetVars(&EMI_PF);
-                }
-                if (!PMRP.PSIV.useOldNTuple) {
                     if (InSystBound(iSyst, &systLB_SmearMET, &systUB_SmearMET)) {
-                        SmearHackEMI_PF_Old_SystVarUp[iSyst].SetVars(&EMI_PF_Old);
-                        SmearHackEMI_PF_Old_SystVarDown[iSyst].SetVars(&EMI_PF_Old);
+                        SmearHackEMI_PF_SystVarUp[iSyst].SetVars(&EMI_PF);
+                        SmearHackEMI_PF_SystVarDown[iSyst].SetVars(&EMI_PF);
+                    }
+                    if (!PMRP.PSIV.useOldNTuple) {
+                        if (InSystBound(iSyst, &systLB_SmearMET, &systUB_SmearMET)) {
+                            SmearHackEMI_PF_Old_SystVarUp[iSyst].SetVars(&EMI_PF_Old);
+                            SmearHackEMI_PF_Old_SystVarDown[iSyst].SetVars(&EMI_PF_Old);
+                        }
                     }
                 }
             }
-            if (PMRP.PSIV.useOldNTuple) {                                        
+            if (PMRP.PSIV.useOldNTuple) {
                 SmearEJI = EJI;
-                for (int iSyst = 1; iSyst <= numSysts; ++iSyst) {          
-                    if (InSystBound(iSyst, &systLB_Jet, &systUB_Jet)) {
-                        SmearEJI_SystVarUp[iSyst] = EJI_SystVarUp[iSyst];
-                        SmearEJI_SystVarDown[iSyst] = EJI_SystVarDown[iSyst];
-                    }
-                    else {
-                        SmearEJI_SystVarUp[iSyst] = EJI;
-                        SmearEJI_SystVarDown[iSyst] = EJI;
+                if (PMRP.SMV.doBookSyst) {
+                    for (int iSyst = 1; iSyst <= numSysts; ++iSyst) {
+                        if (InSystBound(iSyst, &systLB_Jet, &systUB_Jet)) {
+                            SmearEJI_SystVarUp[iSyst] = EJI_SystVarUp[iSyst];
+                            SmearEJI_SystVarDown[iSyst] = EJI_SystVarDown[iSyst];
+                        }
+                        else {
+                            SmearEJI_SystVarUp[iSyst] = EJI;
+                            SmearEJI_SystVarDown[iSyst] = EJI;
+                        }
                     }
                 }
             }
@@ -1429,19 +1496,19 @@ int main( int argc, char* argv[] ) {
                  METComponents(SmearMET_JetSmearUp, SmearMET_Phi_JetSmearUp, SmearMETX_JetSmearUp, SmearMETY_JetSmearUp, 1);
                  METComponents(SmearMET_JetSmearDown, SmearMET_Phi_JetSmearDown, SmearMETX_JetSmearDown, SmearMETY_JetSmearDown, 1);
                  METComponents(SmearMET_UncESUp, SmearMET_Phi_UncESUp, SmearMETX_UncESUp, SmearMETY_UncESUp, 1);
-                 METComponents(SmearMET_UncESDown, SmearMET_Phi_UncESDown, SmearMETX_UncESDown, SmearMETY_UncESDown, 1);            
+                 METComponents(SmearMET_UncESDown, SmearMET_Phi_UncESDown, SmearMETX_UncESDown, SmearMETY_UncESDown, 1);
                  
                  SmearMETX              += DeltaMETXY(vecOneDeeMETXSmearHist,          METXSmearHist2D,          MET_Corr);
                  SmearMETX_JetSmearUp   += DeltaMETXY(vecOneDeeMETXSmearJERUpHist,     METXSmearJERUpHist2D,     MET_Corr);
-                 SmearMETX_JetSmearDown += DeltaMETXY(vecOneDeeMETXSmearJERDownHist,   METXSmearJERDownHist2D,   MET_Corr);                        
+                 SmearMETX_JetSmearDown += DeltaMETXY(vecOneDeeMETXSmearJERDownHist,   METXSmearJERDownHist2D,   MET_Corr);
                  SmearMETX_UncESUp      += DeltaMETXY(vecOneDeeMETXSmearUncESUpHist,   METXSmearUncESUpHist2D,   MET_Corr);
                  SmearMETX_UncESDown    += DeltaMETXY(vecOneDeeMETXSmearUncESDownHist, METXSmearUncESDownHist2D, MET_Corr);
                  
                  SmearMETY              += DeltaMETXY(vecOneDeeMETYSmearHist,          METYSmearHist2D,          MET_Corr);
                  SmearMETY_JetSmearUp   += DeltaMETXY(vecOneDeeMETYSmearJERUpHist,     METYSmearJERUpHist2D,     MET_Corr);
-                 SmearMETY_JetSmearDown += DeltaMETXY(vecOneDeeMETYSmearJERDownHist,   METYSmearJERDownHist2D,   MET_Corr);                        
+                 SmearMETY_JetSmearDown += DeltaMETXY(vecOneDeeMETYSmearJERDownHist,   METYSmearJERDownHist2D,   MET_Corr);
                  SmearMETY_UncESUp      += DeltaMETXY(vecOneDeeMETYSmearUncESUpHist,   METYSmearUncESUpHist2D,   MET_Corr);
-                 SmearMETY_UncESDown    += DeltaMETXY(vecOneDeeMETYSmearUncESDownHist, METYSmearUncESDownHist2D, MET_Corr);                        
+                 SmearMETY_UncESDown    += DeltaMETXY(vecOneDeeMETYSmearUncESDownHist, METYSmearUncESDownHist2D, MET_Corr);
                  
                  METComponents(SmearMET, SmearMET_Phi, SmearMETX, SmearMETY, 0);
                  METComponents(SmearMET_JetSmearUp, SmearMET_Phi_JetSmearUp, SmearMETX_JetSmearUp, SmearMETY_JetSmearUp, 0);
@@ -1458,166 +1525,169 @@ int main( int argc, char* argv[] ) {
                     METPhiSmearHist2D_ToUse = METPhiSmearHist2D_HighJet;
                     
                     vecOneDeeMETSmearHist_ToUse = vecOneDeeMETSmearHist_HighJet;
-                    vecOneDeeMETPhiSmearHist_ToUse = vecOneDeeMETPhiSmearHist_HighJet;                        
+                    vecOneDeeMETPhiSmearHist_ToUse = vecOneDeeMETPhiSmearHist_HighJet;
                 }
-                else {                        
+                else {
                     METSmearHist2D_ToUse = METSmearHist2D_LowJet;
                     METPhiSmearHist2D_ToUse = METPhiSmearHist2D_LowJet;
                     
                     vecOneDeeMETSmearHist_ToUse = vecOneDeeMETSmearHist_LowJet;
-                    vecOneDeeMETPhiSmearHist_ToUse = vecOneDeeMETPhiSmearHist_LowJet; 
+                    vecOneDeeMETPhiSmearHist_ToUse = vecOneDeeMETPhiSmearHist_LowJet;
                 }
                 // do the by-hand smearing
                 SmearHackEMI_PF.EventMET += DeltaMET(vecOneDeeMETSmearHist_ToUse,        METSmearHist2D_ToUse,    MET_Corr, 0, 1.3);
-                SmearHackEMI_PF.EventMETPhi  += DeltaMET(vecOneDeeMETPhiSmearHist_ToUse, METPhiSmearHist2D_ToUse, MET_Corr, 1, 1.3);  
+                SmearHackEMI_PF.EventMETPhi  += DeltaMET(vecOneDeeMETPhiSmearHist_ToUse, METPhiSmearHist2D_ToUse, MET_Corr, 1, 1.3);
                 CorrectMETPhi(SmearHackEMI_PF.EventMETPhi);
                 
                 if (!PMRP.PSIV.useOldNTuple) {
                     SmearHackEMI_PF_Old.EventMET += DeltaMET(vecOneDeeMETSmearHist_ToUse,        METSmearHist2D_ToUse,    MET_Corr_Old, 0, 1.3);
-                    SmearHackEMI_PF_Old.EventMETPhi  += DeltaMET(vecOneDeeMETPhiSmearHist_ToUse, METPhiSmearHist2D_ToUse, MET_Corr_Old, 1, 1.3); 
+                    SmearHackEMI_PF_Old.EventMETPhi  += DeltaMET(vecOneDeeMETPhiSmearHist_ToUse, METPhiSmearHist2D_ToUse, MET_Corr_Old, 1, 1.3);
                     CorrectMETPhi(SmearHackEMI_PF_Old.EventMETPhi);
                 }
-                for (int iSyst = 1; iSyst <= numSysts; ++iSyst) {
-                    if (InSystBound(iSyst, &systLB_SmearMET, &systUB_SmearMET)) {
-                        systUncESShiftUp = iSyst == systUncES;
-                        systUncESShiftDown = -1 * systUncESShiftUp;
-                        systJetSmearShiftUp = iSyst == systJetSmear;
-                        systJetSmearShiftDown = -1 * systJetSmearShiftUp;
-                        
-                        if (systJetSmearShiftUp || systUncESShiftUp) {
-                            // same thing as above -- condition on number of jets, but choose instead from the appropriate 
-                            // systematic varied smearing template
-                            if (systJetSmearShiftUp) {
-                                if (EJI.EventNJets > 1) {
-                                    METSmearHist2D_ToUse_SystVarUp = METSmearJERUpHist2D_HighJet;
-                                    METPhiSmearHist2D_ToUse_SystVarUp = METPhiSmearJERUpHist2D_HighJet;
-                                    
-                                    vecOneDeeMETSmearHist_ToUse_SystVarUp = vecOneDeeMETSmearJERUpHist_HighJet;
-                                    vecOneDeeMETPhiSmearHist_ToUse_SystVarUp = vecOneDeeMETPhiSmearJERUpHist_HighJet;
-                                    
-                                    METSmearHist2D_ToUse_SystVarDown = METSmearJERDownHist2D_HighJet;
-                                    METPhiSmearHist2D_ToUse_SystVarDown = METPhiSmearJERDownHist2D_HighJet;
-                                    
-                                    vecOneDeeMETSmearHist_ToUse_SystVarDown = vecOneDeeMETSmearJERDownHist_HighJet;
-                                    vecOneDeeMETPhiSmearHist_ToUse_SystVarDown = vecOneDeeMETPhiSmearJERDownHist_HighJet;                                         
+                if (PMRP.SMV.doBookSyst) {
+                    for (int iSyst = 1; iSyst <= numSysts; ++iSyst) {
+                        if (InSystBound(iSyst, &systLB_SmearMET, &systUB_SmearMET)) {
+                            systUncESShiftUp = iSyst == systUncES;
+                            systUncESShiftDown = -1 * systUncESShiftUp;
+                            systJetSmearShiftUp = iSyst == systJetSmear;
+                            systJetSmearShiftDown = -1 * systJetSmearShiftUp;
+                            
+                            if (systJetSmearShiftUp || systUncESShiftUp) {
+                                // same thing as above -- condition on number of jets, but choose instead from the appropriate
+                                // systematic varied smearing template
+                                if (systJetSmearShiftUp) {
+                                    if (EJI.EventNJets > 1) {
+                                        METSmearHist2D_ToUse_SystVarUp = METSmearJERUpHist2D_HighJet;
+                                        METPhiSmearHist2D_ToUse_SystVarUp = METPhiSmearJERUpHist2D_HighJet;
+                                        
+                                        vecOneDeeMETSmearHist_ToUse_SystVarUp = vecOneDeeMETSmearJERUpHist_HighJet;
+                                        vecOneDeeMETPhiSmearHist_ToUse_SystVarUp = vecOneDeeMETPhiSmearJERUpHist_HighJet;
+                                        
+                                        METSmearHist2D_ToUse_SystVarDown = METSmearJERDownHist2D_HighJet;
+                                        METPhiSmearHist2D_ToUse_SystVarDown = METPhiSmearJERDownHist2D_HighJet;
+                                        
+                                        vecOneDeeMETSmearHist_ToUse_SystVarDown = vecOneDeeMETSmearJERDownHist_HighJet;
+                                        vecOneDeeMETPhiSmearHist_ToUse_SystVarDown = vecOneDeeMETPhiSmearJERDownHist_HighJet;
+                                    }
+                                    else {
+                                        METSmearHist2D_ToUse_SystVarUp = METSmearJERUpHist2D_LowJet;
+                                        METPhiSmearHist2D_ToUse_SystVarUp = METPhiSmearJERUpHist2D_LowJet;
+                                        
+                                        vecOneDeeMETSmearHist_ToUse_SystVarUp = vecOneDeeMETSmearJERUpHist_LowJet;
+                                        vecOneDeeMETPhiSmearHist_ToUse_SystVarUp = vecOneDeeMETPhiSmearJERUpHist_LowJet;
+                                        
+                                        METSmearHist2D_ToUse_SystVarDown = METSmearJERDownHist2D_LowJet;
+                                        METPhiSmearHist2D_ToUse_SystVarDown = METPhiSmearJERDownHist2D_LowJet;
+                                        
+                                        vecOneDeeMETSmearHist_ToUse_SystVarDown = vecOneDeeMETSmearJERDownHist_LowJet;
+                                        vecOneDeeMETPhiSmearHist_ToUse_SystVarDown = vecOneDeeMETPhiSmearJERDownHist_LowJet;
+                                    }
                                 }
-                                else {
-                                    METSmearHist2D_ToUse_SystVarUp = METSmearJERUpHist2D_LowJet;
-                                    METPhiSmearHist2D_ToUse_SystVarUp = METPhiSmearJERUpHist2D_LowJet;
-                                    
-                                    vecOneDeeMETSmearHist_ToUse_SystVarUp = vecOneDeeMETSmearJERUpHist_LowJet;
-                                    vecOneDeeMETPhiSmearHist_ToUse_SystVarUp = vecOneDeeMETPhiSmearJERUpHist_LowJet;
-                                    
-                                    METSmearHist2D_ToUse_SystVarDown = METSmearJERDownHist2D_LowJet;
-                                    METPhiSmearHist2D_ToUse_SystVarDown = METPhiSmearJERDownHist2D_LowJet;
-                                    
-                                    vecOneDeeMETSmearHist_ToUse_SystVarDown = vecOneDeeMETSmearJERDownHist_LowJet;
-                                    vecOneDeeMETPhiSmearHist_ToUse_SystVarDown = vecOneDeeMETPhiSmearJERDownHist_LowJet;
+                                else if (systUncESShiftUp) {
+                                    if (EJI.EventNJets > 1) {
+                                        METSmearHist2D_ToUse_SystVarUp = METSmearUncESUpHist2D_HighJet;
+                                        METPhiSmearHist2D_ToUse_SystVarUp = METPhiSmearUncESUpHist2D_HighJet;
+                                        
+                                        vecOneDeeMETSmearHist_ToUse_SystVarUp = vecOneDeeMETSmearUncESUpHist_HighJet;
+                                        vecOneDeeMETPhiSmearHist_ToUse_SystVarUp = vecOneDeeMETPhiSmearUncESUpHist_HighJet;
+                                        
+                                        METSmearHist2D_ToUse_SystVarDown = METSmearUncESDownHist2D_HighJet;
+                                        METPhiSmearHist2D_ToUse_SystVarDown = METPhiSmearUncESDownHist2D_HighJet;
+                                        
+                                        vecOneDeeMETSmearHist_ToUse_SystVarDown = vecOneDeeMETSmearUncESDownHist_HighJet;
+                                        vecOneDeeMETPhiSmearHist_ToUse_SystVarDown = vecOneDeeMETPhiSmearUncESDownHist_HighJet;
+                                    }
+                                    else {
+                                        METSmearHist2D_ToUse_SystVarUp = METSmearUncESUpHist2D_LowJet;
+                                        METPhiSmearHist2D_ToUse_SystVarUp = METPhiSmearUncESUpHist2D_LowJet;
+                                        
+                                        vecOneDeeMETSmearHist_ToUse_SystVarUp = vecOneDeeMETSmearUncESUpHist_LowJet;
+                                        vecOneDeeMETPhiSmearHist_ToUse_SystVarUp = vecOneDeeMETPhiSmearUncESUpHist_LowJet;
+                                        
+                                        METSmearHist2D_ToUse_SystVarDown = METSmearUncESDownHist2D_LowJet;
+                                        METPhiSmearHist2D_ToUse_SystVarDown = METPhiSmearUncESDownHist2D_LowJet;
+                                        
+                                        vecOneDeeMETSmearHist_ToUse_SystVarDown = vecOneDeeMETSmearUncESDownHist_LowJet;
+                                        vecOneDeeMETPhiSmearHist_ToUse_SystVarDown = vecOneDeeMETPhiSmearUncESDownHist_LowJet;
+                                    }
+                                }
+                                // do by-hand smearing with said systematic varied template
+                                SmearHackEMI_PF_SystVarUp[iSyst].EventMET   += DeltaMET(vecOneDeeMETSmearHist_ToUse_SystVarUp,     METSmearHist2D_ToUse_SystVarUp,   MET_Corr, 0, 1.3);
+                                SmearHackEMI_PF_SystVarUp[iSyst].EventMETPhi  += DeltaMET(vecOneDeeMETPhiSmearHist_ToUse_SystVarUp,     METPhiSmearHist2D_ToUse_SystVarUp,   MET_Corr, 1, 1.3);
+                                CorrectMETPhi(SmearHackEMI_PF_SystVarUp[iSyst].EventMETPhi);
+                                
+                                SmearHackEMI_PF_SystVarDown[iSyst].EventMET   += DeltaMET(vecOneDeeMETSmearHist_ToUse_SystVarDown,     METSmearHist2D_ToUse_SystVarDown,   MET_Corr, 0, 1.3);
+                                SmearHackEMI_PF_SystVarDown[iSyst].EventMETPhi  += DeltaMET(vecOneDeeMETPhiSmearHist_ToUse_SystVarDown,     METPhiSmearHist2D_ToUse_SystVarDown,   MET_Corr, 1, 1.3);
+                                CorrectMETPhi(SmearHackEMI_PF_SystVarDown[iSyst].EventMETPhi);
+                            }
+                            else {
+                                // no unique template for given systematic variation -- instead set the variables as is
+                                // and then calculate the sytematic variations in the standard vector sum fashion
+                                SmearHackEMI_PF_SystVarUp[iSyst].SetVars(&SmearHackEMI_PF);
+                                SmearHackEMI_PF_SystVarDown[iSyst].SetVars(&SmearHackEMI_PF);
+                                
+                                if (!PMRP.PSIV.useOldNTuple) {
+                                    SmearHackEMI_PF_Old_SystVarUp[iSyst].SetVars(&SmearHackEMI_PF_Old);
+                                    SmearHackEMI_PF_Old_SystVarDown[iSyst].SetVars(&SmearHackEMI_PF_Old);
                                 }
                             }
-                            else if (systUncESShiftUp) {
-                                if (EJI.EventNJets > 1) {
-                                    METSmearHist2D_ToUse_SystVarUp = METSmearUncESUpHist2D_HighJet;
-                                    METPhiSmearHist2D_ToUse_SystVarUp = METPhiSmearUncESUpHist2D_HighJet;
-                                    
-                                    vecOneDeeMETSmearHist_ToUse_SystVarUp = vecOneDeeMETSmearUncESUpHist_HighJet;
-                                    vecOneDeeMETPhiSmearHist_ToUse_SystVarUp = vecOneDeeMETPhiSmearUncESUpHist_HighJet;
-                                    
-                                    METSmearHist2D_ToUse_SystVarDown = METSmearUncESDownHist2D_HighJet;
-                                    METPhiSmearHist2D_ToUse_SystVarDown = METPhiSmearUncESDownHist2D_HighJet;
-                                    
-                                    vecOneDeeMETSmearHist_ToUse_SystVarDown = vecOneDeeMETSmearUncESDownHist_HighJet;
-                                    vecOneDeeMETPhiSmearHist_ToUse_SystVarDown = vecOneDeeMETPhiSmearUncESDownHist_HighJet;                                         
-                                }
-                                else {
-                                    METSmearHist2D_ToUse_SystVarUp = METSmearUncESUpHist2D_LowJet;
-                                    METPhiSmearHist2D_ToUse_SystVarUp = METPhiSmearUncESUpHist2D_LowJet;
-                                    
-                                    vecOneDeeMETSmearHist_ToUse_SystVarUp = vecOneDeeMETSmearUncESUpHist_LowJet;
-                                    vecOneDeeMETPhiSmearHist_ToUse_SystVarUp = vecOneDeeMETPhiSmearUncESUpHist_LowJet;
-                                    
-                                    METSmearHist2D_ToUse_SystVarDown = METSmearUncESDownHist2D_LowJet;
-                                    METPhiSmearHist2D_ToUse_SystVarDown = METPhiSmearUncESDownHist2D_LowJet;
-                                    
-                                    vecOneDeeMETSmearHist_ToUse_SystVarDown = vecOneDeeMETSmearUncESDownHist_LowJet;
-                                    vecOneDeeMETPhiSmearHist_ToUse_SystVarDown = vecOneDeeMETPhiSmearUncESDownHist_LowJet;
-                                }
-                            }     
-                            // do by-hand smearing with said systematic varied template
-                            SmearHackEMI_PF_SystVarUp[iSyst].EventMET   += DeltaMET(vecOneDeeMETSmearHist_ToUse_SystVarUp,     METSmearHist2D_ToUse_SystVarUp,   MET_Corr, 0, 1.3);
-                            SmearHackEMI_PF_SystVarUp[iSyst].EventMETPhi  += DeltaMET(vecOneDeeMETPhiSmearHist_ToUse_SystVarUp,     METPhiSmearHist2D_ToUse_SystVarUp,   MET_Corr, 1, 1.3);
-                            CorrectMETPhi(SmearHackEMI_PF_SystVarUp[iSyst].EventMETPhi);
-                            
-                            SmearHackEMI_PF_SystVarDown[iSyst].EventMET   += DeltaMET(vecOneDeeMETSmearHist_ToUse_SystVarDown,     METSmearHist2D_ToUse_SystVarDown,   MET_Corr, 0, 1.3);
-                            SmearHackEMI_PF_SystVarDown[iSyst].EventMETPhi  += DeltaMET(vecOneDeeMETPhiSmearHist_ToUse_SystVarDown,     METPhiSmearHist2D_ToUse_SystVarDown,   MET_Corr, 1, 1.3); 
-                            CorrectMETPhi(SmearHackEMI_PF_SystVarDown[iSyst].EventMETPhi);
                         }
-                        else {
-                            // no unique template for given systematic variation -- instead set the variables as is
-                            // and then calculate the sytematic variations in the standard vector sum fashion
-                            SmearHackEMI_PF_SystVarUp[iSyst].SetVars(&SmearHackEMI_PF);
-                            SmearHackEMI_PF_SystVarDown[iSyst].SetVars(&SmearHackEMI_PF);      
-                            
-                            if (!PMRP.PSIV.useOldNTuple) {
-                                SmearHackEMI_PF_Old_SystVarUp[iSyst].SetVars(&SmearHackEMI_PF_Old);
-                                SmearHackEMI_PF_Old_SystVarDown[iSyst].SetVars(&SmearHackEMI_PF_Old); 
-                            }
-                        }
-                    }                        
+                    }
                 }
-                
                 if ( SmearHackEMI_PF.EventMET < 0)  SmearHackEMI_PF.EventMET = 0.;
                 if (!PMRP.PSIV.useOldNTuple) {
                     if ( SmearHackEMI_PF_Old.EventMET < 0)  SmearHackEMI_PF_Old.EventMET = 0.;
                 }
-            }                    
+            }
             //                SmearEJI = EJI;
-            for (int iSyst = 1; iSyst <= numSysts; ++iSyst) {
-                if (InSystBound(iSyst, &systLB_SmearJet, &systUB_SmearJet)) {
-                    systJetSmearShiftUp =  iSyst == systJetSmear;
-                    systJetSmearShiftDown = -1 * systJetSmearShiftUp;
-                    /*
-                     if (!systJetSmearShiftUp) {
-                     SmearEJI_SystVarUp[iSyst] = EJI_SystVarUp[iSyst];
-                     SmearEJI_SystVarDown[iSyst] = EJI_SystVarDown[iSyst];
-                     }
-                     else {
-                     SmearEJI_SystVarUp[iSyst] = EJI;
-                     SmearEJI_SystVarDown[iSyst] = EJI;
-                     }
-                     */
-                }
-                
-                if (InSystBound(iSyst, &systLB_SmearMET, &systUB_SmearMET)) {
-                    systLepESShiftUp =  iSyst ==systLepES;
-                    systLepESShiftDown = -1 * systLepESShiftUp;
-                    systJetESShiftUp =  iSyst == systJetES;
-                    systJetESShiftDown = -1 * systJetESShiftUp;
-                    if (systJetESShiftUp) {
-                        if (PMRP.PSIV.levelJetVerbosity) {
-                            cout << "line 1498 " << endl;
-                        }
-                        SmearHackEMI_PF_SystVarUp[iSyst].SystShiftMET(&Jets, &vecVecGoodJets_SystVarUp[iSyst], &SmearHackEMI_PF, PMRP.PSIV.levelJetVerbosity);
-                        SmearHackEMI_PF_SystVarDown[iSyst].SystShiftMET(&Jets, &vecVecGoodJets_SystVarDown[iSyst], &SmearHackEMI_PF, PMRP.PSIV.levelJetVerbosity);
-                        if (PMRP.PSIV.levelJetVerbosity) {
-                            cout << "line 1503 " << endl;
-                        }
-                        if (!PMRP.PSIV.useOldNTuple) {
-                            SmearHackEMI_PF_Old_SystVarUp[iSyst].SystShiftMET(&Jets, &vecVecGoodJets_SystVarUp[iSyst], &SmearHackEMI_PF_Old, PMRP.PSIV.levelJetVerbosity);
-                            SmearHackEMI_PF_Old_SystVarDown[iSyst].SystShiftMET(&Jets, &vecVecGoodJets_SystVarDown[iSyst], &SmearHackEMI_PF_Old, PMRP.PSIV.levelJetVerbosity);
-                        }
+            if (PMRP.SMV.doBookSyst) {
+                for (int iSyst = 1; iSyst <= numSysts; ++iSyst) {
+                    if (InSystBound(iSyst, &systLB_SmearJet, &systUB_SmearJet)) {
+                        systJetSmearShiftUp =  iSyst == systJetSmear;
+                        systJetSmearShiftDown = -1 * systJetSmearShiftUp;
+                        /*
+                         if (!systJetSmearShiftUp) {
+                         SmearEJI_SystVarUp[iSyst] = EJI_SystVarUp[iSyst];
+                         SmearEJI_SystVarDown[iSyst] = EJI_SystVarDown[iSyst];
+                         }
+                         else {
+                         SmearEJI_SystVarUp[iSyst] = EJI;
+                         SmearEJI_SystVarDown[iSyst] = EJI;
+                         }
+                         */
                     }
-                    if (systLepESShiftUp) {
-                        
-                        SmearEMI_PF_SystVarUp[iSyst].SystShiftMET(vecVecIsoLeptonsCentValMETPatsy_SystVarUp[iSyst], vecVecIsoLeptons_SystVarUp[iSyst], &SmearEMI_PF);
-                        SmearEMI_PF_SystVarDown[iSyst].SystShiftMET(vecVecIsoLeptonsCentValMETPatsy_SystVarDown[iSyst],vecVecIsoLeptons_SystVarDown[iSyst], &SmearEMI_PF);
-                        
-                        SmearHackEMI_PF_SystVarUp[iSyst].SystShiftMET(vecVecIsoLeptonsCentValMETPatsy_SystVarUp[iSyst], vecVecIsoLeptons_SystVarUp[iSyst], &SmearHackEMI_PF);
-                        SmearHackEMI_PF_SystVarDown[iSyst].SystShiftMET(vecVecIsoLeptonsCentValMETPatsy_SystVarDown[iSyst], vecVecIsoLeptons_SystVarDown[iSyst], &SmearHackEMI_PF);
-                        
-                        if (!PMRP.PSIV.useOldNTuple) {
-                            SmearHackEMI_PF_Old_SystVarUp[iSyst].SystShiftMET(vecVecIsoLeptonsCentValMETPatsy_SystVarUp[iSyst], vecVecIsoLeptons_SystVarUp[iSyst], &SmearHackEMI_PF_Old);
-                            SmearHackEMI_PF_Old_SystVarDown[iSyst].SystShiftMET(vecVecIsoLeptonsCentValMETPatsy_SystVarDown[iSyst], vecVecIsoLeptons_SystVarDown[iSyst], &SmearHackEMI_PF_Old);
+                    
+                    if (InSystBound(iSyst, &systLB_SmearMET, &systUB_SmearMET)) {
+                        systLepESShiftUp =  iSyst ==systLepES;
+                        systLepESShiftDown = -1 * systLepESShiftUp;
+                        systJetESShiftUp =  iSyst == systJetES;
+                        systJetESShiftDown = -1 * systJetESShiftUp;
+                        if (systJetESShiftUp) {
+                            if (PMRP.PSIV.levelJetVerbosity) {
+                                cout << "line 1498 " << endl;
+                            }
+                            SmearHackEMI_PF_SystVarUp[iSyst].SystShiftMET(&Jets, &vecVecGoodJets_SystVarUp[iSyst], &SmearHackEMI_PF, PMRP.PSIV.levelJetVerbosity);
+                            SmearHackEMI_PF_SystVarDown[iSyst].SystShiftMET(&Jets, &vecVecGoodJets_SystVarDown[iSyst], &SmearHackEMI_PF, PMRP.PSIV.levelJetVerbosity);
+                            if (PMRP.PSIV.levelJetVerbosity) {
+                                cout << "line 1503 " << endl;
+                            }
+                            if (!PMRP.PSIV.useOldNTuple) {
+                                SmearHackEMI_PF_Old_SystVarUp[iSyst].SystShiftMET(&Jets, &vecVecGoodJets_SystVarUp[iSyst], &SmearHackEMI_PF_Old, PMRP.PSIV.levelJetVerbosity);
+                                SmearHackEMI_PF_Old_SystVarDown[iSyst].SystShiftMET(&Jets, &vecVecGoodJets_SystVarDown[iSyst], &SmearHackEMI_PF_Old, PMRP.PSIV.levelJetVerbosity);
+                            }
+                        }
+                        if (systLepESShiftUp) {
+                            
+                            SmearEMI_PF_SystVarUp[iSyst].SystShiftMET(vecVecIsoLeptonsCentValMETPatsy_SystVarUp[iSyst], vecVecIsoLeptons_SystVarUp[iSyst], &SmearEMI_PF);
+                            SmearEMI_PF_SystVarDown[iSyst].SystShiftMET(vecVecIsoLeptonsCentValMETPatsy_SystVarDown[iSyst],vecVecIsoLeptons_SystVarDown[iSyst], &SmearEMI_PF);
+                            
+                            SmearHackEMI_PF_SystVarUp[iSyst].SystShiftMET(vecVecIsoLeptonsCentValMETPatsy_SystVarUp[iSyst], vecVecIsoLeptons_SystVarUp[iSyst], &SmearHackEMI_PF);
+                            SmearHackEMI_PF_SystVarDown[iSyst].SystShiftMET(vecVecIsoLeptonsCentValMETPatsy_SystVarDown[iSyst], vecVecIsoLeptons_SystVarDown[iSyst], &SmearHackEMI_PF);
+                            
+                            if (!PMRP.PSIV.useOldNTuple) {
+                                SmearHackEMI_PF_Old_SystVarUp[iSyst].SystShiftMET(vecVecIsoLeptonsCentValMETPatsy_SystVarUp[iSyst], vecVecIsoLeptons_SystVarUp[iSyst], &SmearHackEMI_PF_Old);
+                                SmearHackEMI_PF_Old_SystVarDown[iSyst].SystShiftMET(vecVecIsoLeptonsCentValMETPatsy_SystVarDown[iSyst], vecVecIsoLeptons_SystVarDown[iSyst], &SmearHackEMI_PF_Old);
+                            }
                         }
                     }
                 }
@@ -1630,23 +1700,24 @@ int main( int argc, char* argv[] ) {
         else {
             EPI.Set1DWeightTrue(TrueWeightHistToUse1D);
             EPI.Set1DWeight(TrueWeightHistToUse1D);
-            EPI.Set3DWeight(WeightHistToUse3D);   
+            EPI.Set3DWeight(WeightHistToUse3D);
         }
         if (ELI.EventDiLepType == -2) ELI.EventDiLepType = 2;
-        if (ELI_SystVarUp[systLepES].EventDiLepType == -2) ELI_SystVarUp[systLepES].EventDiLepType = 2;
-        if (ELI_SystVarDown[systLepES].EventDiLepType == -2) ELI_SystVarDown[systLepES].EventDiLepType = 2;        
-        
+        if (PMRP.SMV.doBookSyst) {
+            if (ELI_SystVarUp[systLepES].EventDiLepType == -2) ELI_SystVarUp[systLepES].EventDiLepType = 2;
+            if (ELI_SystVarDown[systLepES].EventDiLepType == -2) ELI_SystVarDown[systLepES].EventDiLepType = 2;
+        }
         if (PMRP.PSIV.printEventNum && !PMRP.SRS.isSignal) {
             if (ELI.EventDiLepType == 0 && FTI.passTrigDoubleMu) {
-                cout << "MuMu -- Event Passed: RunNum:EventNum:LumiBlock " << BEI.runNumber  << ":" << BEI.eventNumber << ":" << BEI.lumiBlock << endl;                
+                cout << "MuMu -- Event Passed: RunNum:EventNum:LumiBlock " << BEI.runNumber  << ":" << BEI.eventNumber << ":" << BEI.lumiBlock << endl;
             }
             else if (ELI.EventDiLepType == 1 && FTI.passTrigDoubleEl) {
-                cout << "EE -- Event Passed: RunNum:EventNum:LumiBlock " << BEI.runNumber  << ":" << BEI.eventNumber << ":" << BEI.lumiBlock << endl;                
+                cout << "EE -- Event Passed: RunNum:EventNum:LumiBlock " << BEI.runNumber  << ":" << BEI.eventNumber << ":" << BEI.lumiBlock << endl;
             }
             else if (ELI.EventDiLepType == 2 && FTI.passTrigElMu) {
-                cout << "EMu -- Event Passed: RunNum:EventNum:LumiBlock " << BEI.runNumber  << ":" << BEI.eventNumber << ":" << BEI.lumiBlock << endl;                
+                cout << "EMu -- Event Passed: RunNum:EventNum:LumiBlock " << BEI.runNumber  << ":" << BEI.eventNumber << ":" << BEI.lumiBlock << endl;
             }
-        }        
+        }
         
         if (PMRP.SMV.doData) {
             if (ELI.EventDiLepType == 0) {
@@ -1660,7 +1731,7 @@ int main( int argc, char* argv[] ) {
             }
         }
         if (doEvent) {
-            h_CutFlow->Fill(3.);    
+            h_CutFlow->Fill(3.);
         }
         if (!PMRP.SMV.doData) {
             if (doEvent_LepESUp) {
@@ -1671,7 +1742,7 @@ int main( int argc, char* argv[] ) {
             }
         }
         ////Grab Generator Info
-        // grab generator MET info if there       
+        // grab generator MET info if there
         if (PMRP.RRL.doSpecRun) {
             if (BEI.runNumber == (unsigned int) PMRP.RRL.whichRun) {
                 cout << "Post LepCut Run:Event:Lumi" << BEI.runNumber << ":" << BEI.eventNumber << ":" << BEI.lumiBlock << endl;
@@ -1682,13 +1753,15 @@ int main( int argc, char* argv[] ) {
         }
         
         if (!PMRP.SMV.doData) {
-            for (int iSyst = 1; iSyst <= numSysts; ++iSyst) {
-                if (InSystBound(iSyst, &systLB_SmearMET, &systUB_SmearMET)) {
-                    SmearEMI_PF_SystVarUp[iSyst].PhiCorrection(PMRP.SMV.doData, EPI.nVtx, true, PMRP.PSIV.useOldNTuple);
-                    SmearEMI_PF_SystVarDown[iSyst].PhiCorrection(PMRP.SMV.doData, EPI.nVtx, true, PMRP.PSIV.useOldNTuple);
-                    if ((iSyst != systLepES && iSyst != systUncES)) {
-                        MET_ScaleUpSmearing_SF(&EMI_PF, &SmearEMI_PF_SystVarUp[iSyst], SmearJetSF);
-                        MET_ScaleUpSmearing_SF(&EMI_PF, &SmearEMI_PF_SystVarDown[iSyst], SmearJetSF);
+            if (PMRP.SMV.doBookSyst) {
+                for (int iSyst = 1; iSyst <= numSysts; ++iSyst) {
+                    if (InSystBound(iSyst, &systLB_SmearMET, &systUB_SmearMET)) {
+                        SmearEMI_PF_SystVarUp[iSyst].PhiCorrection(PMRP.SMV.doData, EPI.nVtx, true, PMRP.PSIV.useOldNTuple);
+                        SmearEMI_PF_SystVarDown[iSyst].PhiCorrection(PMRP.SMV.doData, EPI.nVtx, true, PMRP.PSIV.useOldNTuple);
+                        if ((iSyst != systLepES && iSyst != systUncES)) {
+                            MET_ScaleUpSmearing_SF(&EMI_PF, &SmearEMI_PF_SystVarUp[iSyst], SmearJetSF);
+                            MET_ScaleUpSmearing_SF(&EMI_PF, &SmearEMI_PF_SystVarDown[iSyst], SmearJetSF);
+                        }
                     }
                 }
             }
@@ -1696,72 +1769,78 @@ int main( int argc, char* argv[] ) {
         
         //try calculating MT2 and MT
         if (!PMRP.PSIV.useOldNTuple) {
-            EMI_PF_noPhiCorr_Old.CalcMETVariations(&ELI, &EJI, PMRP.PSIV.levelJetVerbosity);
-            EMI_PF_Old.CalcMETVariations(&ELI, &EJI, PMRP.PSIV.levelJetVerbosity);
+            EMI_PF_noPhiCorr_Old.CalcMETVariations(&ELI, &EJI, whichCheck, PMRP.PSIV.levelJetVerbosity);
+            EMI_PF_Old.CalcMETVariations(&ELI, &EJI, whichCheck, PMRP.PSIV.levelJetVerbosity);
         }
-        EMI_PF_noPhiCorr.CalcMETVariations(&ELI, &EJI, PMRP.PSIV.levelJetVerbosity);
-        EMI_PF.CalcMETVariations(&ELI, &EJI, PMRP.PSIV.levelJetVerbosity);
+        EMI_PF_noPhiCorr.CalcMETVariations(&ELI, &EJI, whichCheck, PMRP.PSIV.levelJetVerbosity);
+        EMI_PF.CalcMETVariations(&ELI, &EJI, whichCheck, PMRP.PSIV.levelJetVerbosity);
         
         if (PMRP.PSIV.useSpecialMET) {
-            EMI_PF_Special.CalcMETVariations(&ELI, &EJI, PMRP.PSIV.levelJetVerbosity);
+            EMI_PF_Special.CalcMETVariations(&ELI, &EJI, whichCheck, PMRP.PSIV.levelJetVerbosity);
         }
         if (!PMRP.SMV.doData) {
-            EMI_PF_SystVarUp[systLepES].CalcMETVariations(&ELI_SystVarUp[systLepES], &EJI, PMRP.PSIV.levelJetVerbosity);
-            EMI_PF_SystVarDown[systLepES].CalcMETVariations(&ELI_SystVarDown[systLepES], &EJI, PMRP.PSIV.levelJetVerbosity); 
-            
-            for (int iJetSyst = 2; iJetSyst < 5; ++iJetSyst) {
-                if (PMRP.PSIV.levelJetVerbosity) {
-                    cout << "iJetSyst a " << iJetSyst << endl;
+            if (PMRP.SMV.doBookSyst) {
+                EMI_PF_SystVarUp[systLepES].CalcMETVariations(&ELI_SystVarUp[systLepES], &EJI, whichCheck, PMRP.PSIV.levelJetVerbosity);
+                EMI_PF_SystVarDown[systLepES].CalcMETVariations(&ELI_SystVarDown[systLepES], &EJI, whichCheck, PMRP.PSIV.levelJetVerbosity);
+                for (int iJetSyst = 2; iJetSyst < 5; ++iJetSyst) {
+                    if (PMRP.PSIV.levelJetVerbosity) {
+                        cout << "iJetSyst a " << iJetSyst << endl;
+                    }
+                    EMI_PF_SystVarUp[iJetSyst].CalcMETVariations(&ELI, &EJI_SystVarUp[iJetSyst], whichCheck, PMRP.PSIV.levelJetVerbosity);
+                    EMI_PF_SystVarDown[iJetSyst].CalcMETVariations(&ELI, &EJI_SystVarDown[iJetSyst], whichCheck, PMRP.PSIV.levelJetVerbosity);
                 }
-                EMI_PF_SystVarUp[iJetSyst].CalcMETVariations(&ELI, &EJI_SystVarUp[iJetSyst], PMRP.PSIV.levelJetVerbosity);
-                EMI_PF_SystVarDown[iJetSyst].CalcMETVariations(&ELI, &EJI_SystVarDown[iJetSyst], PMRP.PSIV.levelJetVerbosity);
             }
             
-            
-            SmearEMI_PF.CalcMETVariations(&ELI, &SmearEJI, PMRP.PSIV.levelJetVerbosity);
-            
-            SmearEMI_PF_SystVarUp[systLepES].CalcMETVariations(&ELI_SystVarUp[systLepES], &SmearEJI, PMRP.PSIV.levelJetVerbosity);
-            SmearEMI_PF_SystVarDown[systLepES].CalcMETVariations(&ELI_SystVarDown[systLepES], &SmearEJI, PMRP.PSIV.levelJetVerbosity);
-            for (int iJetSyst = 2; iJetSyst < 6; ++iJetSyst) {
-                if (PMRP.PSIV.levelJetVerbosity) {
-                    cout << "iJetSyst b " << iJetSyst << endl;
+            SmearEMI_PF.CalcMETVariations(&ELI, &SmearEJI, whichCheck, PMRP.PSIV.levelJetVerbosity);
+            if (PMRP.SMV.doBookSyst) {
+                SmearEMI_PF_SystVarUp[systLepES].CalcMETVariations(&ELI_SystVarUp[systLepES], &SmearEJI, whichCheck, PMRP.PSIV.levelJetVerbosity);
+                SmearEMI_PF_SystVarDown[systLepES].CalcMETVariations(&ELI_SystVarDown[systLepES], &SmearEJI, whichCheck, PMRP.PSIV.levelJetVerbosity);
+                for (int iJetSyst = 2; iJetSyst < 6; ++iJetSyst) {
+                    if (PMRP.PSIV.levelJetVerbosity) {
+                        cout << "iJetSyst b " << iJetSyst << endl;
+                    }
+                    SmearEMI_PF_SystVarUp[iJetSyst].CalcMETVariations(&ELI, &SmearEJI_SystVarUp[iJetSyst], whichCheck, PMRP.PSIV.levelJetVerbosity);
+                    SmearEMI_PF_SystVarDown[iJetSyst].CalcMETVariations(&ELI, &SmearEJI_SystVarDown[iJetSyst], whichCheck, PMRP.PSIV.levelJetVerbosity);
                 }
-                SmearEMI_PF_SystVarUp[iJetSyst].CalcMETVariations(&ELI, &SmearEJI_SystVarUp[iJetSyst], PMRP.PSIV.levelJetVerbosity);
-                SmearEMI_PF_SystVarDown[iJetSyst].CalcMETVariations(&ELI, &SmearEJI_SystVarDown[iJetSyst], PMRP.PSIV.levelJetVerbosity);
+                SmearEMI_PF_SystVarUp[systUncES].CalcMETVariations(&ELI, &SmearEJI, whichCheck, PMRP.PSIV.levelJetVerbosity);
+                SmearEMI_PF_SystVarDown[systUncES].CalcMETVariations(&ELI, &SmearEJI, whichCheck, PMRP.PSIV.levelJetVerbosity);
             }
-            SmearEMI_PF_SystVarUp[systUncES].CalcMETVariations(&ELI, &SmearEJI, PMRP.PSIV.levelJetVerbosity);
-            SmearEMI_PF_SystVarDown[systUncES].CalcMETVariations(&ELI, &SmearEJI, PMRP.PSIV.levelJetVerbosity);
+            SmearHackEMI_PF.CalcMETVariations(&ELI, &EJI, whichCheck, PMRP.PSIV.levelJetVerbosity);
             
-            SmearHackEMI_PF.CalcMETVariations(&ELI, &EJI, PMRP.PSIV.levelJetVerbosity);            
-            
-            SmearHackEMI_PF_SystVarUp[systLepES].CalcMETVariations(&ELI_SystVarUp[systLepES], &EJI, PMRP.PSIV.levelJetVerbosity);
-            SmearHackEMI_PF_SystVarDown[systLepES].CalcMETVariations(&ELI_SystVarDown[systLepES], &EJI, PMRP.PSIV.levelJetVerbosity);        
-            
+            if (PMRP.SMV.doBookSyst) {
+                SmearHackEMI_PF_SystVarUp[systLepES].CalcMETVariations(&ELI_SystVarUp[systLepES], &EJI, whichCheck, PMRP.PSIV.levelJetVerbosity);
+                SmearHackEMI_PF_SystVarDown[systLepES].CalcMETVariations(&ELI_SystVarDown[systLepES], &EJI, whichCheck, PMRP.PSIV.levelJetVerbosity);
+            }
             if (!PMRP.PSIV.useOldNTuple) {
-                SmearHackEMI_PF_Old.CalcMETVariations(&ELI, &EJI, PMRP.PSIV.levelJetVerbosity);
+                SmearHackEMI_PF_Old.CalcMETVariations(&ELI, &EJI, whichCheck, PMRP.PSIV.levelJetVerbosity);
                 
-                SmearHackEMI_PF_Old_SystVarUp[systLepES].CalcMETVariations(&ELI_SystVarUp[systLepES], &EJI, PMRP.PSIV.levelJetVerbosity);
-                SmearHackEMI_PF_Old_SystVarDown[systLepES].CalcMETVariations(&ELI_SystVarDown[systLepES], &EJI, PMRP.PSIV.levelJetVerbosity);
-            }
-            
-            for (int iJetSyst = 2; iJetSyst < 6; ++iJetSyst) {
-                if (PMRP.PSIV.levelJetVerbosity) {
-                    cout << "iJetSyst c " << iJetSyst << endl;
+                if (PMRP.SMV.doBookSyst) {
+                    SmearHackEMI_PF_Old_SystVarUp[systLepES].CalcMETVariations(&ELI_SystVarUp[systLepES], &EJI, whichCheck, PMRP.PSIV.levelJetVerbosity);
+                    SmearHackEMI_PF_Old_SystVarDown[systLepES].CalcMETVariations(&ELI_SystVarDown[systLepES], &EJI, whichCheck, PMRP.PSIV.levelJetVerbosity);
                 }
-                SmearHackEMI_PF_SystVarUp[iJetSyst].CalcMETVariations(&ELI, &EJI_SystVarUp[iJetSyst], PMRP.PSIV.levelJetVerbosity);
-                SmearHackEMI_PF_SystVarDown[iJetSyst].CalcMETVariations(&ELI, &EJI_SystVarDown[iJetSyst], PMRP.PSIV.levelJetVerbosity);
+            }
+            if (PMRP.SMV.doBookSyst) {
+                for (int iJetSyst = 2; iJetSyst < 6; ++iJetSyst) {
+                    if (PMRP.PSIV.levelJetVerbosity) {
+                        cout << "iJetSyst c " << iJetSyst << endl;
+                    }
+                    SmearHackEMI_PF_SystVarUp[iJetSyst].CalcMETVariations(&ELI, &EJI_SystVarUp[iJetSyst], whichCheck, PMRP.PSIV.levelJetVerbosity);
+                    SmearHackEMI_PF_SystVarDown[iJetSyst].CalcMETVariations(&ELI, &EJI_SystVarDown[iJetSyst], whichCheck, PMRP.PSIV.levelJetVerbosity);
+                    
+                    if (!PMRP.PSIV.useOldNTuple) {
+                        SmearHackEMI_PF_Old_SystVarUp[iJetSyst].CalcMETVariations(&ELI, &EJI_SystVarUp[iJetSyst], whichCheck, PMRP.PSIV.levelJetVerbosity);
+                        SmearHackEMI_PF_Old_SystVarDown[iJetSyst].CalcMETVariations(&ELI, &EJI_SystVarDown[iJetSyst], whichCheck, PMRP.PSIV.levelJetVerbosity);
+                    }
+                }
+            }
+            if (PMRP.SMV.doBookSyst) {
+                SmearHackEMI_PF_SystVarUp[systUncES].CalcMETVariations(&ELI, &EJI, whichCheck, PMRP.PSIV.levelJetVerbosity);
+                SmearHackEMI_PF_SystVarDown[systUncES].CalcMETVariations(&ELI, &EJI, whichCheck, PMRP.PSIV.levelJetVerbosity);
                 
                 if (!PMRP.PSIV.useOldNTuple) {
-                    SmearHackEMI_PF_Old_SystVarUp[iJetSyst].CalcMETVariations(&ELI, &EJI_SystVarUp[iJetSyst], PMRP.PSIV.levelJetVerbosity);
-                    SmearHackEMI_PF_Old_SystVarDown[iJetSyst].CalcMETVariations(&ELI, &EJI_SystVarDown[iJetSyst], PMRP.PSIV.levelJetVerbosity);
+                    SmearHackEMI_PF_Old_SystVarUp[systUncES].CalcMETVariations(&ELI, &EJI, whichCheck, PMRP.PSIV.levelJetVerbosity);
+                    SmearHackEMI_PF_Old_SystVarDown[systUncES].CalcMETVariations(&ELI, &EJI, whichCheck, PMRP.PSIV.levelJetVerbosity);
                 }
-            }
-            SmearHackEMI_PF_SystVarUp[systUncES].CalcMETVariations(&ELI, &EJI, PMRP.PSIV.levelJetVerbosity);
-            SmearHackEMI_PF_SystVarDown[systUncES].CalcMETVariations(&ELI, &EJI, PMRP.PSIV.levelJetVerbosity);
-            
-            if (!PMRP.PSIV.useOldNTuple) {
-                SmearHackEMI_PF_Old_SystVarUp[systUncES].CalcMETVariations(&ELI, &EJI, PMRP.PSIV.levelJetVerbosity);
-                SmearHackEMI_PF_Old_SystVarDown[systUncES].CalcMETVariations(&ELI, &EJI, PMRP.PSIV.levelJetVerbosity);
             }
         }
         
@@ -1791,95 +1870,96 @@ int main( int argc, char* argv[] ) {
             SmearEMI_noType0ToUseSystVarUp = &SmearHackEMI_PF_Old;
             
             SmearEDSI.SetVars(ELIToUseSystVarUp, SmearEJIToUseSystVarUp, SmearEMIToUseSystVarUp, PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity);
-            
-            for (int iSyst = 0; iSyst <= numSysts; ++iSyst) {
-                ELIToUseSystVarUp = SetELIPointer(&ELI, &ELI_SystVarUp[iSyst], &ELI_SystVarDown[iSyst], iSyst, &systLB_Lepton, &systUB_Lepton);
-                ELIToUseSystVarDown = SetELIPointer(&ELI, &ELI_SystVarUp[iSyst], &ELI_SystVarDown[iSyst], -1 * iSyst, &systLB_Lepton, &systUB_Lepton);
-                
-                EJIToUseSystVarUp = SetEJIPointer(&EJI, &EJI_SystVarUp[iSyst], &EJI_SystVarDown[iSyst], iSyst, &systLB_Jet, &systUB_Jet);
-                EJIToUseSystVarDown = SetEJIPointer(&EJI, &EJI_SystVarUp[iSyst], &EJI_SystVarDown[iSyst], -1 * iSyst, &systLB_Jet, &systUB_Jet);
-                
-                EMIToUseSystVarUp = SetEMIPointer(&EMI_PF, &EMI_PF_SystVarUp[iSyst], &EMI_PF_SystVarDown[iSyst], iSyst, &systLB_MET, &systUB_MET);
-                EMIToUseSystVarDown = SetEMIPointer(&EMI_PF, &EMI_PF_SystVarUp[iSyst], &EMI_PF_SystVarDown[iSyst], -1 * iSyst, &systLB_MET, &systUB_MET);
-
-                SmearEJIToUseSystVarUp = SetEJIPointer(&SmearEJI, &SmearEJI_SystVarUp[iSyst], &SmearEJI_SystVarDown[iSyst], iSyst, &systLB_SmearJet, &systUB_SmearJet);
-                SmearEJIToUseSystVarDown = SetEJIPointer(&SmearEJI, &SmearEJI_SystVarUp[iSyst], &SmearEJI_SystVarDown[iSyst], -1 * iSyst, &systLB_SmearJet, &systUB_SmearJet);
-                
-                if (PMRP.PSIV.useOldNTuple) {
-                    SmearEMIToUseSystVarUp = SetEMIPointer(&SmearHackEMI_PF, &SmearHackEMI_PF_SystVarUp[iSyst], &SmearHackEMI_PF_SystVarDown[iSyst], iSyst, &systLB_SmearMET, &systUB_SmearMET);
-                    SmearEMIToUseSystVarDown = SetEMIPointer(&SmearHackEMI_PF, &SmearHackEMI_PF_SystVarUp[iSyst], &SmearHackEMI_PF_SystVarDown[iSyst], -1 * iSyst, &systLB_SmearMET, &systUB_SmearMET);
-                }
-                else {
-                    SmearEMIToUseSystVarUp = SetEMIPointer(&SmearEMI_PF, &SmearEMI_PF_SystVarUp[iSyst], &SmearEMI_PF_SystVarDown[iSyst], iSyst, &systLB_SmearMET, &systUB_SmearMET);
-                    SmearEMIToUseSystVarDown = SetEMIPointer(&SmearEMI_PF, &SmearEMI_PF_SystVarUp[iSyst], &SmearEMI_PF_SystVarDown[iSyst], -1 * iSyst, &systLB_SmearMET, &systUB_SmearMET);
+            if (PMRP.SMV.doBookSyst) {
+                for (int iSyst = 0; iSyst <= numSysts; ++iSyst) {
+                    ELIToUseSystVarUp = SetELIPointer(&ELI, &ELI_SystVarUp[iSyst], &ELI_SystVarDown[iSyst], iSyst, &systLB_Lepton, &systUB_Lepton);
+                    ELIToUseSystVarDown = SetELIPointer(&ELI, &ELI_SystVarUp[iSyst], &ELI_SystVarDown[iSyst], -1 * iSyst, &systLB_Lepton, &systUB_Lepton);
                     
-                    SmearEMI_noType0ToUseSystVarUp = SetEMIPointer(&SmearHackEMI_PF_Old, &SmearHackEMI_PF_Old_SystVarUp[iSyst], &SmearHackEMI_PF_Old_SystVarDown[iSyst], iSyst, &systLB_SmearMET, &systUB_SmearMET);
-                    SmearEMI_noType0ToUseSystVarDown = SetEMIPointer(&SmearHackEMI_PF_Old, &SmearHackEMI_PF_Old_SystVarUp[iSyst], &SmearHackEMI_PF_Old_SystVarDown[iSyst], -1 * iSyst, &systLB_SmearMET, &systUB_SmearMET);
-                }
-                if (InSystBound(iSyst, &systLB_EDSI, &systUB_EDSI)) {
-                    EDSI_SystVarUp[iSyst].SetVars(ELIToUseSystVarUp, EJIToUseSystVarUp, EMIToUseSystVarUp, PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity);
-                    EDSI_SystVarDown[iSyst].SetVars(ELIToUseSystVarDown, EJIToUseSystVarDown, EMIToUseSystVarDown, PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity);
-                }
-                
-                if (InSystBound(iSyst, &systLB_SmearEDSI, &systUB_SmearEDSI)) {
-                    SmearEDSI_SystVarUp[iSyst].SetVars(ELIToUseSystVarUp, SmearEJIToUseSystVarUp, SmearEMIToUseSystVarUp, PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity);
-                    SmearEDSI_SystVarDown[iSyst].SetVars(ELIToUseSystVarDown, SmearEJIToUseSystVarDown, SmearEMIToUseSystVarDown, PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity);
+                    EJIToUseSystVarUp = SetEJIPointer(&EJI, &EJI_SystVarUp[iSyst], &EJI_SystVarDown[iSyst], iSyst, &systLB_Jet, &systUB_Jet);
+                    EJIToUseSystVarDown = SetEJIPointer(&EJI, &EJI_SystVarUp[iSyst], &EJI_SystVarDown[iSyst], -1 * iSyst, &systLB_Jet, &systUB_Jet);
+                    
+                    EMIToUseSystVarUp = SetEMIPointer(&EMI_PF, &EMI_PF_SystVarUp[iSyst], &EMI_PF_SystVarDown[iSyst], iSyst, &systLB_MET, &systUB_MET);
+                    EMIToUseSystVarDown = SetEMIPointer(&EMI_PF, &EMI_PF_SystVarUp[iSyst], &EMI_PF_SystVarDown[iSyst], -1 * iSyst, &systLB_MET, &systUB_MET);
+                    
+                    SmearEJIToUseSystVarUp = SetEJIPointer(&SmearEJI, &SmearEJI_SystVarUp[iSyst], &SmearEJI_SystVarDown[iSyst], iSyst, &systLB_SmearJet, &systUB_SmearJet);
+                    SmearEJIToUseSystVarDown = SetEJIPointer(&SmearEJI, &SmearEJI_SystVarUp[iSyst], &SmearEJI_SystVarDown[iSyst], -1 * iSyst, &systLB_SmearJet, &systUB_SmearJet);
+                    
+                    if (PMRP.PSIV.useOldNTuple) {
+                        SmearEMIToUseSystVarUp = SetEMIPointer(&SmearHackEMI_PF, &SmearHackEMI_PF_SystVarUp[iSyst], &SmearHackEMI_PF_SystVarDown[iSyst], iSyst, &systLB_SmearMET, &systUB_SmearMET);
+                        SmearEMIToUseSystVarDown = SetEMIPointer(&SmearHackEMI_PF, &SmearHackEMI_PF_SystVarUp[iSyst], &SmearHackEMI_PF_SystVarDown[iSyst], -1 * iSyst, &systLB_SmearMET, &systUB_SmearMET);
+                    }
+                    else {
+                        SmearEMIToUseSystVarUp = SetEMIPointer(&SmearEMI_PF, &SmearEMI_PF_SystVarUp[iSyst], &SmearEMI_PF_SystVarDown[iSyst], iSyst, &systLB_SmearMET, &systUB_SmearMET);
+                        SmearEMIToUseSystVarDown = SetEMIPointer(&SmearEMI_PF, &SmearEMI_PF_SystVarUp[iSyst], &SmearEMI_PF_SystVarDown[iSyst], -1 * iSyst, &systLB_SmearMET, &systUB_SmearMET);
+                        
+                        SmearEMI_noType0ToUseSystVarUp = SetEMIPointer(&SmearHackEMI_PF_Old, &SmearHackEMI_PF_Old_SystVarUp[iSyst], &SmearHackEMI_PF_Old_SystVarDown[iSyst], iSyst, &systLB_SmearMET, &systUB_SmearMET);
+                        SmearEMI_noType0ToUseSystVarDown = SetEMIPointer(&SmearHackEMI_PF_Old, &SmearHackEMI_PF_Old_SystVarUp[iSyst], &SmearHackEMI_PF_Old_SystVarDown[iSyst], -1 * iSyst, &systLB_SmearMET, &systUB_SmearMET);
+                    }
+                    if (InSystBound(iSyst, &systLB_EDSI, &systUB_EDSI)) {
+                        EDSI_SystVarUp[iSyst].SetVars(ELIToUseSystVarUp, EJIToUseSystVarUp, EMIToUseSystVarUp, PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity);
+                        EDSI_SystVarDown[iSyst].SetVars(ELIToUseSystVarDown, EJIToUseSystVarDown, EMIToUseSystVarDown, PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity);
+                    }
+                    
+                    if (InSystBound(iSyst, &systLB_SmearEDSI, &systUB_SmearEDSI)) {
+                        SmearEDSI_SystVarUp[iSyst].SetVars(ELIToUseSystVarUp, SmearEJIToUseSystVarUp, SmearEMIToUseSystVarUp, PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity);
+                        SmearEDSI_SystVarDown[iSyst].SetVars(ELIToUseSystVarDown, SmearEJIToUseSystVarDown, SmearEMIToUseSystVarDown, PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity);
+                    }
                 }
             }
             //un smeared systematics
             /*
-            EDSI_SystVarUp[systLepES].SetVars(&ELI_SystVarUp[systLepES], &EJI, &EMI_PF_SystVarUp[systLepES], PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity);
-            EDSI_SystVarDown[systLepES].SetVars(&ELI_SystVarDown[systLepES], &EJI, &EMI_PF_SystVarDown[systLepES], PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity);
-            if (PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity) {
-                cout << "test c " << endl;
-            }
-            EDSI_SystVarUp[systJetES].SetVars(&ELI, &EJI_SystVarUp[systJetES], &EMI_PF_SystVarUp[systJetES], PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity);
-            EDSI_SystVarDown[systJetES].SetVars(&ELI, &EJI_SystVarDown[systJetES], &EMI_PF_SystVarDown[systJetES], PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity);
-            if (PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity) {
-                cout << "test d " << endl;
-            }
-            EDSI_SystVarUp[systBTagEffSF].SetVars(&ELI, &EJI_SystVarUp[systBTagEffSF], &EMI_PF_SystVarUp[systBTagEffSF], PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity);
-            EDSI_SystVarDown[systBTagEffSF].SetVars(&ELI, &EJI_SystVarDown[systBTagEffSF], &EMI_PF_SystVarDown[systBTagEffSF], PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity);
-            if (PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity) {
-                cout << "test e " << endl;
-            }
-            EDSI_SystVarUp[systBMisTagSF].SetVars(&ELI, &EJI_SystVarUp[systBMisTagSF], &EMI_PF_SystVarUp[systBMisTagSF], PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity);
-            EDSI_SystVarDown[systBMisTagSF].SetVars(&ELI, &EJI_SystVarDown[systBMisTagSF], &EMI_PF_SystVarDown[systBMisTagSF], PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity);
-            if (PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity) {
-                cout << "test f " << endl;
-            }
-            
-            SmearEDSI.SetVars(&ELI, &SmearEJI, &SmearEMI_PF, PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity);
-            if (PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity) {
-                cout << "test g" << endl;
-            }
-            SmearEDSI_SystVarUp[systLepES].SetVars(&ELI_SystVarUp[systLepES], &SmearEJI, &SmearEMI_PF_SystVarUp[systLepES], PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity);
-            SmearEDSI_SystVarDown[systLepES].SetVars(&ELI_SystVarDown[systLepES], &SmearEJI, &SmearEMI_PF_SystVarDown[systLepES], PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity);
-            if (PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity) {
-                cout << "test h " << endl;
-            }
-            SmearEDSI_SystVarUp[systJetES].SetVars(&ELI, &SmearEJI_SystVarUp[systJetES], &SmearEMI_PF_SystVarUp[systJetES], PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity);
-            SmearEDSI_SystVarDown[systJetES].SetVars(&ELI, &SmearEJI_SystVarDown[systJetES], &SmearEMI_PF_SystVarDown[systJetES], PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity);
-            if (PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity) {
-                cout << "test i " << endl;
-            }
-            SmearEDSI_SystVarUp[systBTagEffSF].SetVars(&ELI, &SmearEJI_SystVarUp[systBTagEffSF], &SmearEMI_PF_SystVarUp[systBTagEffSF], PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity);
-            SmearEDSI_SystVarDown[systBTagEffSF].SetVars(&ELI, &SmearEJI_SystVarDown[systBTagEffSF], &SmearEMI_PF_SystVarDown[systBTagEffSF], PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity);
-            if (PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity) {
-                cout << "test j " << endl;
-            }
-            SmearEDSI_SystVarUp[systBMisTagSF].SetVars(&ELI, &SmearEJI_SystVarUp[systBMisTagSF], &SmearEMI_PF_SystVarUp[systBMisTagSF], PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity);
-            SmearEDSI_SystVarDown[systBMisTagSF].SetVars(&ELI, &SmearEJI_SystVarDown[systBMisTagSF], &SmearEMI_PF_SystVarDown[systBMisTagSF], PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity);
-            if (PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity) {
-                cout << "test k " << endl;
-            }
-            SmearEDSI_SystVarUp[systJetSmear].SetVars(&ELI, &SmearEJI_SystVarUp[systJetSmear], &SmearEMI_PF_SystVarUp[systJetSmear], PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity);
-            SmearEDSI_SystVarDown[systJetSmear].SetVars(&ELI, &SmearEJI_SystVarUp[systJetSmear], &SmearEMI_PF_SystVarDown[systJetSmear], PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity);
-            if (PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity) {
-                cout << "test l " << endl;
-            }
-            SmearEDSI_SystVarUp[systUncES].SetVars(&ELI, &SmearEJI, &SmearEMI_PF_SystVarUp[systUncES], PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity);
-            SmearEDSI_SystVarDown[systUncES].SetVars(&ELI, &SmearEJI, &SmearEMI_PF_SystVarDown[systUncES], PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity);
+             EDSI_SystVarUp[systLepES].SetVars(&ELI_SystVarUp[systLepES], &EJI, &EMI_PF_SystVarUp[systLepES], PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity);
+             EDSI_SystVarDown[systLepES].SetVars(&ELI_SystVarDown[systLepES], &EJI, &EMI_PF_SystVarDown[systLepES], PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity);
+             if (PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity) {
+             cout << "test c " << endl;
+             }
+             EDSI_SystVarUp[systJetES].SetVars(&ELI, &EJI_SystVarUp[systJetES], &EMI_PF_SystVarUp[systJetES], PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity);
+             EDSI_SystVarDown[systJetES].SetVars(&ELI, &EJI_SystVarDown[systJetES], &EMI_PF_SystVarDown[systJetES], PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity);
+             if (PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity) {
+             cout << "test d " << endl;
+             }
+             EDSI_SystVarUp[systBTagEffSF].SetVars(&ELI, &EJI_SystVarUp[systBTagEffSF], &EMI_PF_SystVarUp[systBTagEffSF], PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity);
+             EDSI_SystVarDown[systBTagEffSF].SetVars(&ELI, &EJI_SystVarDown[systBTagEffSF], &EMI_PF_SystVarDown[systBTagEffSF], PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity);
+             if (PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity) {
+             cout << "test e " << endl;
+             }
+             EDSI_SystVarUp[systBMisTagSF].SetVars(&ELI, &EJI_SystVarUp[systBMisTagSF], &EMI_PF_SystVarUp[systBMisTagSF], PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity);
+             EDSI_SystVarDown[systBMisTagSF].SetVars(&ELI, &EJI_SystVarDown[systBMisTagSF], &EMI_PF_SystVarDown[systBMisTagSF], PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity);
+             if (PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity) {
+             cout << "test f " << endl;
+             }
+             
+             SmearEDSI.SetVars(&ELI, &SmearEJI, &SmearEMI_PF, PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity);
+             if (PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity) {
+             cout << "test g" << endl;
+             }
+             SmearEDSI_SystVarUp[systLepES].SetVars(&ELI_SystVarUp[systLepES], &SmearEJI, &SmearEMI_PF_SystVarUp[systLepES], PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity);
+             SmearEDSI_SystVarDown[systLepES].SetVars(&ELI_SystVarDown[systLepES], &SmearEJI, &SmearEMI_PF_SystVarDown[systLepES], PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity);
+             if (PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity) {
+             cout << "test h " << endl;
+             }
+             SmearEDSI_SystVarUp[systJetES].SetVars(&ELI, &SmearEJI_SystVarUp[systJetES], &SmearEMI_PF_SystVarUp[systJetES], PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity);
+             SmearEDSI_SystVarDown[systJetES].SetVars(&ELI, &SmearEJI_SystVarDown[systJetES], &SmearEMI_PF_SystVarDown[systJetES], PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity);
+             if (PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity) {
+             cout << "test i " << endl;
+             }
+             SmearEDSI_SystVarUp[systBTagEffSF].SetVars(&ELI, &SmearEJI_SystVarUp[systBTagEffSF], &SmearEMI_PF_SystVarUp[systBTagEffSF], PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity);
+             SmearEDSI_SystVarDown[systBTagEffSF].SetVars(&ELI, &SmearEJI_SystVarDown[systBTagEffSF], &SmearEMI_PF_SystVarDown[systBTagEffSF], PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity);
+             if (PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity) {
+             cout << "test j " << endl;
+             }
+             SmearEDSI_SystVarUp[systBMisTagSF].SetVars(&ELI, &SmearEJI_SystVarUp[systBMisTagSF], &SmearEMI_PF_SystVarUp[systBMisTagSF], PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity);
+             SmearEDSI_SystVarDown[systBMisTagSF].SetVars(&ELI, &SmearEJI_SystVarDown[systBMisTagSF], &SmearEMI_PF_SystVarDown[systBMisTagSF], PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity);
+             if (PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity) {
+             cout << "test k " << endl;
+             }
+             SmearEDSI_SystVarUp[systJetSmear].SetVars(&ELI, &SmearEJI_SystVarUp[systJetSmear], &SmearEMI_PF_SystVarUp[systJetSmear], PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity);
+             SmearEDSI_SystVarDown[systJetSmear].SetVars(&ELI, &SmearEJI_SystVarUp[systJetSmear], &SmearEMI_PF_SystVarDown[systJetSmear], PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity);
+             if (PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity) {
+             cout << "test l " << endl;
+             }
+             SmearEDSI_SystVarUp[systUncES].SetVars(&ELI, &SmearEJI, &SmearEMI_PF_SystVarUp[systUncES], PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity);
+             SmearEDSI_SystVarDown[systUncES].SetVars(&ELI, &SmearEJI, &SmearEMI_PF_SystVarDown[systUncES], PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity);
              */
         }
         if (PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity) {
@@ -1910,23 +1990,25 @@ int main( int argc, char* argv[] ) {
         delete vecIsoLeptons;
         //        delete Jets;
         if (!PMRP.SMV.doData) {
-            for (int iSyst = 1; iSyst <= numSysts; ++iSyst) {
-                if (InSystBound(iSyst, &systLB_Lepton, &systUB_Lepton)) {            
-                    delete vecVecIsoLeptonsCentValMETPatsy_SystVarUp[iSyst];
-                    delete vecVecIsoLeptonsCentValMETPatsy_SystVarDown[iSyst];
-                    delete vecVecIsoLeptons_SystVarUp[iSyst];
-                    delete vecVecIsoLeptons_SystVarDown[iSyst];
-                }   
-                /*
-                 if (InSystBound(iSyst, &systLB_Jet, &systUB_Jet)) {
-                 delete vecVecGoodJets_SystVarUp[iSyst];
-                 delete vecVecGoodJets_SystVarDown[iSyst];
-                 }
-                 if (InSystBound(iSyst, &systLB_SmearJet, &systUB_SmearJet)) {
-                 delete vecVecGoodSmearJets_SystVarUp[iSyst];
-                 delete vecVecGoodSmearJets_SystVarDown[iSyst];
-                 }
-                 */
+            if (PMRP.SMV.doBookSyst) {
+                for (int iSyst = 1; iSyst <= numSysts; ++iSyst) {
+                    if (InSystBound(iSyst, &systLB_Lepton, &systUB_Lepton)) {
+                        delete vecVecIsoLeptonsCentValMETPatsy_SystVarUp[iSyst];
+                        delete vecVecIsoLeptonsCentValMETPatsy_SystVarDown[iSyst];
+                        delete vecVecIsoLeptons_SystVarUp[iSyst];
+                        delete vecVecIsoLeptons_SystVarDown[iSyst];
+                    }
+                    /*
+                     if (InSystBound(iSyst, &systLB_Jet, &systUB_Jet)) {
+                     delete vecVecGoodJets_SystVarUp[iSyst];
+                     delete vecVecGoodJets_SystVarDown[iSyst];
+                     }
+                     if (InSystBound(iSyst, &systLB_SmearJet, &systUB_SmearJet)) {
+                     delete vecVecGoodSmearJets_SystVarUp[iSyst];
+                     delete vecVecGoodSmearJets_SystVarDown[iSyst];
+                     }
+                     */
+                }
             }
         }
     }
@@ -2042,7 +2124,7 @@ int main( int argc, char* argv[] ) {
      delete vecOneDeeMETSmearJERDownHist_HighJet;
      delete vecOneDeeMETSmearUncESUpHist_HighJet;
      delete vecOneDeeMETSmearUncESUpHist_HighJet;
-     yet        
+     yet
      delete vecOneDeeMETSmearUncESDownHist_HighJet;
      
      delete vecOneDeeMETPhiSmearJERUpHist;
@@ -2060,7 +2142,7 @@ int main( int argc, char* argv[] ) {
      }
      */
     delete h_eventCount;
-    delete h_CutFlow; 
+    delete h_CutFlow;
     if (!PMRP.SMV.doData) {
         delete h_CutFlow_LepESUp; delete h_CutFlow_LepESDown;
     }
@@ -2069,8 +2151,8 @@ int main( int argc, char* argv[] ) {
     EEPs.DeleteVecs();
     PFJEPs.DeleteVecs();
     SmearPFJEPs.DeleteVecs();
-    GJEPs.DeleteVecs();    
-    EGLPI.DeleteVecs();    
+    GJEPs.DeleteVecs();
+    EGLPI.DeleteVecs();
     EGSPI.DeleteVecs();
     EGQPI.DeleteVecs();
     

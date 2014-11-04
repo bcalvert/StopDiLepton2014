@@ -1,0 +1,90 @@
+######################################
+HeaderFiles/BasicFunctions.h
+######################################
+1) Added in function PoissonError that calculates asymmetric errors on a bin count based upon true Poisson error bounds
+1a) Function is commented out for now due to it not exactly working
+
+2) Added in verbosity options to a number of functions here (with corresponding verbosity-based debug statements
+
+3) Added in new Pass/Fail Cut functions to do the 1D cut, and then N-D (N > 1) where it can do either AND or OR of the various axes
+-- PassFailCut1D
+-- PassFailANDCut2D
+-- PassFailANDCut3D
+-- PassFailORCut2D
+-- PassFailORCut3D
+3a) Added in umbrella Pass/Fail Cut function "PassFailCut" that passes onto specific Pass/Fail cut functions described in 3)
+3b) Added in another umbrella function "PassFailCuts" that calls the umbrella function in 3a)
+3c) Commented out old Pass/Fail cut function
+
+4) Commented out old PassCut Histogram making function, "PassCutHisto"
+4a) Replaced it with new one
+
+5) Added in function "DivideGraph" that divides two graphs assuming they have same x axis values for their points
+
+######################################
+HeaderFiles/PlotDisplayStructs.h
+######################################
+
+1) Added in the "whichIntType" as an option to the "SetTH1F_PassCut" and "DoPassCutHisto" functions
+1a) "whichIntType" is used to define whether to do "AND" cut or "OR" cut (or even "XOR" if I ever care to use it)
+
+######################################
+HeaderFiles/StopPlotStructs.h
+######################################
+
+1) Had to, in line with the changes done to HeaderFiles/PlotDisplayStructs.h, add in "whichIntType" variable to the "DoPassCut" function
+2) Added in the separate channels for the DY to be able to utilize different dilepton channels
+2a) In the WeightCalculators struct this meant loading in different weights for each dilepton channel
+
+######################################
+HeaderFiles/HistogramSystematicsStructs.h
+######################################
+
+1) Made the yield print outs print 4 significant figures instead of 2
+
+2) Put in a sanity check to not kill the yield print out when the yield is 0, specifically, the relative errors
+
+3) Added in DefaultVals() function
+
+######################################
+HeaderFiles/NewOviStopPlotSkimmer_Legacy.h
+######################################
+
+1) Added in some include statements to allow the code to compile with the unordered maps
+
+######################################
+HeaderFiles/StopFunctionDefinitions_v2.h
+######################################
+
+1) fixed curly script f that was spuriously on line 35
+
+######################################
+HeaderFiles/StopPlotStructs_PlotMakingMacro.h
+######################################
+
+1) Added in "_noSyst" to the stringSMV variable for the SampMakingVariables struct (used when running without systematics)
+
+######################################
+HeaderFiles/StopPlotStructs_PlottingMacro.h
+######################################
+
+1) Added in a few additional variables to various structs
+1a) "doDropFakes" got added to SampLoadSettings (for loading in MC without fakes saved), including the appropriate string to grab
+1b) whichIntType for HistPlotMaking for making different sets of cuts
+
+2) Added in the necessary command line reading tools to grab these variables
+
+3) Changed the "printSystLim" option to print asymmetric errors
+3a) "printAveSystLim" now does what "printSystLim" used to do
+
+######################################
+HeaderFiles/StopRootHistoGenFunctions.h
+######################################
+
+1) Removed the automatic addition of the string "Rate" to the histogram produced by the FakeLeptonHistMaker function
+
+######################################
+PlotMakingCode/NewOviStopPlotFillerRunOnSkim_wSyst.C 
+######################################
+
+1) commented out some code associated with the xsection scaling of signal points (nominally, I'd like to just add this in at the yield calculation stage

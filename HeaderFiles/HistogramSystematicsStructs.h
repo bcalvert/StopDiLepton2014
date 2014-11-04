@@ -29,8 +29,13 @@ typedef struct ValError {
         upError = inStatError;
         downError = inStatError;
     }
-    void SetSystError(float inCV, float upShift, float downShift, bool doSymError = false) {
-        centVal = inCV;
+  void SetSystError(float inCV, float upShift, float downShift, bool doSymError = false, bool doVerb = false) {
+    if (doVerb) {
+      cout << "inCV " << inCV << endl;
+      cout << "upShift " << upShift << endl;
+      cout << "downShift " << downShift << endl;
+    }
+    centVal = inCV;
         float diffShiftUp, diffShiftDown;
         float errSum;
         
@@ -83,12 +88,23 @@ typedef struct ValError {
                     upError = abs(diffShiftUp);
                     downError = upError;
                     break;
+	    case 1:
+	      downError = abs(diffShiftDown);
+	      upError = downError;
+	      break;
+	    case -1:
+	      downError = abs(diffShiftDown);
+	      upError = downError;
+	      break;
+	      
                 default:
                     break;
             }
         }
-        cout << "upError " << upError << endl;
-        cout << "downError " << downError << endl;
+	if (doVerb) {	  
+	  cout << "upError " << upError << endl;
+	  cout << "downError " << downError << endl;
+	}
     }
     void SetSystErrorHard(float inCV, float inUE, float inDE) {
         centVal = inCV;
