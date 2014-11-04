@@ -35,7 +35,7 @@
 #include <fstream>
 //#include <vector>
 #include <cmath>
-#include <sstream>ƒ
+#include <sstream>
 using namespace std;
 
 

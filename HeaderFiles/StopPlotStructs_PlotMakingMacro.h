@@ -197,6 +197,7 @@ typedef struct SampMakingVariables {
         if (keepLooseLeps && !estFakeLep) {
             stringSMV += "_LooseLeps";
         }
+	if (whichType == 1 && (!doBookSyst && !doData)) stringSMV += "_noSyst";
         if (whichType == 2) {
             if (!doBookSyst && (!doData || (doData && estFakeLep))) stringSMV += "_noSyst";
             if (doOfficialSmear) stringSMV += "_OfficialSmear";

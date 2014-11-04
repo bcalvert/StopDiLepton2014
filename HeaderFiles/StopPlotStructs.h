@@ -125,7 +125,7 @@ typedef struct WeightCalculators {
     int intLumi;
     
     SpecificWeight weightTTBar_DDNorm;
-    SpecificWeight weightDY_DDNorm;
+    SpecificWeight weightDY_DDNormEE, weightDY_DDNormEMu, weightDY_DDNormMuMu;
     
     void LoadTTBarWeight(SampLoadSettings * inSLS, vector<TString> * vecSystString) {
         TString weightName = "_TTBarFullCutNormalization";
@@ -141,9 +141,12 @@ typedef struct WeightCalculators {
     }
     
     void LoadDYWeight(SampLoadSettings * inSLS, vector<TString> * vecSystString, int versNumber) {
-        TString weightNameAppend = versNumber == 1 ? "_ZMassBVetoCR" : "_ZMassBVetoCR";
+        TString weightNameAppend = versNumber == 1 ? "_ROutIn" : "_ZMassBVetoCR";
         TString weightName = "_DY";
         weightName += weightNameAppend;
+        TString weightNameEE = weightName + "_EE";
+        TString weightNameEMu = weightName + "_EMu";
+        TString weightNameMuMu = weightName + "_MuMu";
         TString nameDYFile = "ScaleFactors";
         nameDYFile += weightName;
         nameDYFile += inSLS->TTBarString();
@@ -151,8 +154,15 @@ typedef struct WeightCalculators {
         nameDYFile += ".root";
         TFile * inFile = TFile::Open(nameDYFile);
         
-        weightDY_DDNorm.SetHistsFromFile(inFile, weightName, vecSystString);
-        weightDY_DDNorm.PrintWeights();
+        weightDY_DDNormEE.SetHistsFromFile(inFile, weightNameEE, vecSystString);
+        weightDY_DDNormEMu.SetHistsFromFile(inFile, weightNameEMu, vecSystString);
+        weightDY_DDNormMuMu.SetHistsFromFile(inFile, weightNameMuMu, vecSystString);
+        cout << "printing EE weights " << endl;
+        weightDY_DDNormEE.PrintWeights();
+        cout << "printing EMu weights " << endl;
+        weightDY_DDNormEMu.PrintWeights();
+        cout << "printing MuMu weights " << endl;
+        weightDY_DDNormMuMu.PrintWeights();
     }
     
     void DefaultVarVals() {
@@ -498,18 +508,31 @@ typedef struct WeightCalculators {
             }
         }
         if (doDY && inISPI->sampleType == 2) {
-            inISPI->weight_CentVal *= weightDY_DDNorm.GetSF(0);
+            SpecificWeight * weightDYToUse;
+            if (inISPI->nameISPI.Contains("ZDY_MuMu")) {
+                weightDYToUse = &weightDY_DDNormMuMu;
+            }
+            else if (inISPI->nameISPI.Contains("ZDY_EE")) {
+                weightDYToUse = &weightDY_DDNormEE;
+            }
+            else if (inISPI->nameISPI.Contains("ZDY_EMu")) {
+                weightDYToUse = &weightDY_DDNormEMu;
+            }
+            else {
+                cout << "not one of the three! " << inISPI->nameISPI << endl;
+            }
+            inISPI->weight_CentVal *= weightDYToUse->GetSF(0);
             if (doVerbosity) {
-                cout << "base DY weight " << weightDY_DDNorm.GetSF(0) << endl;
+                cout << "base DY weight " << weightDYToUse->GetSF(0) << endl;
             }
             for (unsigned int iSyst = 1; iSyst <= inISPI->weight_SystVarUp.size(); ++iSyst) {
                 if (doVerbosity) {
                     cout << " for iSyst " << iSyst << endl;
-                    cout << "weight DY Syst Var Up " << weightDY_DDNorm.GetSF(iSyst) << endl;
-                    cout << "weight DY Syst Var Down " << weightDY_DDNorm.GetSF(- 1 * iSyst) << endl;
+                    cout << "weight DY Syst Var Up " << weightDYToUse->GetSF(iSyst) << endl;
+                    cout << "weight DY Syst Var Down " << weightDYToUse->GetSF(- 1 * iSyst) << endl;
                 }
-                inISPI->weight_SystVarUp[iSyst - 1] *= weightDY_DDNorm.GetSF(iSyst);
-                inISPI->weight_SystVarDown[iSyst - 1] *= weightDY_DDNorm.GetSF(- 1 * iSyst);
+                inISPI->weight_SystVarUp[iSyst - 1] *= weightDYToUse->GetSF(iSyst);
+                inISPI->weight_SystVarDown[iSyst - 1] *= weightDYToUse->GetSF(- 1 * iSyst);
             }
         }
     }
@@ -675,7 +698,7 @@ typedef struct PlotMakingStructs {
         inSLS->SetupMultiHistList_MultiChanList_MT2CutYield(&vecHistNamesForYieldCalc, inHPM->tryCalcPassByHand, &vecXaxisCut, &vecYaxisCut, levelVerbosity);
     }
     
-    void DoPassCut(HistogramDisplayStructs * inHDS, TString compName, vector<indMCParams> * vecIndMCParams, int whichSet = 0, bool doSyst = true, int levelVerbosity = 0) {
+    void DoPassCut(HistogramDisplayStructs * inHDS, TString compName, vector<indMCParams> * vecIndMCParams, int whichIntType, int whichSet = 0, bool doSyst = true, int levelVerbosity = 0) {
         vector<int> vecCutValues;
         vector<TString> vecCutVarNames;
         vecCutValues.push_back((int) vecXaxisCut[whichSet]);
@@ -684,7 +707,7 @@ typedef struct PlotMakingStructs {
             vecCutValues.push_back((int) vecYaxisCut[whichSet]);
             vecCutVarNames.push_back("MT2lblb");
         }        
-        inHDS->DoPassCutHisto(&vecCutValues, &vecCutVarNames, compName, vecIndMCParams, &vecSystNames, doSyst, levelVerbosity);
+        inHDS->DoPassCutHisto(&vecCutValues, &vecCutVarNames, whichIntType, compName, vecIndMCParams, &vecSystNames, doSyst, levelVerbosity);
     }
     ///
     

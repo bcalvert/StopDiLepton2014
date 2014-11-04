@@ -4,6 +4,7 @@
 #include "TString.h"
 #include "TPad.h"
 #include "TCanvas.h"
+#include "TF1.h"
 #include "TLorentzVector.h"
 #include "./HistogramStyleFunctions.h"
 #include "TGraph.h"
@@ -26,7 +27,14 @@ inline float TruncateNum(float inNum, float LB, float UB, float safetyFactor) {
     }
     return outNum;
 }
-
+/*
+inline void PoissonError(float binCount, float &errUp, float &errDown) {
+    //taken from discussion on https://twiki.cern.ch/twiki/bin/viewauth/CMS/PoissonErrorBars
+    const double alpha = 1 - 0.6827;
+    double L =  (N==0) ? 0  : (ROOT::Math::gamma_quantile(alpha/2,N,1.));
+    double U =  ROOT::Math::gamma_quantile_c(alpha/2,N+1,1) ;
+}
+*/
 inline void relErrMaker( TH1F * &inputErrHist) {
     int NBins = inputErrHist->GetNbinsX();
     float binRelErr;
@@ -264,26 +272,144 @@ inline void BadBinCheck(int &checkInt, int inputAxisNBins) {
         checkInt = inputAxisNBins;
     }
 }
-inline void BinFinder(int * address, TH1 * hist, float x, float y, float z) {
+inline void BinFinder(int * address, TH1 * hist, float x, float y, float z, bool doVerbosity = 0) {
     TAxis * xAxis = hist->GetXaxis();
     TAxis * yAxis, * zAxis;
     address[0] = xAxis->FindBin(x);
     BadBinCheck(address[0], xAxis->GetNbins());
-    cout << "for hist " << hist->GetName() << endl;
-    cout << "for x, " << x << " address[0] is " << address[0] << endl;
+    if (doVerbosity) {
+        cout << "for hist " << hist->GetName() << endl;
+        cout << "for x, " << x << " address[0] is " << address[0] << endl;
+    }
     yAxis = hist->GetYaxis();
     if (yAxis->GetNbins() != 1) {
         address[1] = yAxis->FindBin(y);
         BadBinCheck(address[1], yAxis->GetNbins());
-        cout << "for y, " << x << " address[1] is " << address[1] << endl;
+        if (doVerbosity) {
+            cout << "for y, " << y << " address[1] is " << address[1] << endl;
+        }
     }
     zAxis = hist->GetZaxis();
     if (zAxis->GetNbins() != 1) {
         address[2] = zAxis->FindBin(z);
         BadBinCheck(address[2], zAxis->GetNbins());
+        if (doVerbosity) {
+            cout << "for z, " << z << " address[2] is " << address[2] << endl;
+        }
     }
 }
-inline void PassFailCuts(vector<double> * integrals, vector<double> * integralErrors, int * binAddreses, TH1 * hist) {
+inline void PassFailCut1D(TH1 * inHist, double &numPassCut, double &numPassCutErr, double &numFailCut, double &numFailCutErr, int * binAddreses) {
+    double totalEventsErr;
+    double totalEvents = inHist->IntegralAndError(1, inHist->GetNbinsX() + 1, totalEventsErr);
+
+    numPassCut = inHist->IntegralAndError(binAddreses[0], inHist->GetNbinsX() + 1, numPassCutErr);
+    numFailCut = totalEvents - numPassCut;
+    numFailCutErr = TMath::Sqrt(totalEventsErr*totalEventsErr - numPassCutErr * numPassCutErr);
+}
+inline void PassFailANDCut2D(TH1 * inHist, double &numPassCut, double &numPassCutErr, double &numFailCut, double &numFailCutErr, int * binAddreses) {
+    double totalEventsErr;
+    double totalEvents = ((TH2 *) inHist)->IntegralAndError(1, inHist->GetNbinsX() + 1, 1, inHist->GetNbinsY() + 1, totalEventsErr);
+    numPassCut = ((TH2 *) inHist)->IntegralAndError(binAddreses[0], inHist->GetNbinsX() + 1, binAddreses[1], inHist->GetNbinsY() + 1, numPassCutErr);
+    numFailCut = totalEvents - numPassCut;
+    numFailCutErr = TMath::Sqrt(totalEventsErr*totalEventsErr - numPassCutErr * numPassCutErr);
+}
+inline void PassFailANDCut3D(TH1 * inHist, double &numPassCut, double &numPassCutErr, double &numFailCut, double &numFailCutErr, int * binAddreses) {
+    double totalEventsErr;
+    double totalEvents = ((TH3 *) inHist)->IntegralAndError(1, inHist->GetNbinsX() + 1, 1, inHist->GetNbinsY() + 1, 1, inHist->GetNbinsZ() + 1, totalEventsErr);
+    numPassCut = ((TH3 *) inHist)->IntegralAndError(binAddreses[0], inHist->GetNbinsX() + 1, binAddreses[1], inHist->GetNbinsY() + 1, binAddreses[2], inHist->GetNbinsZ() + 1, numPassCutErr);
+    numFailCut = totalEvents - numPassCut;
+    numFailCutErr = TMath::Sqrt(totalEventsErr*totalEventsErr - numPassCutErr * numPassCutErr);
+}
+inline void PassFailORCut2D(TH1 * inHist, double &numPassCut, double &numPassCutErr, double &numFailCut, double &numFailCutErr, int * binAddreses) {
+    double totalEventsErr;
+    double totalEvents = ((TH2 *) inHist)->IntegralAndError(1, inHist->GetNbinsX() + 1, 1, inHist->GetNbinsY() + 1, totalEventsErr);
+
+    if (binAddreses[0] == 1 || binAddreses[1] == 1) {
+        numFailCut = 0;
+        numFailCutErr = 0;
+    }
+    else {
+        numFailCut = ((TH2 *) inHist)->IntegralAndError(1, binAddreses[0] - 1, 1, binAddreses[1] - 1, numFailCutErr);
+    }
+    numPassCut = totalEvents - numFailCut;
+    numPassCutErr = TMath::Sqrt(totalEventsErr*totalEventsErr - numFailCutErr * numFailCutErr);
+}
+inline void PassFailORCut3D(TH1 * inHist, double &numPassCut, double &numPassCutErr, double &numFailCut, double &numFailCutErr, int * binAddreses) {
+    double totalEventsErr;
+    double totalEvents = ((TH3 *) inHist)->IntegralAndError(1, inHist->GetNbinsX() + 1, 1, inHist->GetNbinsY() + 1, 1, inHist->GetNbinsZ() + 1, totalEventsErr);
+    if (binAddreses[0] == 1 || binAddreses[1] == 1 || binAddreses[2] == 1) {
+        numFailCut = 0;
+        numFailCutErr = 0;
+    }
+    else {
+        numFailCut = ((TH3 *) inHist)->IntegralAndError(1, binAddreses[0] - 1, 1, binAddreses[1] - 1, 1, binAddreses[2] - 1, numFailCutErr);
+    }
+    numPassCut = totalEvents - numFailCut;
+    numPassCutErr = TMath::Sqrt(totalEventsErr*totalEventsErr - numFailCutErr * numFailCutErr);
+}
+
+inline void PassFailCut(TH1 * inHist, double &numPassCut, double &numPassCutErr, double &numFailCut, double &numFailCutErr, int * binAddreses, int whichIntType) {
+    //whichIntType
+    //0 is AND
+    //1 is OR
+    //2 is XOR -- not implemented yet though
+    
+    int numDims = 1;
+    if (inHist->GetNbinsY() > 1) {
+        numDims = (inHist->GetNbinsZ() > 1) ? 3 : 2;
+    }
+    switch (numDims) {
+        case 1:
+            PassFailCut1D(inHist, numPassCut, numPassCutErr, numFailCut, numFailCutErr, binAddreses);
+            break;
+        case 2:
+            switch (whichIntType) {
+                case 0:
+                    PassFailANDCut2D(inHist, numPassCut, numPassCutErr, numFailCut, numFailCutErr, binAddreses);
+                    break;
+                case 1:
+                    PassFailORCut2D(inHist, numPassCut, numPassCutErr, numFailCut, numFailCutErr, binAddreses);
+                    break;
+                default:
+                    cout << "whichIntType needs to be 0 or 1: " << whichIntType << endl;
+                    break;
+            }
+            break;
+        case 3:
+            switch (whichIntType) {
+                case 0:
+                    PassFailANDCut3D(inHist, numPassCut, numPassCutErr, numFailCut, numFailCutErr, binAddreses);
+                    break;
+                case 1:
+                    PassFailORCut3D(inHist, numPassCut, numPassCutErr, numFailCut, numFailCutErr, binAddreses);
+                    break;
+                default:
+                    cout << "whichIntType needs to be 0 or 1: " << whichIntType << endl;
+                    break;
+            }
+            break;
+        default:
+            break;
+    }
+}
+
+inline void PassFailCuts(vector<double> * vecIntegrals, vector<double> * vecIntegralErrors, int * binAddreses, TH1 * inHist, int whichIntType, bool doVerbosity = 0) {
+    //it seems that ROOT is intelligent about bin errors and so I don't need to worry about setting the bin errors by hand
+    double numPassCut, numFailCut;
+    double numPassCutErr, numFailCutErr;
+    PassFailCut(inHist, numPassCut, numPassCutErr, numFailCut, numFailCutErr, binAddreses, whichIntType);
+    if (doVerbosity) {
+        cout << "numPass Cut " << numPassCut << " +- " << numPassCutErr << endl;
+        cout << "numFail Cut " << numFailCut << " +- " << numFailCutErr << endl;
+    }
+    vecIntegrals->push_back(numFailCut);
+    vecIntegrals->push_back(numPassCut);
+    
+    vecIntegralErrors->push_back(numFailCutErr);
+    vecIntegralErrors->push_back(numPassCutErr);
+}
+/*
+inline void PassFailCuts(vector<double> * integrals, vector<double> * integralErrors, int * binAddreses, TH1 * hist, bool doVerbosity = 0) {
     double numPassCut, numFailCut;
     double numPassCutErr, numFailCutErr;
     numPassCut = hist->IntegralAndError(binAddreses[0], hist->GetNbinsX() + 1, numPassCutErr);
@@ -294,14 +420,16 @@ inline void PassFailCuts(vector<double> * integrals, vector<double> * integralEr
     else {
         numFailCut = hist->IntegralAndError(1, binAddreses[0] - 1, numFailCutErr);
     }
-    cout << "numPass Cut " << numPassCut << endl;
-    cout << "numFail Cut " << numFailCut << endl;
+    if (doVerbosity) {
+        cout << "numPass Cut " << numPassCut << endl;
+        cout << "numFail Cut " << numFailCut << endl;
+    }
     integrals->push_back(numFailCut);
     integrals->push_back(numPassCut);
     integralErrors->push_back(numFailCutErr);
     integralErrors->push_back(numPassCutErr);
 }
-inline void PassFailCuts(vector<double> * integrals, vector<double> * integralErrors, int * binAddreses, TH2 * hist) {
+inline void PassFailCuts(vector<double> * integrals, vector<double> * integralErrors, int * binAddreses, TH2 * hist, bool doVerbosity = 0) {
     double numPassCut, numFailCut;
     double numPassCutErr, numFailCutErr;
     numPassCut = hist->IntegralAndError(binAddreses[0], hist->GetNbinsX() + 1, binAddreses[1], hist->GetNbinsY() + 1, numPassCutErr);
@@ -312,8 +440,10 @@ inline void PassFailCuts(vector<double> * integrals, vector<double> * integralEr
     else {
         numFailCut = hist->IntegralAndError(1, binAddreses[0] - 1, 1, binAddreses[1] - 1, numFailCutErr);
     }
-    cout << "numPass Cut " << numPassCut << endl;
-    cout << "numFail Cut " << numFailCut << endl;
+    if (doVerbosity) {
+        cout << "numPass Cut " << numPassCut << endl;
+        cout << "numFail Cut " << numFailCut << endl;
+    }
     integrals->push_back(numFailCut);
     integrals->push_back(numPassCut);
     integralErrors->push_back(numFailCutErr);
@@ -335,6 +465,7 @@ inline void PassFailCuts(vector<double> * integrals, vector<double> * integralEr
     integralErrors->push_back(numFailCutErr);
     integralErrors->push_back(numPassCutErr);
 }
+*/
 inline Double_t ElectronEffectiveArea(float elecEta) {
     // calculate the effective area of the electron based upon its eta
     
@@ -372,6 +503,7 @@ inline TLorentzVector LeptonScaleSystShift(TLorentzVector inputLepVec, int input
     return outShiftVec;
 }
 
+/*
 inline TH1F * PassCutHisto(TH1 * inputHist, vector<int> * values, vector<TString> * names, TString histNameAppend, TString SystAppendName = "", int levelVerbosity = 0) {
     //TH1F * PassCutHisto(TH1 * inputHist, vector<int> * values, vector<TString> * names, TString SystAppendName = "", int levelVerbosity = 0) {
     /// Function to make a custom "pass/fail histogram "
@@ -426,27 +558,100 @@ inline TH1F * PassCutHisto(TH1 * inputHist, vector<int> * values, vector<TString
         cout << "inputHist name " << inputHist->GetName() << endl;
     }
     BinFinder(binAddreses, inputHist, x, y, z);
-    vector<double> integrals;
-    vector<double> integralErrors;
+    vector<double> vecIntegrals;
+    
+    vector<double> vecIntegralErrors;
     if (numVals > 1) {
         if (numVals > 2) {
-            PassFailCuts(&integrals, &integralErrors, binAddreses, (TH3 *) inputHist);
+            PassFailCuts(&vecIntegrals, &vecIntegralErrors, binAddreses, (TH3 *) inputHist);
         }
         else {
-            PassFailCuts(&integrals, &integralErrors, binAddreses, (TH2 *) inputHist);
+            PassFailCuts(&vecIntegrals, &vecIntegralErrors, binAddreses, (TH2 *) inputHist);
         }
     }
     else {
-        PassFailCuts(&integrals, &integralErrors, binAddreses, inputHist);
+        PassFailCuts(&vecIntegrals, &vecIntegralErrors, binAddreses, inputHist);
     }
-    outHist->SetBinContent(1, integrals[0]);
-    outHist->SetBinError(1, integralErrors[0]);
-    outHist->SetBinContent(2, integrals[1]);
-    outHist->SetBinError(2, integralErrors[1]);
+    
+    outHist->SetBinContent(1, vecIntegrals[0]);
+    outHist->SetBinError(1, vecIntegralErrors[0]);
+    outHist->SetBinContent(2, vecIntegrals[1]);
+    outHist->SetBinError(2, vecIntegralErrors[1]);
     outHist->GetXaxis()->SetBinLabel(1, "Failed Cut");
     outHist->GetXaxis()->SetBinLabel(2, "Passed Cut");
     return outHist;
 }
+*/
+
+
+inline TH1F * PassCutHisto(TH1 * inputHist, vector<int> * values, vector<TString> * names, TString histNameAppend, int whichIntType, TString SystAppendName = "", int levelVerbosity = 0) {
+    //TH1F * PassCutHisto(TH1 * inputHist, vector<int> * values, vector<TString> * names, TString SystAppendName = "", int levelVerbosity = 0) {
+    /// Function to make a custom "pass/fail histogram "
+    // inputs are the following
+    // vector of integer values which are the cut points
+    // vector of names for the variable that's being cut -- c.f. integer cut values
+    // appendName for what systematic if any the histogram comes from
+    
+    unsigned int numVals = values->size();
+    if (levelVerbosity) {
+        cout << "in PassCutHisto: number of values to cut on " << numVals << endl;
+    }
+    if (numVals == 0) {
+        cout << "issue with values vector: it's size 0!" << endl;
+    }
+    else {
+        if (numVals != names->size()) {
+            cout << "issue with vector sizes " << endl;
+            cout << "values->size() " << numVals << endl;
+            cout << "names->size() " << names->size() << endl;
+        }
+    }
+    
+    TString baseHistName = "h_PassFail_";
+    TString baseAxisName = "Pass/Fail ";
+    for (unsigned int iCut = 0; iCut < values->size(); ++iCut) {
+        baseHistName += names->at(iCut);
+        baseHistName += "Cut";
+        baseHistName += values->at(iCut);
+        if (iCut != values->size()) {
+            baseHistName += "_";
+        }
+        
+        baseAxisName += names->at(iCut);
+        baseAxisName += " > ";
+        baseAxisName += values->at(iCut);
+        if (iCut != values->size() - 1) {
+            baseAxisName += ", ";
+        }
+    }
+    baseHistName += SystAppendName;
+    TH1F * outHist = new TH1F(baseHistName + histNameAppend, baseAxisName, 2, -0.5, 1.5);
+    if (levelVerbosity) {
+        cout << "outHist name " << outHist->GetName() << endl;
+    }
+    int binAddreses[3] = {1, 1, 1};
+    float x = (float) values->at(0);
+    float y = numVals > 1 ? (float) values->at(1) : 1e99;
+    float z = numVals > 2 ? (float) values->at(2) : 1e99;
+    if (levelVerbosity) {
+        cout << "x:y:z = " << x << ":" << y << ":" << z << endl;
+        cout << "inputHist name " << inputHist->GetName() << endl;
+    }
+    BinFinder(binAddreses, inputHist, x, y, z);
+    vector<double> vecIntegrals;
+    vector<double> vecIntegralErrors;
+    PassFailCuts(&vecIntegrals, &vecIntegralErrors, binAddreses, inputHist, whichIntType, levelVerbosity);
+    outHist->SetBinContent(1, vecIntegrals[0]);
+    outHist->SetBinError(1, vecIntegralErrors[0]);
+    
+    outHist->SetBinContent(2, vecIntegrals[1]);
+    outHist->SetBinError(2, vecIntegralErrors[1]);
+    
+    outHist->GetXaxis()->SetBinLabel(1, "Failed Cut");
+    outHist->GetXaxis()->SetBinLabel(2, "Passed Cut");
+    return outHist;
+}
+
 
 
 inline TGraph LogLogGraph(TH1F * inputHist) {
@@ -496,4 +701,21 @@ inline void UnLogXAxis(TGraph * inputGraph) {
         inputGraph->GetPoint(iPoint, x, y);
         inputGraph->SetPoint(iPoint, TMath::Exp(x), y);
     }
+}
+
+inline TGraph * DivideGraph(TGraph * inputGraph1, TGraph * inputGraph2, TString outName, TString yAxis) {
+    TGraph * outGraph = (TGraph *) inputGraph1->Clone(outName);
+    outGraph->GetYaxis()->SetTitle(yAxis);
+    double x1, y1;
+    double x2, y2;
+    for (int iPoint = 0; iPoint < inputGraph1->GetN(); ++iPoint) {
+        inputGraph1->GetPoint(iPoint, x1, y1);
+        inputGraph2->GetPoint(iPoint, x2, y2);
+        if (abs(x1 - x2) >= 1E-3) {
+            cout << "difference between x1 and x2 is too large for iPoint " << iPoint << endl;
+            cout << "difference is " << abs(x1 - x2) << endl;
+        }
+        outGraph->SetPoint(iPoint, x1, y1/y2);
+    }
+    return outGraph;
 }

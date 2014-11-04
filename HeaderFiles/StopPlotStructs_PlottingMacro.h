@@ -12,6 +12,7 @@ typedef struct SampLoadSettings {
     bool doExcSamps;          // For grabbing exclusive (DY + N Jets, TTBar Decay modes) or inclusive samples (As of 8/5/13, only applies to Oviedo)
     bool noGenRecRW;
     bool noType0;            // for grabbing version of MET with no Type 0 corrections
+    bool doDropFakes;
     bool doNonSig;          // For whether or not to grab SM background and data (used in MT2CutYieldCalc.C)
     bool doSignal;          // For whether or not to grab a signal point
     bool multSigPts;          // For whether or not to show multiple different signal points (As of 8/5/13 this functionality hasn't been added in yet)
@@ -54,6 +55,7 @@ typedef struct SampLoadSettings {
         doExcSamps = 1;
         noGenRecRW = 0;
         noType0 = 0;
+        doDropFakes = 0;
         doNonSig = 0;
         doSignal = 0;
         multSigPts = 0;
@@ -148,6 +150,7 @@ typedef struct SampLoadSettings {
         MCAppendString += !doPURW ? "_noPURW" : "";
         MCAppendString += doSyst ? "" : "_noSyst";
         MCAppendString += noGenRecRW ? "_noGenRecRW" : "";
+        MCAppendString += doDropFakes ? "_noFakes" : "";
         if (inISPI->sampleType > 0) {
             MCAppendString += "Haddplots.root";                       
             outString += MCAppendString;
@@ -295,6 +298,7 @@ typedef struct HistPlotMaking{
     float inputMT2llCut;
     bool  cutMT2lb;
     float inputMT2lbCut;
+    int whichIntType;
     
     
     void DefaultVarVals() {
@@ -333,6 +337,7 @@ typedef struct HistPlotMaking{
         inputMT2llCut     = 80;
         cutMT2lb        = 0;
         inputMT2lbCut   = 170;
+        whichIntType = 0;
     }
     
     void SetCutValues(vector<float> * vecMT2llCut, vector<float> * vecMT2lbCut, int levelVerbosity = 0) {
@@ -483,6 +488,9 @@ typedef struct RunParams {
             else if (strncmp (argv[k],"noType0", 7) == 0) {
                 SLS.noType0 = 1;
             }
+            else if (strncmp (argv[k],"noFakes", 7) == 0) {
+                SLS.doDropFakes = 1;
+            }
             else if (strncmp (argv[k],"noExcSamps", 10) == 0) {
                 SLS.doExcSamps = 0;
             }
@@ -558,6 +566,7 @@ typedef struct RunParams {
             }
             else if (strncmp (argv[k],"doVerbosity", 11) == 0) {
                 HPM.doVerbosity = 1;
+                cout << "Verbosity is turned on!" << endl;
             }
             else if (strncmp (argv[k],"calcTTBarNorm", 13) == 0) {
                 HPM.calcTTBarNorm = 1;
@@ -607,10 +616,14 @@ typedef struct RunParams {
                 HPM.doYieldV1 = 0;
                 HPM.doYieldV2 = 1;
             }
-            else if (strncmp (argv[k],"printSystLim", 12) == 0) {
+            else if (strncmp (argv[k],"printAveSystLim", 12) == 0) {
                 HPM.printAveSyst = 1;
                 HPM.printSysLim = 1;
                 HPM.doStopXSec = 0;
+            }
+            else if (strncmp (argv[k],"printSystLim", 12) == 0) {
+	      HPM.printSysLim = 1;
+	      HPM.doStopXSec = 0;
             }
             else if (strncmp (argv[k],"tryCPBH", 7) == 0) {
                 HPM.tryCalcPassByHand = 1;
@@ -631,6 +644,9 @@ typedef struct RunParams {
             else if (strncmp (argv[k],"MT2AxisCuts", 11) == 0) {
                 HPM.MT2llaxisCut = strtol(argv[k+1], NULL, 10 );
                 HPM.MT2lbaxisCut = strtol(argv[k+2], NULL, 10 );
+            }
+            else if (strncmp (argv[k],"wInTy", 5) == 0) {
+                HPM.whichIntType = strtol(argv[k+1], NULL, 10 );
             }
             else if (strncmp (argv[k],"noLeg", 5) == 0) {
                 GHS.showLegend = 0;

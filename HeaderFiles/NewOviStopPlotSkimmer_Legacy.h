@@ -1,4 +1,4 @@
-// Contains relevant header files to include for the purposes 
+// Contains relevant header files to include for the purposes
 // of the Legacy nTuple skimmer
 
 #include "TChain.h"
@@ -19,6 +19,8 @@
 #include "TProfile.h"
 #include <sys/stat.h>
 #include "TCut.h"
+
+#include "./Hasher.h"
 #include "./StopSpecialFunctions.h"
 #include "./BasicFunctions.h"
 #include "./StopStructs_BasicParticleStructs.h"
@@ -27,6 +29,7 @@
 #include "./StopStructs_GenEventParticleInfo.h"
 #include "./StopStructs_RecoEventParticleInfo.h"
 #include "./StopStructs_RecoEventParticleFunctions.h"
+#include "./Typedefs.h"
 #include "./StopStructDefinitions.h"
 #include "./StopTreeManipulations/StopTreeManipulations.h"
 #include "./StopFunctionDefinitions_v2.h"

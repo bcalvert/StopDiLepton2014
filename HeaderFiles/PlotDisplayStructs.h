@@ -497,7 +497,7 @@ typedef struct IndSamplePlotInfo {
             HistogramUnderflowOverflow(vecGrabbedHist_SystVarDown_TH1F[iSyst], inHDP->doUnderflow, inHDP->doOverflow);
         }
     }
-    void SetTH1F_PassCut(vector<int> * vecCutValues, vector<TString> * vecCutVarNames, vector<TString> * vecSystNameAppends, bool doSyst = true, int levelVerbosity = 0) {
+    void SetTH1F_PassCut(vector<int> * vecCutValues, vector<TString> * vecCutVarNames, int whichIntType, vector<TString> * vecSystNameAppends, bool doSyst = true, int levelVerbosity = 0) {
         if (doSyst && vecSystNameAppends->size() != vecGrabbedHist_SystVarUp.size()) {
             cout << "something funky in that syst name and syst TH1 vecs don't have same size" << endl;
         }
@@ -505,15 +505,15 @@ typedef struct IndSamplePlotInfo {
         if (levelVerbosity) {
             cout << "about to run the PassCutHisto! " << endl;
         }
-        grabbedHist_TH1F = PassCutHisto(grabbedHist, vecCutValues, vecCutVarNames, nameISPI, systName, levelVerbosity);
+        grabbedHist_TH1F = PassCutHisto(grabbedHist, vecCutValues, vecCutVarNames, nameISPI, whichIntType, systName, levelVerbosity);
         if (doSyst) {
             for (unsigned int iSyst = 0; iSyst < vecSystNameAppends->size(); ++iSyst) {
                 systName = "";
                 systName += vecSystNameAppends->at(iSyst);
                 systName += "Shift";
                 
-                vecGrabbedHist_SystVarUp_TH1F[iSyst] = PassCutHisto(vecGrabbedHist_SystVarUp[iSyst], vecCutValues, vecCutVarNames, nameISPI, systName + TString("Up"), levelVerbosity);
-                vecGrabbedHist_SystVarDown_TH1F[iSyst] = PassCutHisto(vecGrabbedHist_SystVarDown[iSyst], vecCutValues, vecCutVarNames, nameISPI, systName + TString("Down"), levelVerbosity);
+                vecGrabbedHist_SystVarUp_TH1F[iSyst] = PassCutHisto(vecGrabbedHist_SystVarUp[iSyst], vecCutValues, vecCutVarNames, nameISPI, whichIntType, systName + TString("Up"), levelVerbosity);
+                vecGrabbedHist_SystVarDown_TH1F[iSyst] = PassCutHisto(vecGrabbedHist_SystVarDown[iSyst], vecCutValues, vecCutVarNames, nameISPI, whichIntType, systName + TString("Down"), levelVerbosity);
             }
         }
     }
@@ -692,7 +692,7 @@ typedef struct HistogramDisplayStructs {
     }
     ////////////////////////////////////////////////////////////////////////
     /// Functions related to yield calculations ///
-    void DoPassCutHisto(vector<int> * vecCutValues, vector<TString> * vecCutVarNames, TString compName, vector<indMCParams> * vecIndMCParams, vector<TString> * vecSystNameAppends, bool doSyst = true, int levelVerbosity = 0) {
+    void DoPassCutHisto(vector<int> * vecCutValues, vector<TString> * vecCutVarNames, int whichIntType, TString compName, vector<indMCParams> * vecIndMCParams, vector<TString> * vecSystNameAppends, bool doSyst = true, int levelVerbosity = 0) {
         if (levelVerbosity) {
             cout << "about to run SetTH1F_PassCut on compSamp" << endl;
         }
@@ -702,12 +702,12 @@ typedef struct HistogramDisplayStructs {
         else {
             HistogramAdder(&vecISPI_asLoaded, &compSamp.first, compName, levelVerbosity);
         }
-        compSamp.first.SetTH1F_PassCut(vecCutValues, vecCutVarNames, vecSystNameAppends, doSyst, levelVerbosity);
+        compSamp.first.SetTH1F_PassCut(vecCutValues, vecCutVarNames, whichIntType, vecSystNameAppends, doSyst, levelVerbosity);
         for (unsigned int iIndMC = 0; iIndMC < vecSampDisplay_IndMC.size(); ++iIndMC) {
             if (levelVerbosity) {
                 cout << "about to run SetTH1F_PassCut on vecSampDisplay_IndMC[iIndMC] for iIndMC = " << iIndMC << endl;
             }
-            vecSampDisplay_IndMC[iIndMC].first.SetTH1F_PassCut(vecCutValues, vecCutVarNames, vecSystNameAppends, doSyst, levelVerbosity);
+            vecSampDisplay_IndMC[iIndMC].first.SetTH1F_PassCut(vecCutValues, vecCutVarNames, whichIntType, vecSystNameAppends, doSyst, levelVerbosity);
         }
     }
     void SetSSI_YieldErrors(bool doIndMC = false, int whichBin = 2, bool justStat = false, bool noSystPlusStat = true, bool doSymErr = false) {

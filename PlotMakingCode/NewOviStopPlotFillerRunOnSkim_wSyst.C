@@ -455,7 +455,7 @@ int main( int argc, char* argv[] ) {
         PMRP.SRS.isT2ttFineBin = (PMRP.SRS.isT2tt && PMRP.PSIV.fInName.Contains("FineBin"));
         float stopMassToUseForXSec = PMRP.SRS.grabStopMass;
         
-        
+        /*
         int roundedStopMass;
         int massDiffInt_Twice;
         if (!PMRP.SRS.isT2ttFineBin) {
@@ -476,6 +476,8 @@ int main( int argc, char* argv[] ) {
         cout << "roundedStopMass " << roundedStopMass << endl;
         
         stopMassToUseForXSec = PMRP.SRS.grabStopMass ;
+        */
+        
         StopXSec theStopXSec = getCrossSectionStop(stopMassToUseForXSec);
         EGSPI.StopXSec = theStopXSec.stopProdXsec;
         EGSPI.StopXSecErr = theStopXSec.stopProdXsecUncert * EGSPI.StopXSec;

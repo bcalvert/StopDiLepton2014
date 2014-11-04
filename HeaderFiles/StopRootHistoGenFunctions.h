@@ -43,7 +43,7 @@ inline TH2F * FakeLeptonHistMaker(TString inputFile, int whichHistType, int whic
     TString histName = "h_";
     histName += lepString;
     histName += typeString;
-//    histName += "Rate";
+    //    histName += "Rate";
     histName += addString;
     TString axisString = ";Lepton #eta;Lepton p_{T} [GeV]";
     TH2F * outHist;
@@ -72,20 +72,20 @@ inline TH2F * FakeLeptonHistMaker(TString inputFile, int whichHistType, int whic
         cout << "issue with inputFile: prematurely reached end of file " << endl;
     }
     /*
-    if (!(inputFileStream.eof())) {
-        getline(inputFileStream, line);
-        stringstream ss( (line) );
-        while (std::getline(ss, field, ',' )) {
-            stringstream fs ( field );
-            int currField = 0;
-            fs >> currField;
-            EtaParams.push_back(currField);
-        }
-    }
-    else {
-        cout << "issue with inputFile: prematurely reached end of file " << endl;
-    }
-    */
+     if (!(inputFileStream.eof())) {
+     getline(inputFileStream, line);
+     stringstream ss( (line) );
+     while (std::getline(ss, field, ',' )) {
+     stringstream fs ( field );
+     int currField = 0;
+     fs >> currField;
+     EtaParams.push_back(currField);
+     }
+     }
+     else {
+     cout << "issue with inputFile: prematurely reached end of file " << endl;
+     }
+     */
     outHist = new TH2F(histName, axisString, numEtaBins, etaBoundToUse, pTParams[0], pTParams[1], pTParams[2]);
     for (int iEta = 0; iEta < numEtaBins; ++iEta) {
         pTCounter = 0;
@@ -214,14 +214,14 @@ struct StopXSecFitter {
             xsecFitFunc = new TF1("XSecFitFunc", vecPolyForm[whichTypeFunc], xLBToUse, xUBToUse);
         }
         /*
-        switch (whichTypeFunc) {
-            case 0:
-                xsecFitFunc = new TF1("XSecFitFunc", "pol5", xLBToUse, xUBToUse);
-                break;
-            default :
-                cout << "no value set up for whichTypeFunc = " << whichTypeFunc << endl;
-                break;
-        }
+         switch (whichTypeFunc) {
+         case 0:
+         xsecFitFunc = new TF1("XSecFitFunc", "pol5", xLBToUse, xUBToUse);
+         break;
+         default :
+         cout << "no value set up for whichTypeFunc = " << whichTypeFunc << endl;
+         break;
+         }
          */
     }
     void FitXSecHist(TH1F * inputHist, bool doLogLog = 1) {
