@@ -1,4 +1,4 @@
-void AddInKT2_TopBounds(vector< vector<Double_t> > * inVecVecBinEdges, vector<int> * vecNumBins) {
+inline void AddInKT2_TopBounds(vector< vector<Double_t> > * inVecVecBinEdges, vector<int> * vecNumBins) {
     /*
      200 GeV Signal from -300 to -100 -- 1 bin
      35 GeV bins from -100 to 40 -- 4 bins
@@ -32,7 +32,7 @@ void AddInKT2_TopBounds(vector< vector<Double_t> > * inVecVecBinEdges, vector<in
     vecNumBins->push_back(numBinsTotal);
 }
 
-void AddInMT2bb_ZMETBounds_NonControl(vector< vector<Double_t> > * inVecVecBinEdges, vector<int> * vecNumBins) {
+inline void AddInMT2bb_ZMETBounds_NonControl(vector< vector<Double_t> > * inVecVecBinEdges, vector<int> * vecNumBins) {
     /*
      10 GeV bins from 70 to 150 -- 8 bins
      5 GeV bins from 150 to 200 -- 10 bins
@@ -67,7 +67,7 @@ void AddInMT2bb_ZMETBounds_NonControl(vector< vector<Double_t> > * inVecVecBinEd
     vecNumBins->push_back(numBinsTotal);
 }
 
-void AddInMT2bb_ZMETBounds_Control(vector< vector<Double_t> > * inVecVecBinEdges, vector<int> * vecNumBins) {
+inline void AddInMT2bb_ZMETBounds_Control(vector< vector<Double_t> > * inVecVecBinEdges, vector<int> * vecNumBins) {
     /*
      180 GeV bin from 0 to 170 -- 1 bin
      5 GeV bins from 170 to 200 -- 6 bins
@@ -102,7 +102,7 @@ void AddInMT2bb_ZMETBounds_Control(vector< vector<Double_t> > * inVecVecBinEdges
     vecNumBins->push_back(numBinsTotal);
 }
 
-void AddInMT2lblbBounds_NonControl(vector< vector<Double_t> > * inVecVecBinEdges, vector<int> * vecNumBins) {
+inline void AddInMT2lblbBounds_NonControl(vector< vector<Double_t> > * inVecVecBinEdges, vector<int> * vecNumBins) {
     /*
      1 GeV bin right at 0 -- 1 bin
      9 GeV bin from 1 to 10 -- 1 bin
@@ -136,7 +136,7 @@ void AddInMT2lblbBounds_NonControl(vector< vector<Double_t> > * inVecVecBinEdges
     vecNumBins->push_back(numBinsTotal);
 }
 
-void AddInMT2lblbBounds_Control(vector< vector<Double_t> > * inVecVecBinEdges, vector<int> * vecNumBins) {
+inline void AddInMT2lblbBounds_Control(vector< vector<Double_t> > * inVecVecBinEdges, vector<int> * vecNumBins) {
     /*
      150 GeV bin from 0 to 150 -- 1 bin
      10 GeV bins from 150 to 200 -- 5 bins
@@ -167,7 +167,7 @@ void AddInMT2lblbBounds_Control(vector< vector<Double_t> > * inVecVecBinEdges, v
     vecNumBins->push_back(numBinsTotal);
 }
 
-void AddInMT2llBounds_NonControl(vector< vector<Double_t> > * inVecVecBinEdges, vector<int> * vecNumBins) {
+inline void AddInMT2llBounds_NonControl(vector< vector<Double_t> > * inVecVecBinEdges, vector<int> * vecNumBins) {
     /*
      1 GeV bin right at 0 -- 1 bin
      9 GeV bin up to 10 -- 1 bin
@@ -200,7 +200,7 @@ void AddInMT2llBounds_NonControl(vector< vector<Double_t> > * inVecVecBinEdges, 
     vecNumBins->push_back(numBinsTotal);
 }
 
-void AddInMT2llBounds_Control(vector< vector<Double_t> > * inVecVecBinEdges, vector<int> * vecNumBins) {
+inline void AddInMT2llBounds_Control(vector< vector<Double_t> > * inVecVecBinEdges, vector<int> * vecNumBins) {
     /*
      80 GeV bin from 0 to 80 -- 1 bin
      5 GeV bins 80 to 120 -- 8 bins
@@ -230,7 +230,7 @@ void AddInMT2llBounds_Control(vector< vector<Double_t> > * inVecVecBinEdges, vec
 }
 
 
-void AddInDilepPtBounds(vector< vector<Double_t> > * inVecVecBinEdges, vector<int> * vecNumBins) {
+inline void AddInDilepPtBounds(vector< vector<Double_t> > * inVecVecBinEdges, vector<int> * vecNumBins) {
     /*
      10 GeV bins from 0 to 120 -- 12 bins
      15 GeV bins from 120 to 150 -- 2 bins
