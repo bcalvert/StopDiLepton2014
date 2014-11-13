@@ -1,6 +1,5 @@
-// Functions used as part of the nTuple plot making macro
-// Set up the input branch address names and values for the Maryland skim input tree
-// automatically made from StopOutTreeManipulations.h by using MakeInTreeBranch.sh
+// Functions used as part of the nTuple skimming macro
+// Set up the output branch address names and values for the skim output tree
 
 
 inline void SetInTreeBranch_PlotMaker_PassesCutInfo(TTree * inTree, bool passesFullCut, int whichSyst = 0) {
@@ -28,9 +27,11 @@ inline void SetInTreeBranch_PlotMaker_LeptonInfo(TTree * inTree, EventLepInfo * 
     */
     
     TString lepString = "TLep";
+    
     inTree->SetBranchAddress("TDoEvent" + appendStringSyst,                     &inELI->doEvent);
     inTree->SetBranchAddress("TChannel" + appendStringSyst,                     &inELI->EventDiLepType);
     inTree->SetBranchAddress("TDiLepInZ" + appendStringSyst,                    &inELI->EventDiLepinZMass);
+    /*
     inTree->SetBranchAddress("TNIsoElecs_pT20" + appendStringSyst,              &inELI->ELI_LC.EventNIsoElecs_pT20);
     inTree->SetBranchAddress("TNIsoMuons_pT20" + appendStringSyst,              &inELI->ELI_LC.EventNIsoMuons_pT20);
     inTree->SetBranchAddress("TNIsoPosits_pT20" + appendStringSyst,             &inELI->ELI_LC.EventNIsoPosits_pT20);
@@ -41,6 +42,7 @@ inline void SetInTreeBranch_PlotMaker_LeptonInfo(TTree * inTree, EventLepInfo * 
     inTree->SetBranchAddress("TNIsoMubars_pT10to20" + appendStringSyst,         &inELI->ELI_LC.EventNIsoMubars_pT10to20);
     inTree->SetBranchAddress("TNViableLepPairsPreMassCut" + appendStringSyst,   &inELI->ELI_LC.EventNViableLepPairsPreMassCut);
     inTree->SetBranchAddress("TNViableLepPairsPostMassCut" + appendStringSyst,  &inELI->ELI_LC.EventNViableLepPairsPostMassCut);
+    */
     
     inTree->SetBranchAddress("TDiLepMass" + appendStringSyst,                   &inELI->EventDiLepMass);    
     
@@ -138,6 +140,9 @@ inline void SetInTreeBranch_PlotMaker_METInfo(TTree * inTree, EventMETInfo * inE
     
     noPhiCorrString += appendString;
     
+    TString stringCorrPairBase = "MT2lb_CorrPairing_";
+    TString stringCorrPair;
+    
     //int systLepES = 1;
     //int systJetES = 2;
     int systBTagEffSF = 3;
@@ -153,26 +158,41 @@ inline void SetInTreeBranch_PlotMaker_METInfo(TTree * inTree, EventMETInfo * inE
     inTree->SetBranchAddress(TString("T") + stringSmear + stringMETType[inEMI->METType] + TString("MT2ll") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.EventMT2ll);  
     if (whichSyst != systBTagEffSF && whichSyst != systBMisTagSF) {
         if (isPhiCorr) {
+            /*
             inTree->SetBranchAddress(TString("T") + stringSmear + stringMETType[inEMI->METType] + TString("MT_Lep0") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.MT_Lep0);
             inTree->SetBranchAddress(TString("T") + stringSmear + stringMETType[inEMI->METType] + TString("MT_Lep1") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.MT_Lep1);
             inTree->SetBranchAddress(TString("T") + stringSmear + stringMETType[inEMI->METType] + TString("MT_HTVec") + appendStringSyst + noPhiCorrString,    &inEMI->MET_EMT2I.MT_HTVec);
             
             inTree->SetBranchAddress(TString("T") + stringSmear + stringMETType[inEMI->METType] + TString("METdivMeff") + appendStringSyst + noPhiCorrString,  &inEMI->EventMETdivMeff);
             inTree->SetBranchAddress(TString("T") + stringSmear + stringMETType[inEMI->METType] + TString("METdivHT") + appendStringSyst + noPhiCorrString,    &inEMI->EventMETdivHT);
+            */
             
             inTree->SetBranchAddress(TString("T") + stringSmear + stringMETType[inEMI->METType] + TString("UPar") + appendStringSyst + noPhiCorrString,    &inEMI->MET_ERI.recoilUPar);        
             inTree->SetBranchAddress(TString("T") + stringSmear + stringMETType[inEMI->METType] + TString("UPerp") + appendStringSyst + noPhiCorrString,    &inEMI->MET_ERI.recoilUPerp);
-            inTree->SetBranchAddress(TString("T") + stringSmear + stringMETType[inEMI->METType] + TString("MT2lb") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.EventMT2lb);                        
-            inTree->SetBranchAddress(TString("T") + stringSmear + stringMETType[inEMI->METType] + TString("DPhiMT2lb_JetsUsed") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.EventDeltaPhiMT2lb_JetsUsed);
-            inTree->SetBranchAddress(TString("T") + stringSmear + stringMETType[inEMI->METType] + TString("DPhiMT2lb_BLepsUsed") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.EventDeltaPhiMT2lb_BLepsUsed);
+            inTree->SetBranchAddress(TString("T") + stringSmear + stringMETType[inEMI->METType] + TString("MT2lb") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.EventMT2lblb);
+            inTree->SetBranchAddress(TString("T") + stringSmear + stringMETType[inEMI->METType] + TString("DPhiMT2lblb_JetsUsed") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.EventDeltaPhiMT2lblb_JetsUsed);
+            inTree->SetBranchAddress(TString("T") + stringSmear + stringMETType[inEMI->METType] + TString("DPhiMT2lblb_BLepsUsed") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.EventDeltaPhiMT2lblb_BLepsUsed);            
+            inTree->SetBranchAddress(TString("T") + stringSmear + stringMETType[inEMI->METType] + TString("MassBLep0_BLepsUsed") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.EventMassBLep0_BLepsUsed);
+            inTree->SetBranchAddress(TString("T") + stringSmear + stringMETType[inEMI->METType] + TString("MassBLep1_BLepsUsed") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.EventMassBLep1_BLepsUsed);
         }
     }
     if (isPhiCorr) {
-        inTree->SetBranchAddress(TString("T") + stringSmear + stringMETType[inEMI->METType] + TString("MT2lb_ToT") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.caseMT2lb);       
+        inTree->SetBranchAddress(TString("T") + stringSmear + stringMETType[inEMI->METType] + TString("MT2lb_ToT") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.caseMT2lblb);
+//        cout << "size " << inEMI->MET_EMT2I.vecCorrPairValMT2lblb.size() << endl;
+	/*
+        for (int iCorrPair = 0; iCorrPair < (int) inEMI->MET_EMT2I.vecCorrPairValMT2lblb.size(); ++iCorrPair) {
+            stringCorrPair = stringCorrPairBase;
+            stringCorrPair += iCorrPair;
+            inTree->SetBranchAddress(TString("T") + stringSmear + stringMETType[inEMI->METType] + stringCorrPair + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.vecCorrPairValMT2lblb[iCorrPair]);   
+        }
+	*/
     }
+    inTree->SetBranchAddress(TString("T") + stringSmear + stringMETType[inEMI->METType] + TString("MT2bb_ZMET") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.EventMT2bb_ZMET);
+    inTree->SetBranchAddress(TString("T") + stringSmear + stringMETType[inEMI->METType] + TString("DPhiMT2bb_ZMET_JetsUsed") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.EventDeltaPhiMT2bb_ZMET_JetsUsed);
+    /*
     inTree->SetBranchAddress(TString("T") + stringSmear + stringMETType[inEMI->METType] + TString("BMET") + appendStringSyst + noPhiCorrString,     &inEMI->EventBMET);
     inTree->SetBranchAddress(TString("T") + stringSmear + stringMETType[inEMI->METType] + TString("BMET_Phi") + appendStringSyst + noPhiCorrString,     &inEMI->EventBMETPhi);
-    inTree->SetBranchAddress(TString("T") + stringSmear + stringMETType[inEMI->METType] + TString("MT2ll_BMET") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.EventMT2ll_BMET);
+    */
 }
 
 inline void SetInTreeBranch_PlotMaker_SpecialMETInfo(TTree * inTree, EventMETInfo * inEMI, int whichSyst = 0, bool isSmear = false, bool isPhiCorr = true, TString appendString = "") {
@@ -180,6 +200,9 @@ inline void SetInTreeBranch_PlotMaker_SpecialMETInfo(TTree * inTree, EventMETInf
     TString noPhiCorrString = isPhiCorr ? "" : "_noPhiCorr";
     noPhiCorrString += "_v2";
     noPhiCorrString += appendString;
+    
+    TString stringCorrPairBase = "MT2lb_CorrPairing_";
+    TString stringCorrPair;
     
     //int systLepES = 1;
     //int systJetES = 2;
@@ -197,27 +220,42 @@ inline void SetInTreeBranch_PlotMaker_SpecialMETInfo(TTree * inTree, EventMETInf
     inTree->SetBranchAddress(TString("T") + stringSmear + TString("MT2ll") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.EventMT2ll);                    
     if (whichSyst != systBTagEffSF && whichSyst != systBMisTagSF) {
         if (isPhiCorr) {
+            /*
             inTree->SetBranchAddress(TString("T") + stringSmear + TString("MT_Lep0") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.MT_Lep0);
             inTree->SetBranchAddress(TString("T") + stringSmear + TString("MT_Lep1") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.MT_Lep1);
             inTree->SetBranchAddress(TString("T") + stringSmear + TString("MT_HTVec") + appendStringSyst + noPhiCorrString,    &inEMI->MET_EMT2I.MT_HTVec);
             
             inTree->SetBranchAddress(TString("T") + stringSmear + TString("METdivMeff") + appendStringSyst + noPhiCorrString,  &inEMI->EventMETdivMeff);
             inTree->SetBranchAddress(TString("T") + stringSmear + TString("METdivHT") + appendStringSyst + noPhiCorrString,    &inEMI->EventMETdivHT);
-            
+            */
             inTree->SetBranchAddress(TString("T") + stringSmear + TString("UPar") + appendStringSyst + noPhiCorrString,    &inEMI->MET_ERI.recoilUPar);        
             inTree->SetBranchAddress(TString("T") + stringSmear + TString("UPerp") + appendStringSyst + noPhiCorrString,    &inEMI->MET_ERI.recoilUPerp);
             
-            inTree->SetBranchAddress(TString("T") + stringSmear + TString("MT2lb") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.EventMT2lb);                        
-            inTree->SetBranchAddress(TString("T") + stringSmear + TString("DPhiMT2lb_JetsUsed") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.EventDeltaPhiMT2lb_JetsUsed);
-            inTree->SetBranchAddress(TString("T") + stringSmear + TString("DPhiMT2lb_BLepsUsed") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.EventDeltaPhiMT2lb_BLepsUsed);
+            inTree->SetBranchAddress(TString("T") + stringSmear + TString("MT2lb") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.EventMT2lblb);
+            inTree->SetBranchAddress(TString("T") + stringSmear + TString("DPhiMT2lblb_JetsUsed") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.EventDeltaPhiMT2lblb_JetsUsed);
+            inTree->SetBranchAddress(TString("T") + stringSmear + TString("DPhiMT2lblb_BLepsUsed") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.EventDeltaPhiMT2lblb_BLepsUsed);
+            inTree->SetBranchAddress(TString("T") + stringSmear + TString("MassBLep0_BLepsUsed") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.EventMassBLep0_BLepsUsed);
+            inTree->SetBranchAddress(TString("T") + stringSmear + TString("MassBLep1_BLepsUsed") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.EventMassBLep1_BLepsUsed);
         }
     }
     if (isPhiCorr) {
-        inTree->SetBranchAddress(TString("T") + stringSmear + TString("MT2lb_ToT") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.caseMT2lb);       
+//        cout << "size: " << inEMI->MET_EMT2I.vecCorrPairValMT2lblb.size() << endl;
+        inTree->SetBranchAddress(TString("T") + stringSmear + TString("MT2lb_ToT") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.caseMT2lblb); 
+        /*
+        for (int iCorrPair = 0; iCorrPair < (int) inEMI->MET_EMT2I.vecCorrPairValMT2lblb.size(); ++iCorrPair) {
+            stringCorrPair = stringCorrPairBase;
+            stringCorrPair += iCorrPair;
+            inTree->SetBranchAddress(TString("T") + stringSmear + stringCorrPair + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.vecCorrPairValMT2lblb[iCorrPair]);   
+        }
+        */
     }
+    inTree->SetBranchAddress(TString("T") + stringSmear + TString("MT2bb_ZMET") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.EventMT2bb_ZMET);
+    inTree->SetBranchAddress(TString("T") + stringSmear + TString("DPhiMT2bb_ZMET_JetsUsed") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.EventDeltaPhiMT2bb_ZMET_JetsUsed);
+    /*
     inTree->SetBranchAddress(TString("T") + stringSmear + TString("BMET") + appendStringSyst + noPhiCorrString,     &inEMI->EventBMET);
     inTree->SetBranchAddress(TString("T") + stringSmear + TString("BMET_Phi") + appendStringSyst + noPhiCorrString,     &inEMI->EventBMETPhi);
     inTree->SetBranchAddress(TString("T") + stringSmear + TString("MT2ll_BMET") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.EventMT2ll_BMET);
+    */
 }
 
 inline void SetInTreeBranch_PlotMaker_DiStructureInfo(TTree * inTree, EventDiStructureInfo * inEDSI, int whichSyst = 0, bool isSmear = false, bool isPhiCorr = true) {
@@ -524,6 +562,25 @@ inline void SetInTreeBranch_PlotMaker_SUSYInfo(TTree * inTree, EventGenSUSYParti
     }
     */
 }
+
+
+inline void SetInTreeBranch_PlotMaker_GenMT2Info(TTree * inTree, EventGenMT2Info * inEGMT2I) {
+    TString prefixGenMT2 = "TGen";
+    TString stringCorr[2] = {"_IncorrPair", "_CorrPair"};
+    TString stringPair[2] = {"_0", "_1"};
+    inTree->SetBranchAddress(prefixGenMT2 + TString("MT2ll"), &inEGMT2I->genMT2ll);
+    inTree->SetBranchAddress(prefixGenMT2 + TString("TotBLepMass"), &inEGMT2I->TotBLepMass);
+    for (int iCorr = 0; iCorr < 2; ++iCorr) {
+        inTree->SetBranchAddress(prefixGenMT2 + TString("MT2lb") + stringCorr[iCorr], &inEGMT2I->vecGenMT2lb[iCorr]);
+        inTree->SetBranchAddress(prefixGenMT2 + TString("DPhi_BLeps") + stringCorr[iCorr], &inEGMT2I->vecDPhiGenBLeps[iCorr]);
+        for (int iPair = 0; iPair < 2; ++iPair) {
+            inTree->SetBranchAddress(prefixGenMT2 + TString("BLepMass") + stringCorr[iCorr] + stringPair[iPair], &inEGMT2I->vecVecGenBLepMass[iCorr][iPair]);
+            inTree->SetBranchAddress(prefixGenMT2 + TString("BLepDPhi") + stringCorr[iCorr] + stringPair[iPair], &inEGMT2I->vecVecGenBLepDPhi[iCorr][iPair]);
+            inTree->SetBranchAddress(prefixGenMT2 + TString("BLepDEta") + stringCorr[iCorr] + stringPair[iPair], &inEGMT2I->vecVecGenBLepDEta[iCorr][iPair]);
+        }
+    }
+}
+
 
 inline void SetInTreeBranch_PlotMaker_BasicInfo(TTree * inTree, FilterTriggerInfo * inFTI, EventPileUpInfo * inEPI, BasicEventInfo * inBEI, EventGenWeight * inEGW) {
     inTree->SetBranchAddress("TPassDoubleEl", &inFTI->passTrigDoubleEl);

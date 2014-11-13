@@ -27,9 +27,11 @@ inline void SetOutTreeBranchLeptonInfo(TTree * outTree, EventLepInfo * inELI, in
     */
     
     TString lepString = "TLep";
+    
     outTree->Branch("TDoEvent" + appendStringSyst,                     &inELI->doEvent);
     outTree->Branch("TChannel" + appendStringSyst,                     &inELI->EventDiLepType);
     outTree->Branch("TDiLepInZ" + appendStringSyst,                    &inELI->EventDiLepinZMass);
+    /*
     outTree->Branch("TNIsoElecs_pT20" + appendStringSyst,              &inELI->ELI_LC.EventNIsoElecs_pT20);
     outTree->Branch("TNIsoMuons_pT20" + appendStringSyst,              &inELI->ELI_LC.EventNIsoMuons_pT20);
     outTree->Branch("TNIsoPosits_pT20" + appendStringSyst,             &inELI->ELI_LC.EventNIsoPosits_pT20);
@@ -40,6 +42,7 @@ inline void SetOutTreeBranchLeptonInfo(TTree * outTree, EventLepInfo * inELI, in
     outTree->Branch("TNIsoMubars_pT10to20" + appendStringSyst,         &inELI->ELI_LC.EventNIsoMubars_pT10to20);
     outTree->Branch("TNViableLepPairsPreMassCut" + appendStringSyst,   &inELI->ELI_LC.EventNViableLepPairsPreMassCut);
     outTree->Branch("TNViableLepPairsPostMassCut" + appendStringSyst,  &inELI->ELI_LC.EventNViableLepPairsPostMassCut);
+    */
     
     outTree->Branch("TDiLepMass" + appendStringSyst,                   &inELI->EventDiLepMass);    
     
@@ -137,6 +140,9 @@ inline void SetOutTreeBranchMETInfo(TTree * outTree, EventMETInfo * inEMI, int w
     
     noPhiCorrString += appendString;
     
+    TString stringCorrPairBase = "MT2lb_CorrPairing_";
+    TString stringCorrPair;
+    
     //int systLepES = 1;
     //int systJetES = 2;
     int systBTagEffSF = 3;
@@ -152,26 +158,41 @@ inline void SetOutTreeBranchMETInfo(TTree * outTree, EventMETInfo * inEMI, int w
     outTree->Branch(TString("T") + stringSmear + stringMETType[inEMI->METType] + TString("MT2ll") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.EventMT2ll);  
     if (whichSyst != systBTagEffSF && whichSyst != systBMisTagSF) {
         if (isPhiCorr) {
+            /*
             outTree->Branch(TString("T") + stringSmear + stringMETType[inEMI->METType] + TString("MT_Lep0") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.MT_Lep0);
             outTree->Branch(TString("T") + stringSmear + stringMETType[inEMI->METType] + TString("MT_Lep1") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.MT_Lep1);
             outTree->Branch(TString("T") + stringSmear + stringMETType[inEMI->METType] + TString("MT_HTVec") + appendStringSyst + noPhiCorrString,    &inEMI->MET_EMT2I.MT_HTVec);
             
             outTree->Branch(TString("T") + stringSmear + stringMETType[inEMI->METType] + TString("METdivMeff") + appendStringSyst + noPhiCorrString,  &inEMI->EventMETdivMeff);
             outTree->Branch(TString("T") + stringSmear + stringMETType[inEMI->METType] + TString("METdivHT") + appendStringSyst + noPhiCorrString,    &inEMI->EventMETdivHT);
+            */
             
             outTree->Branch(TString("T") + stringSmear + stringMETType[inEMI->METType] + TString("UPar") + appendStringSyst + noPhiCorrString,    &inEMI->MET_ERI.recoilUPar);        
             outTree->Branch(TString("T") + stringSmear + stringMETType[inEMI->METType] + TString("UPerp") + appendStringSyst + noPhiCorrString,    &inEMI->MET_ERI.recoilUPerp);
-            outTree->Branch(TString("T") + stringSmear + stringMETType[inEMI->METType] + TString("MT2lb") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.EventMT2lb);                        
-            outTree->Branch(TString("T") + stringSmear + stringMETType[inEMI->METType] + TString("DPhiMT2lb_JetsUsed") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.EventDeltaPhiMT2lb_JetsUsed);
-            outTree->Branch(TString("T") + stringSmear + stringMETType[inEMI->METType] + TString("DPhiMT2lb_BLepsUsed") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.EventDeltaPhiMT2lb_BLepsUsed);
+            outTree->Branch(TString("T") + stringSmear + stringMETType[inEMI->METType] + TString("MT2lb") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.EventMT2lblb);
+            outTree->Branch(TString("T") + stringSmear + stringMETType[inEMI->METType] + TString("DPhiMT2lblb_JetsUsed") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.EventDeltaPhiMT2lblb_JetsUsed);
+            outTree->Branch(TString("T") + stringSmear + stringMETType[inEMI->METType] + TString("DPhiMT2lblb_BLepsUsed") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.EventDeltaPhiMT2lblb_BLepsUsed);            
+            outTree->Branch(TString("T") + stringSmear + stringMETType[inEMI->METType] + TString("MassBLep0_BLepsUsed") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.EventMassBLep0_BLepsUsed);
+            outTree->Branch(TString("T") + stringSmear + stringMETType[inEMI->METType] + TString("MassBLep1_BLepsUsed") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.EventMassBLep1_BLepsUsed);
         }
     }
     if (isPhiCorr) {
-        outTree->Branch(TString("T") + stringSmear + stringMETType[inEMI->METType] + TString("MT2lb_ToT") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.caseMT2lb);       
+        outTree->Branch(TString("T") + stringSmear + stringMETType[inEMI->METType] + TString("MT2lb_ToT") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.caseMT2lblb);
+//        cout << "size " << inEMI->MET_EMT2I.vecCorrPairValMT2lblb.size() << endl;
+	/*
+        for (int iCorrPair = 0; iCorrPair < (int) inEMI->MET_EMT2I.vecCorrPairValMT2lblb.size(); ++iCorrPair) {
+            stringCorrPair = stringCorrPairBase;
+            stringCorrPair += iCorrPair;
+            outTree->Branch(TString("T") + stringSmear + stringMETType[inEMI->METType] + stringCorrPair + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.vecCorrPairValMT2lblb[iCorrPair]);   
+        }
+	*/
     }
+    outTree->Branch(TString("T") + stringSmear + stringMETType[inEMI->METType] + TString("MT2bb_ZMET") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.EventMT2bb_ZMET);
+    outTree->Branch(TString("T") + stringSmear + stringMETType[inEMI->METType] + TString("DPhiMT2bb_ZMET_JetsUsed") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.EventDeltaPhiMT2bb_ZMET_JetsUsed);
+    /*
     outTree->Branch(TString("T") + stringSmear + stringMETType[inEMI->METType] + TString("BMET") + appendStringSyst + noPhiCorrString,     &inEMI->EventBMET);
     outTree->Branch(TString("T") + stringSmear + stringMETType[inEMI->METType] + TString("BMET_Phi") + appendStringSyst + noPhiCorrString,     &inEMI->EventBMETPhi);
-    outTree->Branch(TString("T") + stringSmear + stringMETType[inEMI->METType] + TString("MT2ll_BMET") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.EventMT2ll_BMET);
+    */
 }
 
 inline void SetOutTreeBranchSpecialMETInfo(TTree * outTree, EventMETInfo * inEMI, int whichSyst = 0, bool isSmear = false, bool isPhiCorr = true, TString appendString = "") {
@@ -179,6 +200,9 @@ inline void SetOutTreeBranchSpecialMETInfo(TTree * outTree, EventMETInfo * inEMI
     TString noPhiCorrString = isPhiCorr ? "" : "_noPhiCorr";
     noPhiCorrString += "_v2";
     noPhiCorrString += appendString;
+    
+    TString stringCorrPairBase = "MT2lb_CorrPairing_";
+    TString stringCorrPair;
     
     //int systLepES = 1;
     //int systJetES = 2;
@@ -196,27 +220,42 @@ inline void SetOutTreeBranchSpecialMETInfo(TTree * outTree, EventMETInfo * inEMI
     outTree->Branch(TString("T") + stringSmear + TString("MT2ll") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.EventMT2ll);                    
     if (whichSyst != systBTagEffSF && whichSyst != systBMisTagSF) {
         if (isPhiCorr) {
+            /*
             outTree->Branch(TString("T") + stringSmear + TString("MT_Lep0") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.MT_Lep0);
             outTree->Branch(TString("T") + stringSmear + TString("MT_Lep1") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.MT_Lep1);
             outTree->Branch(TString("T") + stringSmear + TString("MT_HTVec") + appendStringSyst + noPhiCorrString,    &inEMI->MET_EMT2I.MT_HTVec);
             
             outTree->Branch(TString("T") + stringSmear + TString("METdivMeff") + appendStringSyst + noPhiCorrString,  &inEMI->EventMETdivMeff);
             outTree->Branch(TString("T") + stringSmear + TString("METdivHT") + appendStringSyst + noPhiCorrString,    &inEMI->EventMETdivHT);
-            
+            */
             outTree->Branch(TString("T") + stringSmear + TString("UPar") + appendStringSyst + noPhiCorrString,    &inEMI->MET_ERI.recoilUPar);        
             outTree->Branch(TString("T") + stringSmear + TString("UPerp") + appendStringSyst + noPhiCorrString,    &inEMI->MET_ERI.recoilUPerp);
             
-            outTree->Branch(TString("T") + stringSmear + TString("MT2lb") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.EventMT2lb);                        
-            outTree->Branch(TString("T") + stringSmear + TString("DPhiMT2lb_JetsUsed") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.EventDeltaPhiMT2lb_JetsUsed);
-            outTree->Branch(TString("T") + stringSmear + TString("DPhiMT2lb_BLepsUsed") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.EventDeltaPhiMT2lb_BLepsUsed);
+            outTree->Branch(TString("T") + stringSmear + TString("MT2lb") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.EventMT2lblb);
+            outTree->Branch(TString("T") + stringSmear + TString("DPhiMT2lblb_JetsUsed") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.EventDeltaPhiMT2lblb_JetsUsed);
+            outTree->Branch(TString("T") + stringSmear + TString("DPhiMT2lblb_BLepsUsed") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.EventDeltaPhiMT2lblb_BLepsUsed);
+            outTree->Branch(TString("T") + stringSmear + TString("MassBLep0_BLepsUsed") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.EventMassBLep0_BLepsUsed);
+            outTree->Branch(TString("T") + stringSmear + TString("MassBLep1_BLepsUsed") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.EventMassBLep1_BLepsUsed);
         }
     }
     if (isPhiCorr) {
-        outTree->Branch(TString("T") + stringSmear + TString("MT2lb_ToT") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.caseMT2lb);       
+//        cout << "size: " << inEMI->MET_EMT2I.vecCorrPairValMT2lblb.size() << endl;
+        outTree->Branch(TString("T") + stringSmear + TString("MT2lb_ToT") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.caseMT2lblb); 
+        /*
+        for (int iCorrPair = 0; iCorrPair < (int) inEMI->MET_EMT2I.vecCorrPairValMT2lblb.size(); ++iCorrPair) {
+            stringCorrPair = stringCorrPairBase;
+            stringCorrPair += iCorrPair;
+            outTree->Branch(TString("T") + stringSmear + stringCorrPair + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.vecCorrPairValMT2lblb[iCorrPair]);   
+        }
+        */
     }
+    outTree->Branch(TString("T") + stringSmear + TString("MT2bb_ZMET") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.EventMT2bb_ZMET);
+    outTree->Branch(TString("T") + stringSmear + TString("DPhiMT2bb_ZMET_JetsUsed") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.EventDeltaPhiMT2bb_ZMET_JetsUsed);
+    /*
     outTree->Branch(TString("T") + stringSmear + TString("BMET") + appendStringSyst + noPhiCorrString,     &inEMI->EventBMET);
     outTree->Branch(TString("T") + stringSmear + TString("BMET_Phi") + appendStringSyst + noPhiCorrString,     &inEMI->EventBMETPhi);
     outTree->Branch(TString("T") + stringSmear + TString("MT2ll_BMET") + appendStringSyst + noPhiCorrString,     &inEMI->MET_EMT2I.EventMT2ll_BMET);
+    */
 }
 
 inline void SetOutTreeBranchDiStructureInfo(TTree * outTree, EventDiStructureInfo * inEDSI, int whichSyst = 0, bool isSmear = false, bool isPhiCorr = true) {
@@ -523,6 +562,25 @@ inline void SetOutTreeBranchSUSYInfo(TTree * outTree, EventGenSUSYParticleInfo *
     }
     */
 }
+
+
+inline void SetOutTreeBranchGenMT2Info(TTree * outTree, EventGenMT2Info * inEGMT2I) {
+    TString prefixGenMT2 = "TGen";
+    TString stringCorr[2] = {"_IncorrPair", "_CorrPair"};
+    TString stringPair[2] = {"_0", "_1"};
+    outTree->Branch(prefixGenMT2 + TString("MT2ll"), &inEGMT2I->genMT2ll);
+    outTree->Branch(prefixGenMT2 + TString("TotBLepMass"), &inEGMT2I->TotBLepMass);
+    for (int iCorr = 0; iCorr < 2; ++iCorr) {
+        outTree->Branch(prefixGenMT2 + TString("MT2lb") + stringCorr[iCorr], &inEGMT2I->vecGenMT2lb[iCorr]);
+        outTree->Branch(prefixGenMT2 + TString("DPhi_BLeps") + stringCorr[iCorr], &inEGMT2I->vecDPhiGenBLeps[iCorr]);
+        for (int iPair = 0; iPair < 2; ++iPair) {
+            outTree->Branch(prefixGenMT2 + TString("BLepMass") + stringCorr[iCorr] + stringPair[iPair], &inEGMT2I->vecVecGenBLepMass[iCorr][iPair]);
+            outTree->Branch(prefixGenMT2 + TString("BLepDPhi") + stringCorr[iCorr] + stringPair[iPair], &inEGMT2I->vecVecGenBLepDPhi[iCorr][iPair]);
+            outTree->Branch(prefixGenMT2 + TString("BLepDEta") + stringCorr[iCorr] + stringPair[iPair], &inEGMT2I->vecVecGenBLepDEta[iCorr][iPair]);
+        }
+    }
+}
+
 
 inline void SetOutTreeBranchBasicInfo(TTree * outTree, FilterTriggerInfo * inFTI, EventPileUpInfo * inEPI, BasicEventInfo * inBEI, EventGenWeight * inEGW) {
     outTree->Branch("TPassDoubleEl", &inFTI->passTrigDoubleEl);
