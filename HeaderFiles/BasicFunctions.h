@@ -758,7 +758,7 @@ inline void HistDivBinContent(TH1 * inputTH1) {
 
 
 
-float ScaleBackCalcBasic(TFile * inputFile, bool doVerbosity = false, int whichSyst = 0, vector<TString> * vecSystString = 0) {
+inline float ScaleBackCalcBasic(TFile * inputFile, bool doVerbosity = false, int whichSyst = 0, vector<TString> * vecSystString = 0) {
     TString mcplot = "h_nVtx_inclusive";
     TString mcplot_preRW = "h_BasicWeightIntegral_inclusive";
     
