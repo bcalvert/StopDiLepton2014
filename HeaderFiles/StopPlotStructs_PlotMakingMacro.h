@@ -106,6 +106,8 @@ typedef struct PlotSaveInfoVars {
     bool useSpecialMET;
 
     bool makeGenJetCheck;
+    
+
     void DefaultVarVals() {
         grabOutDir      = 0;      // whether or not to use the file: "outputSavePath.txt" for where to save output
         outputSavePathString = "outputSavePath";
@@ -151,6 +153,8 @@ typedef struct SampMakingVariables {
     bool keepLooseLeps; // boolean for whether or not to keep the loose leptons when running on data
     bool estFakeLep; // boolean for whether or not to run the fake Lepton estimation (for plot making purposes)
     
+    int whichSSType;
+    
     void DefaultVarVals() {
         whichTTbarGen = 2; // 0 is Madgraph, 1 is MC@NLO, 2 is Powheg (default is 2)
         doExcSamps = 1; // For grabbing exclusive (DY + N Jets, TTBar Decay modes) or inclusive samples (As of 8/5/13, only applies to Oviedo)
@@ -176,6 +180,8 @@ typedef struct SampMakingVariables {
         doPURW = 1;     // run pile up reweighting
         doPhiCorr = 1;  // whether to do the MetPhi asymmetry correction
         
+        whichSSType = -1;
+        
         stringSMV = "";
     }
     void SetSMVString(int whichType) {
@@ -196,6 +202,10 @@ typedef struct SampMakingVariables {
         }
         if (keepLooseLeps && !estFakeLep) {
             stringSMV += "_LooseLeps";
+        }
+        if (whichSSType > -1) {
+            stringSMV += "_wSS";
+            stringSMV+= whichSSType;
         }
 	if (whichType == 1 && (!doBookSyst && !doData)) stringSMV += "_noSyst";
         if (whichType == 2) {
@@ -307,7 +317,14 @@ typedef struct SampMakingVariables {
                 estFakeLep = 1;
                 keepLooseLeps = 1;
                 doBlindData = 0;
-                doBookSyst = 1;
+                cout << "not saving systematics on fake lepton for now!! " << endl;
+                doBookSyst = 0;
+            }
+            else if (strncmp (argv[k], "isSig", 5) == 0) {
+                whichSSType = 2;
+            }
+            else if (strncmp (argv[k], "whichSS", 7) == 0) {
+                whichSSType = strtol(argv[k+1], NULL, 10);
             }
         }
     }
@@ -385,6 +402,7 @@ typedef struct PlotMakingRunParams {
                 SRS.isTightBin = 1;
             }
             else if (strncmp (argv[k],"isSig", 5) == 0) {
+                SMV.whichSSType = 2;
                 SRS.isSignal = 1;
                 SRS.grabStopMass = strtol(argv[k+1], NULL, 10);
                 SRS.grabChi0Mass = strtol(argv[k+2], NULL, 10);
@@ -395,7 +413,7 @@ typedef struct PlotMakingRunParams {
             }
             else if (strncmp (argv[k],"limStats", 8) == 0) {
                 RRL.isLimStats = 1;
-                RRL.nEvents = strtol(argv[k+1], NULL, 10);   
+                RRL.nEvents = strtol(argv[k+1], NULL, 10);
             }
             else if (strncmp (argv[k],"useNew", 6) == 0) {
                 PSIV.useOldNTuple = 0;
@@ -403,8 +421,8 @@ typedef struct PlotMakingRunParams {
             else if (strncmp (argv[k],"useSpecMET", 10) == 0) {
                 PSIV.useSpecialMET = 1;
             }
-	    else if (strncmp (argv[k],"checkDeltEn", 11) == 0) {
-	      PSIV.makeGenJetCheck = 1;
+            else if (strncmp (argv[k],"checkDeltEn", 11) == 0) {
+                PSIV.makeGenJetCheck = 1;
             }
         }
         SMV.SetVals(argc, argv);

@@ -1,6 +1,8 @@
 // Structs used as part of plotting the final sets of histograms
+using namespace std;
 typedef pair<int, int> intBounds;
 typedef pair<TString, intBounds> indMCParams;
+typedef pair<float, float> valPlusErr;
 inline TString SystStringForPlot(int whichSyst = 0) {
     TString suffixSyst[10] = {"", "LepES", "JetES", "BTagEffSF", "BMisTagSF", "JetSmear", "UncES", "LepEffSF", "genRecoilRW", "genStopXSec"};
     ////    cout << "suffixSyst[7] " << suffixSyst[7] << endl;
@@ -17,7 +19,7 @@ inline TString SystStringForPlot(int whichSyst = 0) {
     return outString;
 }
 void MakeSystVec(vector<TString> * vecSystString, bool isSmear = false) {
-    const int numSysts = 9;
+    const int numSysts = 8;
     int indexSystJetSmear = 5;
     int indexSystUncES = 6;
     for (int iSyst = 1; iSyst <= numSysts; ++iSyst) {
@@ -25,7 +27,6 @@ void MakeSystVec(vector<TString> * vecSystString, bool isSmear = false) {
         vecSystString->push_back(SystStringForPlot(iSyst));
     }
 }
-
 
 typedef struct SpecificWeight {
     TH1F * weightHistCV;
@@ -56,15 +57,45 @@ typedef struct SpecificWeight {
         }
     }
     void SetSF(float SF, int whichSyst = 0) {
+        TH1F * histToSet;
         if (whichSyst == 0) {
-            weightHistCV->SetBinContent(1, SF);
+            histToSet = weightHistCV;
         }
         else if (whichSyst > 0) {
-            weightHist_SystVarUp[abs(whichSyst) - 1]->SetBinContent(1, SF);
+            histToSet = weightHist_SystVarUp[abs(whichSyst) - 1];
         }
         else if (whichSyst < 0) {
-            weightHist_SystVarDown[abs(whichSyst) - 1]->SetBinContent(1, SF);
+            histToSet = weightHist_SystVarDown[abs(whichSyst) - 1];
         }
+        histToSet->SetBinContent(1, SF);
+    }
+    void SetSF(valPlusErr * inVPE, int whichSyst = 0) {
+        TH1F * histToSet;
+        if (whichSyst == 0) {
+            histToSet = weightHistCV;
+        }
+        else if (whichSyst > 0) {
+            histToSet = weightHist_SystVarUp[abs(whichSyst) - 1];
+        }
+        else if (whichSyst < 0) {
+            histToSet = weightHist_SystVarDown[abs(whichSyst) - 1];
+        }
+        histToSet->SetBinContent(1, inVPE->first);
+        histToSet->SetBinError(1, inVPE->second);
+    }
+    void SetSF(ValError * inVE, int whichSyst = 0) {
+        TH1F * histToSet;
+        if (whichSyst == 0) {
+            histToSet = weightHistCV;
+        }
+        else if (whichSyst > 0) {
+            histToSet = weightHist_SystVarUp[abs(whichSyst) - 1];
+        }
+        else if (whichSyst < 0) {
+            histToSet = weightHist_SystVarDown[abs(whichSyst) - 1];
+        }
+        histToSet->SetBinContent(1, inVE->centVal);
+        histToSet->SetBinError(1, inVE->upError);
     }
     float GetSF(int whichSyst = 0) {
         float outSF;
@@ -124,49 +155,108 @@ typedef struct WeightCalculators {
     float SFLumi;
     int intLumi;
     
-    SpecificWeight weightTTBar_DDNorm;
+    vector<TString> vecChanNames;
+    vector<TString> vecTTBarNames, vecDYNames;
+    
+    vector<SpecificWeight> vecWeightTTBar_Dilep;
+    vector<SpecificWeight> vecWeightDY_Dilep;
+    
+    SpecificWeight weightTTBar_DDNormEE, weightTTBar_DDNormEMu, weightTTBar_DDNormMuMu;
     SpecificWeight weightDY_DDNormEE, weightDY_DDNormEMu, weightDY_DDNormMuMu;
     
-    void LoadTTBarWeight(SampLoadSettings * inSLS, vector<TString> * vecSystString) {
-        TString weightName = "_TTBarFullCutNormalization";
-        TString nameTTBarFile = "ScaleFactors";
-        nameTTBarFile += weightName;
-        nameTTBarFile += inSLS->TTBarString();
-        if (!inSLS->doExcSamps) nameTTBarFile += "_noExcSamps";
-        nameTTBarFile += ".root";
-        TFile * inFile = TFile::Open(nameTTBarFile);
-        
-        weightTTBar_DDNorm.SetHistsFromFile(inFile, weightName, vecSystString);
-        weightTTBar_DDNorm.PrintWeights();
+    void SetTTBarNames() {
+        vecTTBarNames.resize(0);
+        vecTTBarNames.push_back("_FullCut");
+    }
+    void SetDYNames() {
+        vecDYNames.resize(0);
+        vecDYNames.push_back("_Dilep");
+        vecDYNames.push_back("_Jet2");
+        vecDYNames.push_back("_Jet2MET");
+        vecDYNames.push_back("_Jet2BJet1");
+        vecDYNames.push_back("_Jet2BJet1MET");
+    }
+    void SetChanNames() {
+        vecChanNames.resize(0);
+        vecChanNames.push_back("_MuMu");
+        vecChanNames.push_back("_EE");
+        vecChanNames.push_back("_EMu");
     }
     
-    void LoadDYWeight(SampLoadSettings * inSLS, vector<TString> * vecSystString, int versNumber) {
-        TString weightNameAppend = versNumber == 1 ? "_ROutIn" : "_ZMassBVetoCR";
-        TString weightName = "_DY";
-        weightName += weightNameAppend;
-        TString weightNameEE = weightName + "_EE";
-        TString weightNameEMu = weightName + "_EMu";
-        TString weightNameMuMu = weightName + "_MuMu";
-        TString nameDYFile = "ScaleFactors";
-        nameDYFile += weightName;
-        nameDYFile += inSLS->TTBarString();
-        if (!inSLS->doExcSamps) nameDYFile += "_noExcSamps";
-        nameDYFile += ".root";
-        TFile * inFile = TFile::Open(nameDYFile);
+    TString GetWeightName(int whichWeightType, int versNumber, bool useMET = true) {
+        vector< vector<TString> * > vecVecToUse(0);
+        vecVecToUse.push_back(&vecTTBarNames);
+        vecVecToUse.push_back(&vecDYNames);
         
-        weightDY_DDNormEE.SetHistsFromFile(inFile, weightNameEE, vecSystString);
-        weightDY_DDNormEMu.SetHistsFromFile(inFile, weightNameEMu, vecSystString);
-        weightDY_DDNormMuMu.SetHistsFromFile(inFile, weightNameMuMu, vecSystString);
-        cout << "printing EE weights " << endl;
-        weightDY_DDNormEE.PrintWeights();
-        cout << "printing EMu weights " << endl;
-        weightDY_DDNormEMu.PrintWeights();
-        cout << "printing MuMu weights " << endl;
-        weightDY_DDNormMuMu.PrintWeights();
+        TString arrBaseName[2] = {"_TTBarMT2ControlNormalization", "DY_ROutIn"};
+        
+        if (whichWeightType == 1 && !useMET && (versNumber == 2 || versNumber == 4)) {
+            cout << "rolling back to a non-MET cut SF " << endl;
+            versNumber -= 1;
+        }
+        TString weightName = arrBaseName[whichWeightType] + vecVecToUse[whichWeightType]->at(versNumber);
+        return weightName;
     }
-    
+    vector<SpecificWeight> * GetVecSW(int whichWeightType) {
+        if (whichWeightType == 0) {
+            return &vecWeightTTBar_Dilep;
+        }
+        else if (whichWeightType == 1) {
+            return &vecWeightDY_Dilep;
+        }
+        return NULL;
+    }
+    void LoadWeights(SampLoadSettings * inSLS, vector<TString> * vecSystString, int whichWeightType, int versNumber) {
+        //debug statements
+        vector<int> vecDebugInts(0);
+        vecDebugInts.push_back(0);
+        vecDebugInts.push_back(1);
+        DebugStatement(whichWeightType, &vecDebugInts, "whichWeightType", "LoadWeights");
+
+        TString weightNameSF = GetWeightName(whichWeightType, versNumber, true);
+        TString weightNameOF = GetWeightName(whichWeightType, versNumber, false);
+        
+        TString addString = inSLS->TTBarString();
+        addString += inSLS->SampleStringScaleFacSaving();
+        
+        TString nameFileSF = "ScaleFactors";
+        nameFileSF += weightNameSF;
+        nameFileSF += addString;
+
+        TString nameFileOF = "ScaleFactors";
+        nameFileOF += weightNameOF;
+        nameFileOF += addString;
+        
+        cout << "going to try and grab SF File: " << nameFileSF << endl;
+        cout << "going to try and grab OF File: " << nameFileOF << endl;
+        
+        TFile * inFileSF = TFile::Open(nameFileSF);
+        TFile * inFileOF = TFile::Open(nameFileOF);
+        
+        vector<SpecificWeight> * vecSWToUse = GetVecSW(whichWeightType);
+        vecSWToUse->resize(vecChanNames.size());
+        
+        TFile * fileToGrabFrom;
+        TString weightNameToUse;
+        
+        for (unsigned int iChan = 0; iChan < vecSWToUse->size(); ++iChan) {
+            //set which file to grab from based on dilepton type
+            fileToGrabFrom = inFileSF;
+            weightNameToUse = weightNameSF;
+            if (iChan == 2) {
+                fileToGrabFrom = inFileOF;
+                weightNameToUse = weightNameOF;
+            }
+            vecSWToUse->at(iChan).SetHistsFromFile(fileToGrabFrom, weightNameToUse + vecChanNames[iChan], vecSystString);
+            cout << "printing " << vecChanNames[iChan] << " weights " << endl;
+            vecSWToUse->at(iChan).PrintWeights();
+        }
+    }
     void DefaultVarVals() {
         SFLumi = 1.0;
+        SetTTBarNames();
+        SetDYNames();
+        SetChanNames();
     }
     void SetIntLumi() {
         float indLumiOvi[4] = {892, 4404, 7032, 7274};
@@ -178,184 +268,6 @@ typedef struct WeightCalculators {
     void SetUniWeights(SampLoadSettings * inSLS) {
         SetIntLumi();
     }
-    float CalcTTBarNormWeight(HistogramDisplayStructs * inHDS_Data, HistogramDisplayStructs * inHDS_MC, int whichSyst = 0, int binStatEnd = -1) {
-        
-        TH1F * dataHistToIntegrate = inHDS_Data->compSamp.first.grabbedHist_TH1F;
-        
-        
-        int BinMax = binStatEnd < 1 ? dataHistToIntegrate->GetNbinsX() : binStatEnd;
-        
-        float dataIntegral = dataHistToIntegrate->Integral(1, BinMax);
-        float dataIntegralMinNonTTBar = dataIntegral;
-        
-        
-        float mcIntegral_v1 = 0.0, mcIntegral_v2 = 0.0;
-        float integralTTBar = 0;
-        float currMCIntegral;
-        TString mcName;
-        
-        TH1F * compMCHistToIntegrate, * indMCHistToIntegrate;
-        //nominally will put in stuff for systematics in here
-        
-        /*
-        cout << "size of up systs " << inHDS_MC->compSamp.first.vecGrabbedHist_SystVarUp_TH1F.size() << endl;
-        cout << "size of down systs " << inHDS_MC->compSamp.first.vecGrabbedHist_SystVarUp_TH1F.size() << endl;
-        inHDS_MC->PrintCompSystHistNames();
-        */
-        if (whichSyst == 0) {
-            compMCHistToIntegrate = inHDS_MC->compSamp.first.grabbedHist_TH1F;
-        }
-        else if (whichSyst > 0) {
-            compMCHistToIntegrate = inHDS_MC->compSamp.first.vecGrabbedHist_SystVarUp_TH1F[abs(whichSyst) - 1];
-        }
-        else if (whichSyst < 0) {
-            compMCHistToIntegrate = inHDS_MC->compSamp.first.vecGrabbedHist_SystVarDown_TH1F[abs(whichSyst) - 1];
-        }
-        /*
-        cout << "whichSyst - 1 " << whichSyst - 1 << endl;
-        cout << "compMCHistToIntegrate exists? " << compMCHistToIntegrate << endl;
-        cout << "compMCHistToIntegrate exists? " << compMCHistToIntegrate->GetName() << endl;
-        */
-        mcIntegral_v1 = compMCHistToIntegrate->Integral(1, BinMax);
-        
-        
-        for (unsigned int iMC = 0; iMC < inHDS_MC->vecSampDisplay_IndMC.size(); ++iMC) {                        
-            mcName = inHDS_MC->vecSampDisplay_IndMC[iMC].first.grabbedHist_TH1F->GetName();
-            
-            if (whichSyst == 0) {
-                indMCHistToIntegrate = inHDS_MC->vecSampDisplay_IndMC[iMC].first.grabbedHist_TH1F;
-            }
-            else if (whichSyst > 0) {
-                indMCHistToIntegrate = inHDS_MC->vecSampDisplay_IndMC[iMC].first.vecGrabbedHist_SystVarUp_TH1F[abs(whichSyst) - 1];
-            }
-            else if (whichSyst < 0) {
-                indMCHistToIntegrate = inHDS_MC->vecSampDisplay_IndMC[iMC].first.vecGrabbedHist_SystVarDown_TH1F[abs(whichSyst) - 1];
-            }
-            currMCIntegral = indMCHistToIntegrate->Integral(1, BinMax);
-            if (!mcName.Contains("VecBoson") && (mcName.Contains("TTbar") || mcName.Contains("TTBar"))) {
-                integralTTBar += currMCIntegral;
-            }
-            else {
-                dataIntegralMinNonTTBar -= currMCIntegral;
-            }
-            mcIntegral_v2 += currMCIntegral;
-        }
-        if (abs(mcIntegral_v2 - mcIntegral_v1) > 10) {
-            cout << "something funky...mc comp integral calculated two different but ostensibly equivalent ways isn't the same..." << endl;
-            cout << "mcIntegral_v1 " << mcIntegral_v1 << endl;
-            cout << "mcIntegral_v2 " << mcIntegral_v2 << endl;
-        }
-        cout << "IntegralTTBar " <<  integralTTBar << endl;
-        cout << "DataIntegralMinNonTTBar " << dataIntegralMinNonTTBar << endl;
-        return dataIntegralMinNonTTBar/integralTTBar;
-    }
-    
-    
-    
-    
-    
-    float CalcTTBarNormWeight(vector<TString> * vecStringsToContain, vector<TString> * vecStringsToNotContain, HistogramDisplayStructs * inHDS_Data, HistogramDisplayStructs * inHDS_MC, int whichSyst = 0, int binStatEnd = -1) {
-        
-        TH1F * dataHistToIntegrate = inHDS_Data->compSamp.first.grabbedHist_TH1F;
-        
-        
-        int BinMax = binStatEnd < 1 ? dataHistToIntegrate->GetNbinsX() : binStatEnd;
-        
-        float dataIntegral = dataHistToIntegrate->Integral(1, BinMax);
-        float dataIntegralMinNonTTBar = dataIntegral;
-        
-        
-        float mcIntegral_v1 = 0.0, mcIntegral_v2 = 0.0;
-        float integralTTBar = 0;
-        float currMCIntegral;
-        TString mcName;
-        
-        TH1F * compMCHistToIntegrate, * indMCHistToIntegrate;
-        //nominally will put in stuff for systematics in here
-        
-        /*
-         cout << "size of up systs " << inHDS_MC->compSamp.first.vecGrabbedHist_SystVarUp_TH1F.size() << endl;
-         cout << "size of down systs " << inHDS_MC->compSamp.first.vecGrabbedHist_SystVarUp_TH1F.size() << endl;
-         inHDS_MC->PrintCompSystHistNames();
-         */
-        if (whichSyst == 0) {
-            compMCHistToIntegrate = inHDS_MC->compSamp.first.grabbedHist_TH1F;
-        }
-        else if (whichSyst > 0) {
-            compMCHistToIntegrate = inHDS_MC->compSamp.first.vecGrabbedHist_SystVarUp_TH1F[abs(whichSyst) - 1];
-        }
-        else if (whichSyst < 0) {
-            compMCHistToIntegrate = inHDS_MC->compSamp.first.vecGrabbedHist_SystVarDown_TH1F[abs(whichSyst) - 1];
-        }
-        /*
-         cout << "whichSyst - 1 " << whichSyst - 1 << endl;
-         cout << "compMCHistToIntegrate exists? " << compMCHistToIntegrate << endl;
-         cout << "compMCHistToIntegrate exists? " << compMCHistToIntegrate->GetName() << endl;
-         */
-        mcIntegral_v1 = compMCHistToIntegrate->Integral(1, BinMax);
-        
-        
-        bool indMCContainsGoodString, indMCContainsBadString;
-        
-        
-        for (unsigned int iMC = 0; iMC < inHDS_MC->vecSampDisplay_IndMC.size(); ++iMC) {    
-            indMCContainsBadString = false;
-            indMCContainsGoodString = false;
-            
-            
-            mcName = inHDS_MC->vecSampDisplay_IndMC[iMC].first.grabbedHist_TH1F->GetName();
-            
-            if (whichSyst == 0) {
-                indMCHistToIntegrate = inHDS_MC->vecSampDisplay_IndMC[iMC].first.grabbedHist_TH1F;
-            }
-            else if (whichSyst > 0) {
-                indMCHistToIntegrate = inHDS_MC->vecSampDisplay_IndMC[iMC].first.vecGrabbedHist_SystVarUp_TH1F[abs(whichSyst) - 1];
-            }
-            else if (whichSyst < 0) {
-                indMCHistToIntegrate = inHDS_MC->vecSampDisplay_IndMC[iMC].first.vecGrabbedHist_SystVarDown_TH1F[abs(whichSyst) - 1];
-            }
-            currMCIntegral = indMCHistToIntegrate->Integral(1, BinMax);
-            
-            for (unsigned int iBadString = 0; iBadString < vecStringsToNotContain->size(); ++iBadString) {
-                if (mcName.Contains(vecStringsToNotContain->at(iBadString))) indMCContainsBadString = true;
-            }
-            if (indMCContainsBadString) {
-                dataIntegralMinNonTTBar -= currMCIntegral;
-            }
-            else {
-                for (unsigned int iGoodString = 0; iGoodString < vecStringsToContain->size(); ++iGoodString) {
-                    if (mcName.Contains(vecStringsToContain->at(iGoodString))) indMCContainsGoodString = true;
-                }
-                if (indMCContainsGoodString) {
-                    integralTTBar += currMCIntegral;
-                }
-                else {
-                    dataIntegralMinNonTTBar -= currMCIntegral;
-                }
-            }
-            /*
-            if (!mcName.Contains("VecBoson") && (mcName.Contains("TTbar") || mcName.Contains("TTBar"))) {
-                integralTTBar += currMCIntegral;
-            }
-            else {
-                dataIntegralMinNonTTBar -= currMCIntegral;
-            }
-            */
-            mcIntegral_v2 += currMCIntegral;
-        }
-        if (abs(mcIntegral_v2 - mcIntegral_v1) > 10) {
-            cout << "something funky...mc comp integral calculated two different but ostensibly equivalent ways isn't the same..." << endl;
-            cout << "mcIntegral_v1 " << mcIntegral_v1 << endl;
-            cout << "mcIntegral_v2 " << mcIntegral_v2 << endl;
-        }
-        cout << "IntegralTTBar " <<  integralTTBar << endl;
-        cout << "DataIntegralMinNonTTBar " << dataIntegralMinNonTTBar << endl;
-        return dataIntegralMinNonTTBar/integralTTBar;
-    }
-
-    
-    
-    
     float ScaleBackCalc(TFile * inputFile, bool doVerbosity = false, int whichSyst = 0, vector<TString> * vecSystString = 0) {
         TString mcplot = "h_nVtx_inclusive";
         TString mcplot_preRW = "h_nVtx_preRW_inclusive";
@@ -398,10 +310,6 @@ typedef struct WeightCalculators {
         scaleBack = (float) nVtxOrigHist->Integral(1, NBinsX + 1) / nVtxNewHist->Integral(1, NBinsX + 1);
         return scaleBack;
     }
-
-    
-    
-   
     float ScaleBackCalcBasic(TFile * inputFile, bool doVerbosity = false, int whichSyst = 0, vector<TString> * vecSystString = 0) {
         TString mcplot = "h_nVtx_inclusive";
         TString mcplot_preRW = "h_BasicWeightIntegral_inclusive";
@@ -490,49 +398,50 @@ typedef struct WeightCalculators {
         scaleBack = (float) RecoilOrigHist->Integral(1, NBinsX + 1) / RecoilNewHist->Integral(1, NBinsX + 1);
         return scaleBack;
     }
-    void SetISPIDDWeight(IndSamplePlotInfo * inISPI, bool doTTBar = false, bool doDY = false, bool doVerbosity = false) {
-
-        if (doTTBar && inISPI->sampleType == 1) {
-            inISPI->weight_CentVal *= weightTTBar_DDNorm.GetSF(0);
-            if (doVerbosity) {
-                cout << "base TTBar weight " << weightTTBar_DDNorm.GetSF(0) << endl;
-            }
-            for (unsigned int iSyst = 1; iSyst <= inISPI->weight_SystVarUp.size(); ++iSyst) {
-                if (doVerbosity) {
-                    cout << " for iSyst " << iSyst << endl;
-                    cout << "weight TTBar Syst Var Up " << weightTTBar_DDNorm.GetSF(iSyst) << endl;
-                    cout << "weight TTBar Syst Var Down " << weightTTBar_DDNorm.GetSF(- 1 * iSyst) << endl;
-                }
-                inISPI->weight_SystVarUp[iSyst - 1] *= weightTTBar_DDNorm.GetSF(iSyst);
-                inISPI->weight_SystVarDown[iSyst - 1] *= weightTTBar_DDNorm.GetSF(- 1 * iSyst);
-            }
+    SpecificWeight * PickSW(IndSamplePlotInfo * inISPI, SampLoadSettings * inSLS, vector<SpecificWeight> * vecSW) {
+        int indexMuMu = 0;
+        int indexEE = 1;
+        int indexEMu = 2;
+        if (inSLS->whichDilepType == 0 || inISPI->nameISPI.Contains("_MuMu")) {
+            return &vecSW->at(indexMuMu);
         }
-        if (doDY && inISPI->sampleType == 2) {
-            SpecificWeight * weightDYToUse;
-            if (inISPI->nameISPI.Contains("ZDY_MuMu")) {
-                weightDYToUse = &weightDY_DDNormMuMu;
+        else if (inSLS->whichDilepType == 1 || inISPI->nameISPI.Contains("_EE")) {
+            return &vecSW->at(indexEE);
+        }
+        else if (inSLS->whichDilepType == 2 || inISPI->nameISPI.Contains("_EMu")) {
+            return &vecSW->at(indexEMu);
+        }
+        else {
+            cout << "inSLS->whichDilepType " << inSLS->whichDilepType << endl;
+            cout << "inISPI->nameISPI " << inISPI->nameISPI << endl;
+            cout << "returning NULL! in PickSW Function " << endl;
+        }
+        return NULL;
+    }
+    void SetISPIDDWeight(IndSamplePlotInfo * inISPI, SampLoadSettings * inSLS, bool doTTBar = false, bool doDY = false, bool doVerbosity = false) {
+        SpecificWeight * SWtoUse;
+        TString nameWeight;
+        if ((doTTBar && inISPI->sampleType == 1) || (doDY && inISPI->sampleType == 2)) {
+            if (doTTBar && inISPI->sampleType == 1) {
+                nameWeight = "TTBar";
+                SWtoUse = PickSW(inISPI, inSLS, &vecWeightTTBar_Dilep);
             }
-            else if (inISPI->nameISPI.Contains("ZDY_EE")) {
-                weightDYToUse = &weightDY_DDNormEE;
+            else if (doDY && inISPI->sampleType == 2) {
+                nameWeight = "DY";
+                SWtoUse = PickSW(inISPI, inSLS, &vecWeightDY_Dilep);
             }
-            else if (inISPI->nameISPI.Contains("ZDY_EMu")) {
-                weightDYToUse = &weightDY_DDNormEMu;
-            }
-            else {
-                cout << "not one of the three! " << inISPI->nameISPI << endl;
-            }
-            inISPI->weight_CentVal *= weightDYToUse->GetSF(0);
+            inISPI->weight_CentVal *= SWtoUse->GetSF(0);
             if (doVerbosity) {
-                cout << "base DY weight " << weightDYToUse->GetSF(0) << endl;
+                cout << "base " << nameWeight << " weight " << SWtoUse->GetSF(0) << endl;
             }
             for (unsigned int iSyst = 1; iSyst <= inISPI->weight_SystVarUp.size(); ++iSyst) {
                 if (doVerbosity) {
                     cout << " for iSyst " << iSyst << endl;
-                    cout << "weight DY Syst Var Up " << weightDYToUse->GetSF(iSyst) << endl;
-                    cout << "weight DY Syst Var Down " << weightDYToUse->GetSF(- 1 * iSyst) << endl;
+                    cout << "weight " << nameWeight << " Syst Var Up " << SWtoUse->GetSF(iSyst) << endl;
+                    cout << "weight " << nameWeight << " Syst Var Down " << SWtoUse->GetSF(- 1 * iSyst) << endl;
                 }
-                inISPI->weight_SystVarUp[iSyst - 1] *= weightDYToUse->GetSF(iSyst);
-                inISPI->weight_SystVarDown[iSyst - 1] *= weightDYToUse->GetSF(- 1 * iSyst);
+                inISPI->weight_SystVarUp[iSyst - 1] *= SWtoUse->GetSF(iSyst);
+                inISPI->weight_SystVarDown[iSyst - 1] *= SWtoUse->GetSF(- 1 * iSyst);
             }
         }
     }
@@ -559,15 +468,15 @@ typedef struct WeightCalculators {
         for (unsigned int iSyst = 1; iSyst <= inISPI->weight_SystVarUp.size(); ++iSyst) {
             inISPI->weight_SystVarUp[iSyst - 1] *= ScaleBackCalcBasic(inISPI->inputFile, doVerbosity, iSyst, vecSystString);
             
-            inISPI->weight_SystVarDown[iSyst - 1] *= ScaleBackCalcBasic(inISPI->inputFile, doVerbosity, iSyst, vecSystString);
+            inISPI->weight_SystVarDown[iSyst - 1] *= ScaleBackCalcBasic(inISPI->inputFile, doVerbosity, -1 * iSyst, vecSystString);
         }
     }
-    void SetISPIWeight(IndSamplePlotInfo * inISPI, bool useDDEstTTBar, bool useDDEstDY, bool doVerbosity = false, int numSysts = 0, vector<TString> * vecSystString = 0, vector<float> * inVecSignalSkimEfficiencyCalc = 0, int whichSigIndex = 0) {
+    void SetISPIWeight(IndSamplePlotInfo * inISPI, SampLoadSettings * inSLS, bool useDDEstTTBar, bool useDDEstDY, bool doVerbosity = false, int numSysts = 0, vector<TString> * vecSystString = 0, vector<float> * inVecSignalSkimEfficiencyCalc = 0, int whichSigIndex = 0) {
         bool useDDEst = (useDDEstDY || useDDEstTTBar);
         inISPI->DefaultWeights(numSysts);
-        if (inISPI->sampleType != 0) {
+        if (inISPI->sampleType != 0 && inISPI->sampleType != 100) {
             if (useDDEst) {
-                SetISPIDDWeight(inISPI, useDDEstTTBar, useDDEstDY, doVerbosity);
+                SetISPIDDWeight(inISPI, inSLS, useDDEstTTBar, useDDEstDY, doVerbosity);
             }
             if (inISPI->sampleType < 0) {
                 SetISPIWeightSignal(inISPI, inVecSignalSkimEfficiencyCalc, whichSigIndex);
@@ -670,9 +579,12 @@ typedef struct PlotMakingStructs {
     vector<TString> vecSystNames;
     int numSysts;
     
-    
+    vector<Color_t> vecMCColors;
+    vector<TString> vecMCLegends;
+    vector<int> vecMCSortParams;
     vector<indMCParams> vecIndMCParams;
     
+    vector<vector<TFile *> > vecVecTFiles;
     
     THStack * indMCStack;
     
@@ -683,9 +595,43 @@ typedef struct PlotMakingStructs {
     //structs for MT2CutYieldCalc.C
     vector<float> vecXaxisCut, vecYaxisCut;
     vector<TString> vecHistNamesForYieldCalc;
-    
+    /*
     ////Set of functions
+    void SetFileNameVector(vector<TFile *> * inVecTFile, int index, int doNonSig, bool doSig) {
+        TString dataName = "Data.root";
+        TString mcName1, mcName2;
+        if (doSig && !doNonSig) {
+            mcName1
+        }
+        TString mcName1 = "TTBar";
+        if (doSig) mc
+        if (doNonSig) {
+            if (index == 0) {
+                inVecTFile->at(0) = new TFile("Data.root", "RECREATE");
+            }
+            else {
+                if (index == 1) {
+                    if (
+                }h
+            }
+        }
+    }
     
+    void SetUpTFiles(bool doNonSig, bool doSig) {
+        if (doNonSig) {
+            vecVecTFiles.resize(2);
+            vecVecTFiles[0].resize(1); // one output data file
+            vecVecTFiles[1].resize(2); // Two output MC files
+        }
+        else if (doSig) {
+            vecVecTFiles.resize(1);
+        }
+        else {
+            cout << "not saving any TFiles because you've specified both no 'non-signal' and no 'signal'!"
+            vecVecTFiles.resize(0);
+        }
+    }
+    */
     //Functions for Yield calculation
     void SetCutValues(HistPlotMaking * inHPM, int levelVerbosity = 0) {
         vecXaxisCut.resize(0);
@@ -713,7 +659,10 @@ typedef struct PlotMakingStructs {
     
     void SetVecIndMCParams(SampLoadSettings * inSLS) {
         vecIndMCParams.resize(0);
-        SampleStartPositionsNames(&vecIndMCParams, inSLS);
+        vecMCColors.resize(0);
+        vecMCLegends.resize(0);
+        vecMCSortParams.resize(0);
+        SampleStartPositionsNames(&vecMCSortParams, &vecMCLegends, &vecMCColors, &vecIndMCParams, inSLS);
     }
     
     void DefaultMultiChanHistVecs() {

@@ -267,7 +267,7 @@ void CombineSystInfo(vector<TH1F *> * MCAddHists, vector<int> * sampleStartPosit
             cout << "statError " << inVecSSI->at(iMCSpec).StatError.upError << endl;
             currSSI.StatError.centVal += inVecSSI->at(iMCSpec).StatError.centVal;
             currSSI.StatError.upError += inVecSSI->at(iMCSpec).StatError.upError * inVecSSI->at(iMCSpec).StatError.upError;
-            for (int iSyst = 0; iSyst < currSSI.SystError.size(); ++iSyst) {
+            for (unsigned int iSyst = 0; iSyst < currSSI.SystError.size(); ++iSyst) {
                 if (iSyst == 0) {
                     currSSI.SystError[iSyst].centVal = 0;
                     currSSI.SystError[iSyst].upError = 0;
@@ -841,14 +841,21 @@ void SetupPlotRunning_Part1(int argc, char * argv[], RunParams * inRP, WeightCal
     //    inWC->SetUniWeights(&RP.SLS);
     inWC->SetIntLumi();    
     
-    inPMS->SetStructs(&inRP->SLS);    
-    
+    inPMS->SetStructs(&inRP->SLS);
+    /*
     if (inRP->HPM.useDDEstimate_TTBar) {
         inWC->LoadTTBarWeight(&inRP->SLS, &inPMS->vecSystNames);        
     }
     if (inRP->HPM.useDDEstimate_DY) {
         inWC->LoadDYWeight(&inRP->SLS, &inPMS->vecSystNames, inRP->HPM.versDDEst_DY);        
-    }    
+    }
+    */
+    if (inRP->HPM.useDDEstimate_TTBar) {
+        inWC->LoadWeights(&inRP->SLS, &inPMS->vecSystNames, 0, inRP->HPM.versDDEst_TTBar);
+    }
+    if (inRP->HPM.useDDEstimate_DY) {
+        inWC->LoadWeights(&inRP->SLS, &inPMS->vecSystNames, 1, inRP->HPM.versDDEst_DY);
+    }
     inADV->SetDefaultAxisSizeParams();
     inADV->DefaultLegParams();
     
@@ -858,7 +865,7 @@ void SetupPlotRunning_Part1(int argc, char * argv[], RunParams * inRP, WeightCal
     TString genCutUsed = "";
     inGHPI->DefaultVarVals();
     inGHPI->SetFracRatioADPNameRange(inRP->GHS.doAbsRatio, inRP->GHS.ReturnFracRatioBound(1), inRP->GHS.ReturnFracRatioBound(2));
-    inGHPI->SetLatexStringVec(inWC->intLumi, typeMET, stringMETExtra, genCutUsed, true);
+    inGHPI->SetLatexStringVec(inWC->intLumi, typeMET, stringMETExtra, inRP->SLS.whichDilepType, genCutUsed, true);
     
     
     int RBNX = 1;
@@ -868,11 +875,27 @@ void SetupPlotRunning_Part1(int argc, char * argv[], RunParams * inRP, WeightCal
     inHDP->SetVals(RBNX, doOverflow, doUnderflow, addName);
 }
 
-
-
-
-
-
+void SetupPlotRunning_DataMC_DYEstimation(RunParams * inRP, vector<TString> * inVecDataNames, vector<TString> * inVecMCNames, TString baseDir = "/home/bcalvert/DYReweight/") {
+    TString strDilep[3] = {"_MuMu", "_EE", "_EMu"};
+    TString baseStrData[3] = {"DataMuMu", "DataEE", "DataEMu"};
+    TString endStrData = "_ReReco_OviedoHaddplots_NOTBLIND.root";
+    
+    TString baseStrMC = "ZDY";
+    
+    inVecDataNames->resize(0);
+    inVecMCNames->resize(0);
+    TString nameData, nameMC;
+    for (int iChan = 0; iChan < 3; ++iChan) {
+        nameData = baseDir + baseStrData[iChan] + endStrData;
+        cout << "For Data, pushing back " << nameData << endl;
+        inVecDataNames->push_back(nameData);
+        
+        nameMC = baseDir + baseStrMC + inRP->SLS.SampleStringDYLoading();
+        nameMC.Replace(nameMC.Index("_PATSY"), 6, strDilep[iChan]);
+        cout << "For MC, pushing back " << nameMC << endl;
+        inVecMCNames->push_back(nameMC);
+    }
+}
 void SetupPlotRunning_DataMC(RunParams * inRP, WeightCalculators * inWC, PlotMakingStructs * inPMS, HistogramDisplayStructs * inHDS_Data, HistogramDisplayStructs * inHDS_MC, bool doVerb = false) {
     bool isNotSig = false;
     vector<TString> vecBaseFileNames_Data;
@@ -885,7 +908,7 @@ void SetupPlotRunning_DataMC(RunParams * inRP, WeightCalculators * inWC, PlotMak
     
     inHDS_Data->SetCompParams("Data", 0);
     inHDS_Data->SetSystSize(0);
-    SetWeights(inHDS_Data, inWC, inRP->HPM.useDDEstimate_TTBar, inRP->HPM.useDDEstimate_DY);
+    SetWeights(inHDS_Data, inWC, &inRP->SLS, inRP->HPM.useDDEstimate_TTBar, inRP->HPM.useDDEstimate_DY);
     
     vector<TString> vecBaseFileNames_MC;    
     StopBaseFileNames_MC(&vecBaseFileNames_MC, &inRP->SLS);
@@ -895,7 +918,7 @@ void SetupPlotRunning_DataMC(RunParams * inRP, WeightCalculators * inWC, PlotMak
     SetFileNames(&inHDS_MC->vecISPI_asLoaded, &vecBaseFileNames_MC, &inRP->SLS, isNotSig, doVerb);
     inHDS_MC->SetCompParams("MC", 1);
     
-    
+    /*
     const int numIndMC_Available = 8;
     Color_t mcColors[numIndMC_Available] = {kRed, kOrange + 2, kRed - 10, kGreen + 2, kBlue, kOrange - 5, kCyan - 2, kGreen + 3};
     TString mcLegends[numIndMC_Available] = {"t#bar{t}", "VV", "Single Top", "W + Jets", "Z/#gamma* #rightarrow l^{+}l^{-}", "VG", "Higgs", "Rare"};
@@ -903,14 +926,15 @@ void SetupPlotRunning_DataMC(RunParams * inRP, WeightCalculators * inWC, PlotMak
     vector<Color_t> vecMCColors;
     vector<TString> vecMCLegends;
     vector<int> vecMCSortParams;
-    for (unsigned int iIndMC = 0; iIndMC < numIndMC_Available; ++iIndMC) {
+    for (int iIndMC = 0; iIndMC < numIndMC_Available; ++iIndMC) {
         vecMCColors.push_back(mcColors[iIndMC]);
         vecMCLegends.push_back(mcLegends[iIndMC]);
         vecMCSortParams.push_back(mcSortParams[iIndMC]);        
     }
-    inHDS_MC->SetIndMCParams(&vecMCLegends, &vecMCColors, &vecMCSortParams);
+    */
+    inHDS_MC->SetIndMCParams(&inPMS->vecMCLegends, &inPMS->vecMCColors, &inPMS->vecMCSortParams);
     inHDS_MC->SetSystSize(inPMS->numSysts, inRP->SLS.doSyst);
-    SetWeights(inHDS_MC, inWC, inRP->HPM.useDDEstimate_TTBar, inRP->HPM.useDDEstimate_DY, doVerb, &inPMS->vecSystNames);
+    SetWeights(inHDS_MC, inWC, &inRP->SLS, inRP->HPM.useDDEstimate_TTBar, inRP->HPM.useDDEstimate_DY, doVerb, &inPMS->vecSystNames);
     SetSystBasics(inHDS_MC, &inPMS->vecSystNames, inRP->SLS.SmearedPlots, false);
 }
 
@@ -929,7 +953,7 @@ void SetupPlotRunning_Signal(RunParams * inRP, WeightCalculators * inWC, PlotMak
     
     inHDS_Signal->SetCompParams(inRP->SLS.SignalLegendString(0), -1);
     inHDS_Signal->SetSystSize(inPMS->numSysts, inRP->SLS.doSyst);
-    SetWeights(inHDS_Signal, inWC, inRP->HPM.useDDEstimate_TTBar, inRP->HPM.useDDEstimate_DY, doVerb, &inPMS->vecSystNames, &signalSkimScaleVec);
+    SetWeights(inHDS_Signal, inWC, &inRP->SLS, inRP->HPM.useDDEstimate_TTBar, inRP->HPM.useDDEstimate_DY, doVerb, &inPMS->vecSystNames, &signalSkimScaleVec);
     SetSystBasics(inHDS_Signal, &inPMS->vecSystNames, inRP->SLS.SmearedPlots, true);    
 }
 

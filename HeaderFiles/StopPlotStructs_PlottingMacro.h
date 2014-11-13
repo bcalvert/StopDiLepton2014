@@ -12,6 +12,8 @@ typedef struct SampLoadSettings {
     bool doExcSamps;          // For grabbing exclusive (DY + N Jets, TTBar Decay modes) or inclusive samples (As of 8/5/13, only applies to Oviedo)
     bool noGenRecRW;
     bool noType0;            // for grabbing version of MET with no Type 0 corrections
+    int whichSSType;
+    int whichDilepType;
     bool doDropFakes;
     bool doNonSig;          // For whether or not to grab SM background and data (used in MT2CutYieldCalc.C)
     bool doSignal;          // For whether or not to grab a signal point
@@ -64,6 +66,8 @@ typedef struct SampLoadSettings {
         doPURW = 1;
         doSyst = 1;
         
+        whichSSType = -1;
+        whichDilepType = -1;
         
         multiHistList = 0;
         readHistListFile = 0;
@@ -91,8 +95,32 @@ typedef struct SampLoadSettings {
         TString appendNamesTTBarGens[3] = {"_Madspin", "_MCatNLO", "_Powheg"};
         return appendNamesTTBarGens[whichTTbarGen];
     }
+    TString SignalStringForFile(int sigIndex) {
+        bool isT2tt = prefixT2tt.Contains("T2tt");
+        TString strSMS = isT2tt ? "_T2tt" : "_T2bw";
+        TString sigString = strSMS;
+        sigString += "_Stop";
+        sigString += vecStopMassGrab[sigIndex];
+        sigString += "_Chi0";
+        sigString += vecChi0MassGrab[sigIndex];
+        if (!isT2tt) {
+            sigString += "_CharFrac";
+            sigString += vecCharginoMassGrab[sigIndex];
+        }
+        else {
+            sigString += "_PerPol";
+            sigString += vecPercentPolGrab[sigIndex];
+        }
+        return sigString;
+    }
     TString SignalString(int sigIndex) {
         // return the appropriate name for the signal file
+        
+        TString stringSSType = "";
+        if (whichSSType > -1) {
+            stringSSType = "_wSS";
+            stringSSType += whichSSType;
+        }
         
         bool isT2tt = prefixT2tt.Contains("T2tt");
         TString sigString = "";
@@ -100,10 +128,11 @@ typedef struct SampLoadSettings {
         sigString += "/Tree_";
         sigString += prefixT2tt;
         sigString += "_Oviedo_SkimOutput_Oviedo";
-//        sigString += "_SignalStop_";
+        sigString += stringSSType;
         sigString += "_SignalStop";
+        //        sigString += "_SignalStop_";
         sigString += vecStopMassGrab[sigIndex];
-//        sigString += "_Chi0_";
+        //        sigString += "_Chi0_";
         sigString += "_Chi0";
         sigString += vecChi0MassGrab[sigIndex];
         if (!isT2tt) {
@@ -134,6 +163,33 @@ typedef struct SampLoadSettings {
         }
         return legEntry;
     }
+    TString SampleStringDYLoading() {
+        TString MCAppendString = "";
+        MCAppendString += doExcSamps ? "_Exclusive" : "";
+        TString stringSSType = "";
+        if (whichSSType > -1) {
+            stringSSType = "_wSS";
+            stringSSType += whichSSType;
+        }
+        MCAppendString += "_Oviedo";
+        MCAppendString += !doPURW ? "_noPURW" : "";
+        MCAppendString += doSyst ? "" : "_noSyst";
+        MCAppendString += stringSSType;
+        MCAppendString += "_PATSY";
+        MCAppendString += noGenRecRW ? "_noGenRecRW" : "";
+        MCAppendString += doDropFakes ? "_noFakes" : "";
+        MCAppendString += "Haddplots.root";
+        return MCAppendString;
+    }
+    TString SampleStringScaleFacSaving() {
+        TString MCAppendString = "";
+        MCAppendString += doExcSamps ? "_Exclusive" : "";
+        MCAppendString += !doPURW ? "_noPURW" : "";
+        MCAppendString += noGenRecRW ? "_noGenRecRW" : "";
+        MCAppendString += doDropFakes ? "_noFakes" : "";
+        MCAppendString += ".root";
+        return MCAppendString;
+    }
     TString SampleStringEnd(IndSamplePlotInfo * inISPI) {
         // how to end the input file based on what kind of sample you're grabbing
         TString outString = inISPI->nameISPI;
@@ -146,9 +202,24 @@ typedef struct SampLoadSettings {
                 MCAppendString += doExcSamps ? "_Exclusive" : "";
                 break;                
         }
+        
+        TString stringSSType = "";
+        if (whichSSType > -1) {
+            stringSSType = "_wSS";
+            stringSSType += whichSSType;
+        }
+        
+        TString strDiLep[3] = {"_MuMu", "_EE", "_EMu"};
+        TString strDiLepType = "";
+
+        
         MCAppendString += "_Oviedo";
         MCAppendString += !doPURW ? "_noPURW" : "";
         MCAppendString += doSyst ? "" : "_noSyst";
+        MCAppendString += stringSSType;
+        if (whichDilepType > -1) {
+            MCAppendString += strDiLep[whichDilepType];
+        }
         MCAppendString += noGenRecRW ? "_noGenRecRW" : "";
         MCAppendString += doDropFakes ? "_noFakes" : "";
         if (inISPI->sampleType > 0) {
@@ -163,6 +234,11 @@ typedef struct SampLoadSettings {
         else { //is signal
             outString += "_Output.root";
         }
+        
+        if (inISPI->sampleType == 100) {
+            outString = inISPI->nameISPI + "_OviedoHaddplots.root";
+        }
+        
         return outString;
     }
     
@@ -233,7 +309,17 @@ typedef struct SampLoadSettings {
     }
     
     
-    
+    void SetupMultiHistList_MultiChanList_MT2Saving(vector<TString> * vecMultiHistNames, int levelVerbosity = 0) {
+        // set up multi hist and multi-channel adding in the context of calculating MT2 yields
+        TString plotGrabBaseName = SmearedPlots ? "h_Smear" : "h_";
+        plotGrabBaseName += "MT2ll_vs_MT2lblb_vs_MT2bb_ZMET";
+        vecMultiHistNames->push_back(plotGrabBaseName);
+        if (levelVerbosity) {
+            for (int iHist = 0; iHist < (int) vecMultiHistNames->size(); ++iHist) {
+                cout << "MT2 Saving Hist name for iHist = " << iHist << " is " << vecMultiHistNames->at(iHist) << endl;
+            }
+        }
+    }
     
     void SetupMultiHistList_MultiChanList_MT2CutYield(vector<TString> * vecMultiHistNames, bool calcByHand, vector<float> * vecMT2llCut, vector<float> * vecMT2lbCut, int levelVerbosity = 0) {
         // set up multi hist and multi-channel adding in the context of calculating MT2 yields
@@ -270,7 +356,7 @@ typedef struct HistPlotMaking{
     bool calcTTBarNorm;         // calculate TTBar normalization by utilizing integral to data - (other backgrounds) for MT2ll < 80 in the "Full Cut region"
     bool useDDEstimate;         // whether or not to use data-driven estimates for appropriate backgrounds -- (3/28/14) this has now been split into two classes, ttbar normalization and DY normalization
     bool useDDEstimate_TTBar, useDDEstimate_DY;
-    int versDDEst_DY;
+    int versDDEst_TTBar, versDDEst_DY;
     
     
     bool doOneDee;          // Plots 1D histograms, as in the 1D HistTs defined in StopFunctionDefinitions_v2.h
@@ -300,6 +386,8 @@ typedef struct HistPlotMaking{
     float inputMT2lbCut;
     int whichIntType;
     
+    bool doSaveHistograms;
+    
     
     void DefaultVarVals() {
         addThings     = 1;
@@ -307,6 +395,7 @@ typedef struct HistPlotMaking{
         useDDEstimate = 0;
         useDDEstimate_TTBar = 0;
         useDDEstimate_DY = 0;
+        versDDEst_TTBar = -1;
         versDDEst_DY = -1;
         doOneDee      = 1;
         doTwoDee      = 0;
@@ -314,6 +403,8 @@ typedef struct HistPlotMaking{
         doIsoPlots    = 0;
         reportChi2    = 0;
         doCDF         = 0;
+        
+        doSaveHistograms = false;
         
         doVerbosity = 0;
         
@@ -413,6 +504,8 @@ typedef struct GlobalSaveInfo {
     void SetSaveName(SampLoadSettings * inSLS, GlobalHistSettings * inGHS, HistPlotMaking * inHPM) {
         TString TTBarGenName[3] = {"_madgraph", "_mcatnlo", "_powheg"};
         TString nameNTuple = "_Ovi";
+        TString nameDiLep[3] = {"_MuMu", "_EE", "_EMu"};
+
         TString stringDDEstimate = (inHPM->useDDEstimate) ? "_wDDEst" : "";
         TString stringExcSamp = (inSLS->doExcSamps) ? "_ExcSamps" : "";
         TString stringSignal = "";
@@ -436,7 +529,10 @@ typedef struct GlobalSaveInfo {
             }
         }   
         
-        saveName = TTBarGenName[inSLS->whichTTbarGen];        
+        saveName = TTBarGenName[inSLS->whichTTbarGen];
+        if (inSLS->whichDilepType > -1) {
+            saveName += nameDiLep[inSLS->whichDilepType];
+        }
         saveName += nameNTuple;
         saveName += stringDDEstimate;
         saveName += stringExcSamp;
@@ -484,6 +580,12 @@ typedef struct RunParams {
             }
             else if (strncmp (argv[k],"wTTbarGen", 9) == 0) {
                 SLS.whichTTbarGen = strtol(argv[k+1], NULL, 10 );
+            }
+            else if (strncmp (argv[k],"whichSS", 7) == 0) {
+                SLS.whichSSType = strtol(argv[k+1], NULL, 10 );
+            }
+            else if (strncmp (argv[k],"whichDL", 7) == 0) {
+                SLS.whichDilepType = strtol(argv[k+1], NULL, 10 );
             }
             else if (strncmp (argv[k],"noType0", 7) == 0) {
                 SLS.noType0 = 1;
@@ -574,16 +676,24 @@ typedef struct RunParams {
             else if (strncmp (argv[k],"useDDEst", 8) == 0) {
                 HPM.useDDEstimate = 1;
                 HPM.useDDEstimate_TTBar = 1;
+                HPM.versDDEst_TTBar = 0;
                 HPM.useDDEstimate_DY = 1;
-                HPM.versDDEst_DY = 1;
+                HPM.versDDEst_DY = 3;
             }
             else if (strncmp (argv[k],"useTTBarDDEst", 13) == 0) {
                 HPM.useDDEstimate = 1;
                 HPM.useDDEstimate_TTBar = 1;
+                HPM.versDDEst_TTBar = strtol(argv[k+1], NULL, 10 );
             }
             else if (strncmp (argv[k],"useDYDDEst", 10) == 0) {
                 HPM.useDDEstimate = 1;
                 HPM.useDDEstimate_DY = 1;
+                HPM.versDDEst_DY = strtol(argv[k+1], NULL, 10 );
+            }
+            else if (strncmp (argv[k],"calcTTBarDDEst", 11) == 0) {
+                HPM.versDDEst_TTBar = strtol(argv[k+1], NULL, 10 );
+            }
+            else if (strncmp (argv[k],"calcDYDDEst", 11) == 0) {
                 HPM.versDDEst_DY = strtol(argv[k+1], NULL, 10 );
             }
             else if (strncmp (argv[k],"noOneDee", 8) == 0) {
@@ -616,14 +726,18 @@ typedef struct RunParams {
                 HPM.doYieldV1 = 0;
                 HPM.doYieldV2 = 1;
             }
+            else if (strncmp (argv[k],"doSave", 6) == 0) {
+                HPM.doYieldV1 = 0;
+                HPM.doSaveHistograms = true;
+            }
             else if (strncmp (argv[k],"printAveSystLim", 12) == 0) {
                 HPM.printAveSyst = 1;
                 HPM.printSysLim = 1;
                 HPM.doStopXSec = 0;
             }
             else if (strncmp (argv[k],"printSystLim", 12) == 0) {
-	      HPM.printSysLim = 1;
-	      HPM.doStopXSec = 0;
+                HPM.printSysLim = 1;
+                HPM.doStopXSec = 0;
             }
             else if (strncmp (argv[k],"tryCPBH", 7) == 0) {
                 HPM.tryCalcPassByHand = 1;

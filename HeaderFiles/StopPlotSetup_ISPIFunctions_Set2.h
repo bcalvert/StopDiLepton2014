@@ -14,7 +14,15 @@ void SetFileNames(vector<IndSamplePlotInfo> * vecISPI, vector<TString> * vecBase
         vecISPI->at(iSamp).SetSampleType(doVerbosity);
         baseName = path;
         if (!isSignal) {
-            baseName += vecISPI->at(iSamp).sampleType == 0 ? "Data/" : "MC/";
+            if (vecISPI->at(iSamp).sampleType == 0) {
+                baseName += "Data/";
+            }
+            else if (vecISPI->at(iSamp).sampleType == 100) {
+                baseName += "FakeLep/";
+            }
+            else {
+                baseName += "MC/";
+            }
         }
 //        vecISPI->at(iSamp).SetInputFile(baseName + vecBaseFileNames->at(iSamp) + inSLS->SampleStringEnd(&vecISPI->at(iSamp)));
         vecISPI->at(iSamp).SetInputFile(baseName + inSLS->SampleStringEnd(&vecISPI->at(iSamp)));
@@ -22,16 +30,16 @@ void SetFileNames(vector<IndSamplePlotInfo> * vecISPI, vector<TString> * vecBase
 }
 
 
-void SetWeights(HistogramDisplayStructs * inHDS, WeightCalculators * inWC, bool useDDEstTTBar, bool useDDEstDY, bool doVerbosity = false, vector<TString> * vecSystString = 0, vector<float> * inVecSignalSkimEfficiencyCalc = 0) {
+void SetWeights(HistogramDisplayStructs * inHDS, WeightCalculators * inWC, SampLoadSettings * inSLS, bool useDDEstTTBar, bool useDDEstDY, bool doVerbosity = false, vector<TString> * vecSystString = 0, vector<float> * inVecSignalSkimEfficiencyCalc = 0) {
     int numSysts = vecSystString != 0 ? (int) vecSystString->size() : 0;
     for (unsigned int iISPI = 0; iISPI < inHDS->vecISPI_asLoaded.size(); ++iISPI) {
         if (inVecSignalSkimEfficiencyCalc != NULL) {
             for (unsigned int iSig = 0; iSig < inVecSignalSkimEfficiencyCalc->size(); ++iSig) {
-                inWC->SetISPIWeight(&inHDS->vecISPI_asLoaded[iISPI], useDDEstTTBar, useDDEstDY, doVerbosity, numSysts, vecSystString, inVecSignalSkimEfficiencyCalc, iSig);   
+                inWC->SetISPIWeight(&inHDS->vecISPI_asLoaded[iISPI], inSLS, useDDEstTTBar, useDDEstDY, doVerbosity, numSysts, vecSystString, inVecSignalSkimEfficiencyCalc, iSig);
             }
         }
         else {
-            inWC->SetISPIWeight(&inHDS->vecISPI_asLoaded[iISPI], useDDEstTTBar, useDDEstDY, doVerbosity, numSysts, vecSystString);
+            inWC->SetISPIWeight(&inHDS->vecISPI_asLoaded[iISPI], inSLS, useDDEstTTBar, useDDEstDY, doVerbosity, numSysts, vecSystString);
         }
     }
 }
@@ -39,18 +47,33 @@ void SetWeights(HistogramDisplayStructs * inHDS, WeightCalculators * inWC, bool 
 void SetSystBasics(HistogramDisplayStructs * inHDS, vector<TString> * vecSystNames, bool doSmear, bool isSignalHDS) {
     unsigned int numSysts = vecSystNames->size();
     for (unsigned int iSyst = 0; iSyst < numSysts; ++iSyst) {
-        for (unsigned int iISPI = 0; iISPI < inHDS->vecISPI_asLoaded.size(); ++iISPI) {            
-            if (vecSystNames->at(iSyst).Contains("genStopXSec")) {
-                inHDS->SetBoolSysts(iSyst, iISPI, isSignalHDS);
-//                inHDS->SetBoolSysts(iSyst, iISPI, false);
-            }
-            else if (vecSystNames->at(iSyst).Contains("JetSmear") || vecSystNames->at(iSyst).Contains("UncES")){
-                inHDS->SetBoolSysts(iSyst, iISPI, doSmear);
-//                inHDS->SetBoolSysts(iSyst, iISPI, false);
+        for (unsigned int iISPI = 0; iISPI < inHDS->vecISPI_asLoaded.size(); ++iISPI) {
+            if (vecSystNames->at(iSyst).Contains("Fake")) {
+                if (!inHDS->vecISPI_asLoaded[iISPI].nameISPI.Contains("FakeLep")) {
+                    //not on a sample that is a fake lepton sample so nuke that ish
+                    inHDS->SetBoolSysts(iSyst, iISPI, false);
+                }
             }
             else {
-                inHDS->SetBoolSysts(iSyst, iISPI, true);
-//                inHDS->SetBoolSysts(iSyst, iISPI, false);
+                //Not a fake lepton systematic
+                if (inHDS->vecISPI_asLoaded[iISPI].nameISPI.Contains("FakeLep")) {
+                    //on a sample that is a fake lepton sample so nuke that ish
+                    inHDS->SetBoolSysts(iSyst, iISPI, false);
+                }
+                else {
+                    if (vecSystNames->at(iSyst).Contains("genStopXSec")) {
+                        inHDS->SetBoolSysts(iSyst, iISPI, isSignalHDS);
+                        //                inHDS->SetBoolSysts(iSyst, iISPI, false);
+                    }
+                    else if (vecSystNames->at(iSyst).Contains("JetSmear") || vecSystNames->at(iSyst).Contains("UncES")){
+                        inHDS->SetBoolSysts(iSyst, iISPI, doSmear);
+                        //                inHDS->SetBoolSysts(iSyst, iISPI, false);
+                    }
+                    else {
+                        inHDS->SetBoolSysts(iSyst, iISPI, true);
+                        //                inHDS->SetBoolSysts(iSyst, iISPI, false);
+                    }
+                }
             }
         }
     }
