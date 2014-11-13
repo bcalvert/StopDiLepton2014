@@ -7,6 +7,7 @@ typedef struct ElecCutInfo {
     vector<float> vecCutSigIetaIeta, vecCutHOverE;
     vector<float> vecCutDelta0, vecCutDeltaZ;
     vector<float> vecCutDeltaEP, vecCutRelIso;
+    vector<float> vecCutMissHits;
     void SetElecCutVars(int cutStrength) {
         // cutStrength 0: Loose, 1: Medium, 2: Tight
         float cutDeltEtaBarrel[3] = {0.007, 0.004, 0.004};        
@@ -17,7 +18,7 @@ typedef struct ElecCutInfo {
         float cutDeltZBarrel[3] = {0.2, 0.1, 0.1};
         float cutRelIsoBarrel[3] = {1.0, 0.15, 0.10};
         float cutDeltEPBarrel[3] = {0.05, 0.05, 0.05};
-        
+        float cutMissHitsBarrel[3] = {1, 1, 0};
         
         float cutDeltEtaEndcap[3] = {0.009, 0.007, 0.005};
         float cutDeltPhiEndcap[3] = {0.10, 0.03, 0.02};
@@ -27,6 +28,7 @@ typedef struct ElecCutInfo {
         float cutDeltZEndcap[3] = {0.2, 0.1, 0.1};
         float cutRelIsoEndcap[3] = {1.0, 0.15, 0.10};
         float cutDeltEPEndcap[3] = {0.05, 0.05, 0.05};
+        float cutMissHitsEndcap[3] = {1, 1, 0};
         
         vecCutDeltaEtaIn.resize(2);
         vecCutDeltaEtaIn[0] = cutDeltEtaBarrel[cutStrength];
@@ -59,6 +61,10 @@ typedef struct ElecCutInfo {
         vecCutRelIso.resize(2);
         vecCutRelIso[0] = cutRelIsoBarrel[cutStrength];
         vecCutRelIso[1] = cutRelIsoEndcap[cutStrength];
+        
+        vecCutMissHits.resize(2);
+        vecCutMissHits[0] = cutMissHitsBarrel[cutStrength];
+        vecCutMissHits[1] = cutMissHitsEndcap[cutStrength];
     }
     void DefaultCutVarVals() {
         SetElecCutVars(1);

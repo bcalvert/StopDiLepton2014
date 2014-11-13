@@ -97,10 +97,12 @@ void CorrectEMI(EventMETInfo * inEMICV, EventMETInfo * inEMIShiftUp, EventMETInf
         inEMIShiftUp->MET_ERI.recoilUPar = inEMICV->MET_ERI.recoilUPar;
         inEMIShiftUp->MET_ERI.recoilUPerp = inEMICV->MET_ERI.recoilUPerp;
         
-        inEMIShiftUp->MET_EMT2I.EventMT2lb = inEMICV->MET_EMT2I.EventMT2lb;
+        inEMIShiftUp->MET_EMT2I.EventMT2lblb = inEMICV->MET_EMT2I.EventMT2lblb;
+        inEMIShiftUp->MET_EMT2I.EventMT2bb_ZMET = inEMICV->MET_EMT2I.EventMT2bb_ZMET;
         
-        inEMIShiftUp->MET_EMT2I.EventDeltaPhiMT2lb_JetsUsed = inEMICV->MET_EMT2I.EventDeltaPhiMT2lb_JetsUsed;
-        inEMIShiftUp->MET_EMT2I.EventDeltaPhiMT2lb_BLepsUsed = inEMICV->MET_EMT2I.EventDeltaPhiMT2lb_BLepsUsed;
+        inEMIShiftUp->MET_EMT2I.EventDeltaPhiMT2bb_ZMET_JetsUsed = inEMICV->MET_EMT2I.EventDeltaPhiMT2bb_ZMET_JetsUsed;
+        inEMIShiftUp->MET_EMT2I.EventDeltaPhiMT2lblb_JetsUsed = inEMICV->MET_EMT2I.EventDeltaPhiMT2lblb_JetsUsed;
+        inEMIShiftUp->MET_EMT2I.EventDeltaPhiMT2lblb_BLepsUsed = inEMICV->MET_EMT2I.EventDeltaPhiMT2lblb_BLepsUsed;
         
         
         
@@ -115,10 +117,12 @@ void CorrectEMI(EventMETInfo * inEMICV, EventMETInfo * inEMIShiftUp, EventMETInf
         inEMIShiftDown->MET_ERI.recoilUPar = inEMICV->MET_ERI.recoilUPar;
         inEMIShiftDown->MET_ERI.recoilUPerp = inEMICV->MET_ERI.recoilUPerp;
         
-        inEMIShiftDown->MET_EMT2I.EventMT2lb = inEMICV->MET_EMT2I.EventMT2lb;
+        inEMIShiftDown->MET_EMT2I.EventMT2lblb = inEMICV->MET_EMT2I.EventMT2lblb;
+        inEMIShiftDown->MET_EMT2I.EventMT2bb_ZMET = inEMICV->MET_EMT2I.EventMT2bb_ZMET;
         
-        inEMIShiftDown->MET_EMT2I.EventDeltaPhiMT2lb_JetsUsed = inEMICV->MET_EMT2I.EventDeltaPhiMT2lb_JetsUsed;
-        inEMIShiftDown->MET_EMT2I.EventDeltaPhiMT2lb_BLepsUsed = inEMICV->MET_EMT2I.EventDeltaPhiMT2lb_BLepsUsed;
+        inEMIShiftDown->MET_EMT2I.EventDeltaPhiMT2bb_ZMET_JetsUsed = inEMICV->MET_EMT2I.EventDeltaPhiMT2bb_ZMET_JetsUsed;
+        inEMIShiftDown->MET_EMT2I.EventDeltaPhiMT2lblb_JetsUsed = inEMICV->MET_EMT2I.EventDeltaPhiMT2lblb_JetsUsed;
+        inEMIShiftDown->MET_EMT2I.EventDeltaPhiMT2lblb_BLepsUsed = inEMICV->MET_EMT2I.EventDeltaPhiMT2lblb_BLepsUsed;
     }
 }
 

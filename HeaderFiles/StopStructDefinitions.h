@@ -40,6 +40,14 @@ typedef struct SampleT {
         histNameSuffix = "";
     }
     
+    void SetAsFullCut() {
+        whichdiLepType = -1;
+        doZVeto = 1;
+        cutNJets = 2;
+        cutNBJets = 1;
+        cutMET = 40;
+    }
+    
 } SampleT;
 
 

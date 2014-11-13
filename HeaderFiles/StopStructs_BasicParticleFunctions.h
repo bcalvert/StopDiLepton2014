@@ -12,15 +12,18 @@ inline void MetPhiCorrect(bool doData, float &MetX, float &MetY, int nVtx, int M
     float CorrType1PFMETX[4] = {-2.09720e-01, 2.50634e-01, 1.70969e-01, -2.66011e-02};
     float CorrType1PFMETY[4] = {4.97289e-02, -1.30547e-01, 3.61567e-01, -1.52030e-01};
     
+    /*
     float CorrType1PFMETX_Error[4] = {1.22617e-02, 8.66910e-04, 5.44773e-02, 3.65571e-03};
     float CorrType1PFMETY_Error[4] = {1.22985e-02, 8.70019e-04, 5.56118e-02, 3.71861e-03};
-    
+    */
     
     float CorrType1CaloMETX[4] = {-9.39018e-01, 1.41941e-01, 7.11905e-01, -2.88627e-01};
     float CorrType1CaloMETY[4] = {5.83075e-01, -4.54582e-02, 1.45326e+00, -3.12096e-01};
     
+    /*
     float CorrType1CaloMETX_Error[4] = {1.36453e-02, 9.54727e-04, 6.62481e-02, 4.42074e-03};
     float CorrType1CaloMETY_Error[4] = {1.37454e-02, 9.62002e-04, 6.74509e-02, 4.49338e-03};
+    */
     
     
     //  float CorrType1PFMETX_ReReco[4] = {-0.254, 0.309, 0.110, -0.005};
@@ -42,8 +45,10 @@ inline void MetPhiCorrectSmear(float &MetX, float &MetY, int nVtx) {
     int c1 = 1;
     float CorrType1PFMETX[4] = {4.71194e-02, -2.56750e-02};
     float CorrType1PFMETY[4] = {1.52731e-01, -7.42056e-02};
+    /*
     float CorrType1PFMETX_Error[4] = {5.49905e-02, 3.73960e-03};
     float CorrType1PFMETY_Error[4] = {5.65045e-02, 3.83885e-03};
+    */
     
     MetX = MetX - CorrType1PFMETX[c0] - nVtx * CorrType1PFMETX[c1];
     MetY = MetY - CorrType1PFMETY[c0] - nVtx * CorrType1PFMETY[c1];
@@ -65,8 +70,10 @@ inline void MetPhiCorrect_noType0(bool doData, float &MetX, float &MetY, int nVt
     float CorrType1PFMETX_ReReco[4] = {-2.35119e-01, 3.07387e-01, 1.38959e-01, -7.37727e-03};
     float CorrType1PFMETY_ReReco[4] = {-1.70399e-01, -1.60497e-01, 3.63978e-01, -2.17595e-01};
     
+    /*
     float CorrType1PFMETX_ReReco_Error[4] = {1.28320e-02, 9.29808e-04, 1.62513e-02, 1.11343e-03};
     float CorrType1PFMETY_ReReco_Error[4] = {1.3828532e-02, 9.90921e-04, 1.64292e-02, 1.12429e-03};
+    */
     
     MetX = MetX - CorrType1PFMETX_ReReco[c0] - nVtx * CorrType1PFMETX_ReReco[c1];
     MetY = MetY - CorrType1PFMETY_ReReco[c0] - nVtx * CorrType1PFMETY_ReReco[c1];

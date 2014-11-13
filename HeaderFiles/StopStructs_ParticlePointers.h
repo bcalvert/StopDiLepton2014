@@ -118,7 +118,6 @@ typedef struct MuonEventPointers {
         // function that says if muon passes cuts we put on it
                         
         bool muonPassCut;
-        float muonIsoRatioCut = 0.15;
         float muonEtaCut = 2.4;
         
         if (!isGMPTMuon->at(whichMu) || !isPFMuon->at(whichMu) || !isGlobMuon->at(whichMu) || !(fabs(muonEta) < muonEtaCut)) {
@@ -416,6 +415,7 @@ typedef struct ElectronEventPointers {
             cout << "currElecDeltaEtaIn " << currElecDeltaEtaIn << endl;
             cout << "currElecSigIetaIeta " << currElecSigIetaIeta << endl;
             cout << "currElecHtoERatio " << currElecHtoERatio << endl;
+            cout << "currElecNumMissHits " << currElecNumMissHits << endl;
         }
         
         if (keepLoose) {
