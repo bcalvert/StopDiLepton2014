@@ -1,0 +1,286 @@
+######################################
+HeaderFiles/StopTreeManipulations/StopOutTreeManipulations.h
+######################################
+
+1) Commented out a bunch of info on specific number of "isolated" leptons that were being saved
+
+2) Got rid of the MT and MET significance like variables
+
+3) Fixed naming of MT2lb
+
+4) Added in MT2bb_ZMET, along with a DPhi for the jets used
+
+5) Got rid of BMET
+
+6) Added in the branch saving function for SetOutTreeBranchGenMT2Info
+
+######################################
+HeaderFiles/StopTreeManipulations/StopInTreeManipulations_PlotMaker.h
+######################################
+
+1) All the stuff for StopOutTreeManipulations.h happened here as well (because this file is automatically written by a shell script
+
+######################################
+HeaderFiles/StopStructs_RecoEventParticleInfo.h
+######################################
+
+1) Commented out some spurious variable declarations that were giving warnings when compiling
+
+2) Added function JetSelectorForMT2 that selects the b-jets to use for the MT2lblb and MT2bb_ZMET calculation (previously the MT2lblb calculator was doing this on its own)
+
+3) Removed MT2ll_BMET and added in MT2bb_ZMET
+3a) Also fixed the naming of MT2lb (adding in the extra lb)
+
+4) Added in the function CalcMT2bb_ZMET that calculates the MT2bb_ZMET with a test mass of M_W
+
+5) Fixed the selector used to be minMaxBLepton mass for MT2lblb
+
+######################################
+HeaderFiles/BasicFunctions.h
+######################################
+
+1) Added in functions 
+1a) DebugStatement: facilitates (i.e. reduces amount of code footprint) checks on values of input integers
+1b) HistDivBinContent: Used when plotting distributions without even binning to do "Events / Unit"
+1c) Copied ScaleBackCalcBasic into this area to use outside of WeightCalculators struct
+
+######################################
+HeaderFiles/GeneralPlotDrawingFunctions.h
+######################################
+
+1) Added in function SetDilepLatexString that adds a dilepton string to plots where I only show one channel
+
+######################################
+HeaderFiles/HistogramPlottingStructs.h
+######################################
+
+1) Added in struct SpecialAxisBounds that is used for histograms with custom binning
+
+2) Changed some stuff in AxisT struct
+2a) Changed the function SetAxisAsDefaultCountAxis to have the addString be customizable
+2b) Added in function SetAxisSpecial used as part of setting custom binning
+
+3) Changed some stuff in HistogramT struct
+3a) Changed the Book*Hist functions to take as input the SpecialAxisBounds in case they need a special binning
+
+######################################
+HeaderFiles/HistogramPlottingStructs_StopSpecific.h
+######################################
+
+1) Changed some stuff in StopHistBinBounds
+1a) Added in instance of SpecialAxisBounds
+1b) Added in a InputHistBinBounds for KT2_Top
+
+######################################
+HeaderFiles/HistogramSystematicsStructs.h
+######################################
+
+1) Added to ValError Struct the ability to set it based on an input pair of floats (value, stat error)
+1a) Added SetSystError function that takes systematic varied ValErrors and calculates the systematic error on the current ValError
+
+2) Added a function MakeFullSyst that takes as input a central value ValError and vectors of the systematic variants and calculates the full combined Systematic uncertainty
+
+3) From SampleSystematicsInfo, removed the genStopXSec systematic
+
+######################################
+HeaderFiles/NewOviStopPlotFillerRunOnSkim_wSyst.h
+######################################
+
+1) Added in include of HistogramPlottingFunctions.h
+
+######################################
+HeaderFiles/PlotDisplayStructs.h
+######################################
+
+1) Added in function CorrGrabName that removes "Smear" from the grab name when running on Data
+
+2) Added in function to AxisProjInfo
+2a) DivideHistogramBins -- used as part of plotting distributions with custom binning
+
+3) In IndSamplePlotInfo struct, 
+3a) added in changes to enable the FakeLepton addition to plots
+3b) added in changes to enable the proper plotting of distributions with custom binning
+3c) added in function WriteToFile to allow writing to output files (for shape analysis)
+3d) Temporarily changed plots to sort by individual MC integrals
+3e) Added in SetUpHistosForSaving function that prepares histograms for saving to output
+
+4) In GlobalHistPlotInfo struct, added in the Dilepton Latex string
+
+5) Fixed the ">" sorting for SampDisplays to properly sort based on integrals
+
+######################################
+HeaderFiles/StopFillFunctions.h
+######################################
+
+1) Added in printing of new MT2 variable to PrintEvent function
+
+######################################
+HeaderFiles/StopFunctionDefinitions_Plots.h
+######################################
+
+1) Changed around the SetHistTVec function to include the 3D histograms and also fixing the variable that controls what histograms are made/saved
+
+2) Fixed the cutBJet array used in event selection (bug in that the 1 BJet selection was actually 2 B-jets)
+
+3) Changed around what sub-sample types are saved based on the control variables
+
+4) Started to add in the fake lepton systematics (not done)
+
+######################################
+HeaderFiles/StopFunctions_PlotFilling.h
+######################################
+
+1) Added in the TTBar Control and Signal region checks
+1a) They check on MT2ll > 80, MT2lblb > 150 and MT2bb_ZMET > 170
+
+######################################
+HeaderFiles/StopFunctions_PlotFillingShowing_HistogramBooking.h
+######################################
+
+1) Added in the SPecialAxisBounds to the histogram booking
+
+######################################
+HeaderFiles/StopFunctions_PlotFillingShowing_Strings.h
+######################################
+
+1) Fixed some of the labels to be better
+2) Added in the labels for MT2bb_ZMET and KT2_Top
+
+######################################
+HeaderFiles/StopFunctions_PlotFillingShowing_VariableMapping.h
+######################################
+
+1) Added in the strings and associated mappings for MT2bb_ZMET and KT2_Top
+
+######################################
+HeaderFiles/StopHistTDefinitions_1D.h
+######################################
+
+1) Commented out spurious variable decs. to silence warnings
+
+2) Added in some new histograms
+2a) H_ObjPtCoarseBin (to measure ISR reweighting SF)
+2b) H_MT2bb_ZMET
+2c) H_KT2_Top
+2d) Signal Shape versions of MT2ll, MT2lblb, and MT2bb_ZMET
+
+3) Changed the cutPlotLevel checks for deciding which histograms to make
+
+######################################
+HeaderFiles/StopHistTDefinitions_2D.h
+######################################
+
+1) Added in MT2bb_ZMET and KT2_Top to the MT2 correlation hists (and various permutations with the pre-existing dudes)
+
+3) Changed the cutPlotLevel checks for deciding which histograms to make
+
+######################################
+HeaderFiles/StopHistTDefinitions_3D.h
+######################################
+
+1) Added in 3D MT2 correlation histograms
+
+######################################
+HeaderFiles/StopPlotHaddInfo.h
+######################################
+
+1) When making
+
+######################################
+HeaderFiles/StopPlotSetup.h
+######################################
+
+1) Changed the loading in of WC weights to reflect the changes to DY and TTBar SF calculations
+
+2) Added in function SetupPlotRunning_DataMC_DYEstimation for setting up for DY calculation
+
+######################################
+HeaderFiles/StopPlotSetup_FileSetup.h
+######################################
+
+1) Added in struct CompIndMCParams that facilitates keeping the various subMC components together for plotting
+
+2) Added in functions for the individual subMC components like StopBaseFileNames_MC_TTBar that push back the names to grab
+2a) Consequently, changed this function, StopBaseFileNames_MC, to call these sub functions
+
+3) Changed the function SampleStartPositionsNames to include different TTBar dilepton samples as well as the Fake Lepton estimation
+
+######################################
+HeaderFiles/StopPlotSetup_ISPIFunctions_Set2.h
+######################################
+
+1) Added in necessary things for handling FakeLepton addition into plots
+1a) Setting the directory properly
+1b) Not grabbing incorrect systematics
+2) Changed the TTBar/DY SF weight loading
+
+######################################
+HeaderFiles/StopPlotStructs.h
+######################################
+
+1) Changed numSysts to 8 (dropped genStopXSection)
+
+2) Changed the SpecificWeight as part of writing the more clean versions of DY and TTBar estimation
+
+3) Changed the WeightCalculators struct as part of writing the more clean versions of DY and TTBar estimation
+
+4) Changes to PlotMakingStructs Struct 
+4a) Started to write the function SetFileNameVector for Shape Analysis histogram saving
+4aa) This needs to be worked on further
+4b) Added in MC Colors, MC Legend Entries, and MC Sort Parameters into this
+
+######################################
+HeaderFiles/StopPlotStructs_PlotMakingMacro.h
+######################################
+
+1) In Struct SampMakingVariables
+1a) Added in whichSSType, for which type of NTuple set to grab
+
+######################################
+HeaderFiles/StopPlotStructs_PlottingMacro.h
+######################################
+
+1) In struct SampLoadSettings
+1a) Added in whichDilepType, for when to grab just a singular dilepton type of event
+1b) Added in whichSSType, for which type of NTuple set to grab (see above about SampMakingVariables)
+1c) Added some functions as part of DY/TTBar SF making/loading
+
+2) In struct HistPlotMaking
+2a) Added in version of DDEstimate for TTBar (was already there for DY)
+2b) Added in doSaveHistograms to say whether or not to save histograms for shape analysis
+
+######################################
+HeaderFiles/StopPlottingHeaderFiles.h
+######################################
+
+1) Added in include of HistogramPlottingFunctions.h
+
+######################################
+HeaderFiles/StopSpecialFunctions.h
+######################################
+
+1) Added in testMass option for the getMT2 function (needed for MT2bb_ZMET, by default it's 0)
+
+######################################
+HeaderFiles/StopStructDefinitions.h
+######################################
+
+1) Added in function SetAsFullCut which will be used (not being used yet) to set a sub-sample as a "Full Cut sample"
+
+######################################
+PlotMakingCode/NewOviStopPlotFillerRunOnSkim_wSyst.C
+######################################
+
+1) Removed the genStopSyst
+2) Added in use of PMRP.SMV.whichSSType
+3) Started to add in systematics on FakeLepton (work in progress)
+4) Changed weird ass thing I had, "if (PMRP.PSIV.fInName) {"
+
+######################################
+PlotMakingCode/SkimmingMacro/NewOviStopPlotSkimmer.C
+######################################
+
+1) Set base check for correct MT2lblb pairing to be the pairing with the smallest max b-lepton system mass
+
+2) Set Default MET Types for EMI_PF_SystVarUp and EMI_PF_SystVarDown (fixes a bug)
+
