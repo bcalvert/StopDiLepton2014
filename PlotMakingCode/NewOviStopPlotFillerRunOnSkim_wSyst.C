@@ -107,11 +107,13 @@ int main( int argc, char* argv[] ) {
     TH2F * h_LepIDIsoElecSFToUse, * h_LepIDIsoMuonSFToUse;
     
      // stuff for additional scale factors from Pieter (decommisioned with the new SF measurements from Carmen/Jan (12/6/13)
+    /*
     TFile * fileFastSimLepIDIsoMuMu = new TFile(baseDirLeptonSF + TString("muon_FastSim_EWKino.root"));
     TFile * fileFastSimLepIDIsoEE = new TFile(baseDirLeptonSF + TString("electron_FastSim_EWKino.root"));
     
     TH2F * h_LepIDIsoSFSigMuMu = (TH2F *) fileFastSimLepIDIsoMuMu->Get("SF");
     TH2F * h_LepIDIsoSFSigEE = (TH2F *) fileFastSimLepIDIsoEE->Get("SF");
+    */
 
     /******************************************************************************************************************************/
     ///////////////////////  End: Deal with loading in Lepton SFs
@@ -186,7 +188,7 @@ int main( int argc, char* argv[] ) {
     vector<int> systLB_SmearEDSI, systUB_SmearEDSI;
     
     const int numKinSysts = 6;
-    const int numSystsTotal = 9;
+    int numSystsTotal = 8;
     
     // Systs -- 1: LepES, 2: JetES, 3/4: BTag SF stuff, 5: JetSmear, 6: UncES
     int systLepES = 1;
@@ -198,13 +200,6 @@ int main( int argc, char* argv[] ) {
     int systLepEff = 7;
     int systGenRecoilRW = 8;
     int systStopXSec = 9;
-    
-    int systLepESShiftUp, systLepESShiftDown;
-    int systJetESShiftUp, systJetESShiftDown;
-    int systBTagEffSFShiftUp, systBTagEffSFShiftDown;
-    int systBMisTagSFShiftUp, systBMisTagSFShiftDown;
-    int systJetSmearShiftUp, systJetSmearShiftDown;
-    int systUncESShiftUp, systUncESShiftDown;
     
     systLB_Lepton.push_back(systLepES);  systUB_Lepton.push_back(systLepES);
     systLB_Jet.push_back(systJetES);     systUB_Jet.push_back(systBMisTagSF);
@@ -517,6 +512,7 @@ int main( int argc, char* argv[] ) {
     /******************************************************************************************************************************/
     
     /////Set up preliminary things
+    
     //Set up the Default Stop Hist Binnings and Bounds
     StopHistBinBounds basicSHBB; basicSHBB.DefaultVarVals();
     
@@ -525,13 +521,12 @@ int main( int argc, char* argv[] ) {
     SetStringKey_StSMap_Composite(mapVartoLabel);
     
     // Set up the SubSampleVector (i.e. the different classes of events
-    int whichSSType = PMRP.SRS.isSignal ? 2 : -1;
     vector<SampleT> * subSampVec = new vector<SampleT>;
-    SetSubSampVec(subSampVec, whichSSType);
+    SetSubSampVec(subSampVec, PMRP.SMV.whichSSType);
     
     // Set up the systematics that we'll book histograms for
     vector<SystT> * systVec = new vector<SystT>;
-    SetSystVec(systVec, true);
+    SetSystVec(systVec, true, PMRP.SMV.estFakeLep);
     /////Set up preliminary things
     
     /******************************************************************************************************************************/
@@ -543,7 +538,7 @@ int main( int argc, char* argv[] ) {
     
     for (int iDim = 0; iDim < numSpaceDimensions; ++iDim) {
         vecVecHistT_Inclusive[iDim] = new vector<HistogramT>;
-        SetHistTVec_Inclusive(vecVecHistT_Inclusive[iDim], &basicSHBB, &mapVartoLabel, iDim + 1, PMRP.SRS.isSignal);
+        SetHistTVec_Inclusive(vecVecHistT_Inclusive[iDim], &basicSHBB, &mapVartoLabel, iDim + 1, PMRP.SMV.whichSSType);
         AddPatsyName(vecVecHistT_Inclusive[iDim]);
         vecVecHistT_MET_noType0[iDim] = new vector<HistogramT>;
         //SetHistTVec_MET_noType0(vecVecHistT_MET_noType0[iDim], &basicSHBB, &mapVartoLabel, iDim + 1, PMRP.SRS.isSignal);
@@ -559,7 +554,7 @@ int main( int argc, char* argv[] ) {
     vector< vector<HistogramT> *> vecVecHistT_Inclusive_Smear_Syst;
     vector< vector<HistogramT> *> vecVecHistT_MET_noType0_Smear_Syst;
     
-    int systStopBook = 2; //3/30/14: temporarily don't book systematics for 3D hists -- too much memory 
+    int systStopBook = 3; //3/30/14: temporarily don't book systematics for 3D hists -- too much memory
     
     if (!PMRP.SMV.doData) {
         vecVecHistT_Inclusive_Smear.resize(numSpaceDimensions);
@@ -567,7 +562,7 @@ int main( int argc, char* argv[] ) {
         
         for (int iDim = 0; iDim < numSpaceDimensions; ++iDim) {
             vecVecHistT_Inclusive_Smear[iDim] = new vector<HistogramT>;
-            SetHistTVec_Inclusive_Smeared(vecVecHistT_Inclusive_Smear[iDim], &basicSHBB, &mapVartoLabel, iDim + 1, PMRP.SRS.isSignal);
+            SetHistTVec_Inclusive_Smeared(vecVecHistT_Inclusive_Smear[iDim], &basicSHBB, &mapVartoLabel, iDim + 1, PMRP.SMV.whichSSType);
             AddPatsyName(vecVecHistT_Inclusive_Smear[iDim]);
             
             vecVecHistT_MET_noType0_Smear[iDim] = new vector<HistogramT>;
@@ -575,7 +570,7 @@ int main( int argc, char* argv[] ) {
             //AddPatsyName(vecVecHistT_MET_noType0_Smear[iDim]);
         }
         
-        if (PMRP.PSIV.fInName) {
+        if (PMRP.SMV.doBookSyst) {
             vecVecHistT_Inclusive_Syst.resize(numSpaceDimensions);
             vecVecHistT_MET_noType0_Syst.resize(numSpaceDimensions);
             
@@ -584,13 +579,38 @@ int main( int argc, char* argv[] ) {
             
             
             for (int iDim = 0; iDim < numSpaceDimensions; ++iDim) {
-                if (iDim == systStopBook) continue;                
+                if (iDim >= systStopBook) continue;
                 vecVecHistT_Inclusive_Syst[iDim] = new vector<HistogramT>;
                 AddSystHists(vecVecHistT_Inclusive_Syst[iDim], vecVecHistT_Inclusive[iDim], systVec, PMRP.SRS.isSignal);
                 
                 vecVecHistT_MET_noType0_Syst[iDim] = new vector<HistogramT>;
                 AddSystHists(vecVecHistT_MET_noType0_Syst[iDim], vecVecHistT_MET_noType0[iDim], systVec, PMRP.SRS.isSignal);
                 
+                
+                vecVecHistT_Inclusive_Smear_Syst[iDim] = new vector<HistogramT>;
+                AddSystHists(vecVecHistT_Inclusive_Smear_Syst[iDim], vecVecHistT_Inclusive_Smear[iDim], systVec, PMRP.SRS.isSignal);
+                
+                vecVecHistT_MET_noType0_Smear_Syst[iDim] = new vector<HistogramT>;
+                AddSystHists(vecVecHistT_MET_noType0_Smear_Syst[iDim], vecVecHistT_MET_noType0[iDim], systVec, PMRP.SRS.isSignal);
+            }
+        }
+    }
+    else {
+        if (PMRP.SMV.doBookSyst) {
+            vecVecHistT_Inclusive_Syst.resize(numSpaceDimensions);
+            vecVecHistT_MET_noType0_Syst.resize(numSpaceDimensions);
+            
+            vecVecHistT_Inclusive_Smear_Syst.resize(numSpaceDimensions);
+            vecVecHistT_MET_noType0_Smear_Syst.resize(numSpaceDimensions);
+            
+            
+            for (int iDim = 0; iDim < numSpaceDimensions; ++iDim) {
+                if (iDim >= systStopBook) continue;
+                vecVecHistT_Inclusive_Syst[iDim] = new vector<HistogramT>;
+                AddSystHists(vecVecHistT_Inclusive_Syst[iDim], vecVecHistT_Inclusive[iDim], systVec, PMRP.SRS.isSignal);
+                
+                vecVecHistT_MET_noType0_Syst[iDim] = new vector<HistogramT>;
+                AddSystHists(vecVecHistT_MET_noType0_Syst[iDim], vecVecHistT_MET_noType0[iDim], systVec, PMRP.SRS.isSignal);
                 
                 vecVecHistT_Inclusive_Smear_Syst[iDim] = new vector<HistogramT>;
                 AddSystHists(vecVecHistT_Inclusive_Smear_Syst[iDim], vecVecHistT_Inclusive_Smear[iDim], systVec, PMRP.SRS.isSignal);
@@ -659,35 +679,44 @@ int main( int argc, char* argv[] ) {
             if (PMRP.PSIV.doVerbosity_Plots) {
                 cout << "going to try and book Normal " << endl;
             }
-            BookHists(vecVecHistT_Inclusive[iDim], histMap_1D, histMap_2D, histMap_3D, &subSampVec->at(iSubSamp), vecNBins, vecBinEdges, iDim + 1);
+            BookHists(vecVecHistT_Inclusive[iDim], histMap_1D, histMap_2D, histMap_3D, &subSampVec->at(iSubSamp), &basicSHBB.SAB, iDim + 1);
             if (PMRP.PSIV.doVerbosity_Plots) {
                 cout << "going to try and book Type 0 " << endl;
             }
             // book Type0 hists
-            BookHists(vecVecHistT_MET_noType0[iDim], histMap_1D_METnoType0, histMap_2D_METnoType0, histMap_3D_METnoType0, &subSampVec->at(iSubSamp), vecNBins, vecBinEdges, iDim + 1);
+            BookHists(vecVecHistT_MET_noType0[iDim], histMap_1D_METnoType0, histMap_2D_METnoType0, histMap_3D_METnoType0, &subSampVec->at(iSubSamp), &basicSHBB.SAB, iDim + 1);
             
             if (!PMRP.SMV.doData) {
                 // book the smeared hists
-                BookHists(vecVecHistT_Inclusive_Smear[iDim], histMap_1D_Smear, histMap_2D_Smear, histMap_3D_Smear, &subSampVec->at(iSubSamp), vecNBins, vecBinEdges, iDim + 1);
+                BookHists(vecVecHistT_Inclusive_Smear[iDim], histMap_1D_Smear, histMap_2D_Smear, histMap_3D_Smear, &subSampVec->at(iSubSamp), &basicSHBB.SAB, iDim + 1);
                 
                 // book the smeared hists w/o Type0
-                BookHists(vecVecHistT_MET_noType0_Smear[iDim], histMap_1D_SmearMETnoType0, histMap_2D_SmearMETnoType0, histMap_3D_SmearMETnoType0, &subSampVec->at(iSubSamp), vecNBins, vecBinEdges, iDim + 1);
+                BookHists(vecVecHistT_MET_noType0_Smear[iDim], histMap_1D_SmearMETnoType0, histMap_2D_SmearMETnoType0, histMap_3D_SmearMETnoType0, &subSampVec->at(iSubSamp), &basicSHBB.SAB, iDim + 1);
                 
-                if (PMRP.PSIV.fInName) {
+                if (PMRP.SMV.doBookSyst) {
                     if (iDim == systStopBook) continue;
                     // book the syst. hists
-                    BookHists(vecVecHistT_Inclusive_Syst[iDim], histMap_1D_Syst, histMap_2D_Syst, histMap_3D_Syst, &subSampVec->at(iSubSamp), vecNBins, vecBinEdges, iDim + 1);
+                    BookHists(vecVecHistT_Inclusive_Syst[iDim], histMap_1D_Syst, histMap_2D_Syst, histMap_3D_Syst, &subSampVec->at(iSubSamp), &basicSHBB.SAB, iDim + 1);
                     
                     // book the syst. hists w/o Type0
-                    BookHists(vecVecHistT_MET_noType0_Syst[iDim], histMap_1D_METnoType0_Syst, histMap_2D_METnoType0_Syst, histMap_3D_METnoType0_Syst, &subSampVec->at(iSubSamp), vecNBins, vecBinEdges, iDim + 1);
+                    BookHists(vecVecHistT_MET_noType0_Syst[iDim], histMap_1D_METnoType0_Syst, histMap_2D_METnoType0_Syst, histMap_3D_METnoType0_Syst, &subSampVec->at(iSubSamp), &basicSHBB.SAB, iDim + 1);
                     
                     // book the syst. smeared hists
-                    BookHists(vecVecHistT_Inclusive_Smear_Syst[iDim], histMap_1D_Smear_Syst, histMap_2D_Smear_Syst, histMap_3D_Smear_Syst, &subSampVec->at(iSubSamp), vecNBins, vecBinEdges, iDim + 1);
+                    BookHists(vecVecHistT_Inclusive_Smear_Syst[iDim], histMap_1D_Smear_Syst, histMap_2D_Smear_Syst, histMap_3D_Smear_Syst, &subSampVec->at(iSubSamp), &basicSHBB.SAB, iDim + 1);
                     
                     // book the syst. smeared hists w/o Type0
-                    BookHists(vecVecHistT_MET_noType0_Smear_Syst[iDim], histMap_1D_SmearMETnoType0_Syst, histMap_2D_SmearMETnoType0_Syst, histMap_3D_SmearMETnoType0_Syst, &subSampVec->at(iSubSamp), vecNBins, vecBinEdges, iDim + 1);
+                    BookHists(vecVecHistT_MET_noType0_Smear_Syst[iDim], histMap_1D_SmearMETnoType0_Syst, histMap_2D_SmearMETnoType0_Syst, histMap_3D_SmearMETnoType0_Syst, &subSampVec->at(iSubSamp), &basicSHBB.SAB, iDim + 1);
                 }
-                
+            }
+            else {
+                if (PMRP.SMV.doBookSyst) {
+                    if (iDim == systStopBook) continue;
+                    // book the syst. hists
+                    BookHists(vecVecHistT_Inclusive_Syst[iDim], histMap_1D_Syst, histMap_2D_Syst, histMap_3D_Syst, &subSampVec->at(iSubSamp), &basicSHBB.SAB, iDim + 1);
+                    
+                    // book the syst. hists w/o Type0
+                    BookHists(vecVecHistT_MET_noType0_Syst[iDim], histMap_1D_METnoType0_Syst, histMap_2D_METnoType0_Syst, histMap_3D_METnoType0_Syst, &subSampVec->at(iSubSamp), &basicSHBB.SAB, iDim + 1);
+                }
             }
             
         }
@@ -790,8 +819,10 @@ int main( int argc, char* argv[] ) {
         cout << "running on just " << PMRP.RRL.nEvents << " events " << endl;
     }
     vector<int> * breakPoints = new vector<int>;
+    /*
     int currBreakPoint;
     int endBreakPoint = -1;
+    */
     breakPoints->push_back(0);
     /*
     if (numBreakPoints > 0) {
@@ -878,7 +909,7 @@ int main( int argc, char* argv[] ) {
         
         ELI.EventDiLepMass = EDSI.DP_DiLepton.BVC.Vec_Mass;
         ELI.EventDiLepinZMass = ELI.EventDiLepMass > 76 && ELI.EventDiLepMass < 106;
-        if (PMRP.PSIV.fInName) {
+        if (PMRP.SMV.doBookSyst && !PMRP.SMV.doData) {
             ELI_SystVarUp[systLepES].EventDiLepMass = EDSI_SystVarUp[systLepES].DP_DiLepton.BVC.Vec_Mass;
             ELI_SystVarUp[systLepES].EventDiLepinZMass = ELI_SystVarUp[systLepES].EventDiLepMass > 76 && ELI_SystVarUp[systLepES].EventDiLepMass < 106;
             ELI_SystVarDown[systLepES].EventDiLepMass = EDSI_SystVarDown[systLepES].DP_DiLepton.BVC.Vec_Mass;
@@ -1099,6 +1130,8 @@ int main( int argc, char* argv[] ) {
                 }
             }
             //            cout << "test 5 " << endl;
+            /*
+             turning off scaling of signal for to just save energy/time and do it later
             if (PMRP.SRS.isSignal) {
                 BEI.ScaleWeights(EGSPI.StopXSec, true, true);
                 for (int iSyst = 1; iSyst <= numSystsTotal; ++iSyst) {
@@ -1112,6 +1145,7 @@ int main( int argc, char* argv[] ) {
                     }
                 }
             }
+            */
         }
         // basic condition, if running on data, only select type of events that are relevant to prevent double counting
         if (PMRP.SMV.doData) {
@@ -1189,7 +1223,7 @@ int main( int argc, char* argv[] ) {
         if (!PMRP.SMV.doData) {            
 //            SmearESPI.SetStructs(0, &mapIntBEI_Basic, &mapIntEMI_OfficialSmear, &mapIntEJI_OfficialSmear, &mapIntELI_Basic, &mapIntEDSI_OfficialSmear);
             SmearESPI.SetStructs(0, &mapIntBEI_Basic, &mapIntEMI_OfficialSmear, &mapIntEJI_OfficialSmear, &mapIntELI_Basic, &mapIntEDSI_OfficialSmear);
-            if (PMRP.PSIV.fInName) {
+            if (PMRP.SMV.doBookSyst) {
                 for (int iSyst = 1; iSyst <= numSystsTotal; ++iSyst) {
 //                    SmearESPI_SystVarUp[iSyst].SetStructs(iSyst, &mapIntBEI_Basic, &mapIntEMI_OfficialSmear, &mapIntEJI_OfficialSmear, &mapIntELI_Basic, &mapIntEDSI_OfficialSmear);
 //                    SmearESPI_SystVarDown[iSyst].SetStructs(-1 * iSyst, &mapIntBEI_Basic, &mapIntEMI_OfficialSmear, &mapIntEJI_OfficialSmear, &mapIntELI_Basic, &mapIntEDSI_OfficialSmear);
@@ -1205,7 +1239,7 @@ int main( int argc, char* argv[] ) {
 //            cout << "about to set NoType0 smeared map stuff " << endl;
 //            SmearESPI_NoType0.SetStructs(0, &mapIntBEI_Basic, &mapIntEMI_NoType0_ByHandSmear, &mapIntEJI_OfficialSmear, &mapIntELI_Basic, &mapIntEDSI_OfficialSmear);
             SmearESPI_NoType0.SetStructs(0, &mapIntBEI_Basic, &mapIntEMI_NoType0_ByHandSmear, &mapIntEJI_Basic, &mapIntELI_Basic, &mapIntEDSI_Basic);
-            if (PMRP.PSIV.fInName) { // what the hell is this for?
+            if (PMRP.SMV.doBookSyst) { // what the hell is this for?
                 for (int iSyst = 1; iSyst <= numSystsTotal; ++iSyst) {
 //                    SmearESPI_NoType0_SystVarUp[iSyst].SetStructs(iSyst, &mapIntBEI_Basic, &mapIntEMI_NoType0_ByHandSmear, &mapIntEJI_OfficialSmear, &mapIntELI_Basic, &mapIntEDSI_OfficialSmear);
 //                    SmearESPI_NoType0_SystVarDown[iSyst].SetStructs(-1 * iSyst, &mapIntBEI_Basic, &mapIntEMI_NoType0_ByHandSmear, &mapIntEJI_OfficialSmear, &mapIntELI_Basic, &mapIntEDSI_OfficialSmear);
@@ -1232,7 +1266,7 @@ int main( int argc, char* argv[] ) {
         if (!PMRP.SMV.doData) {
             StVM_Smear.clear();
             StVM_Smear_MET_noType0.clear();
-            if (PMRP.PSIV.fInName) {
+            if (PMRP.SMV.doBookSyst) {
                 for (int iSyst = 1; iSyst <= numSystsTotal; ++iSyst) {
                     StVM_Basic_SystVarUp[iSyst].clear();
                     StVM_Basic_SystVarDown[iSyst].clear();
@@ -1242,6 +1276,14 @@ int main( int argc, char* argv[] ) {
                     
                     StVM_Smear_MET_noType0_SystVarUp[iSyst].clear();
                     StVM_Smear_MET_noType0_SystVarDown[iSyst].clear();
+                }
+            }
+        }
+        else {
+            if (PMRP.SMV.doBookSyst) {
+                for (int iSyst = 1; iSyst <= numSystsTotal; ++iSyst) {
+                    StVM_Basic_SystVarUp[iSyst].clear();
+                    StVM_Basic_SystVarDown[iSyst].clear();
                 }
             }
         }
@@ -1275,18 +1317,18 @@ int main( int argc, char* argv[] ) {
             
             ///// Histograms for smeared MET w/o Type 0  /////            
             SetupMapsAndFillHistograms(StVM_Smear_MET_noType0, subSampBool_Smear_noType0, subSampVec, &SmearESPI_NoType0, &EPI, &vecVecHistT_MET_noType0_Smear, &histMap_1D_SmearMETnoType0, &histMap_2D_SmearMETnoType0, &histMap_3D_SmearMETnoType0, METSig_Raw, systStopBook, 0, true, PMRP.SMV.whichDiLepType, PMRP.PSIV.doVerbosity_Plots);                                     
-            if (PMRP.PSIV.fInName) {                
+            if (PMRP.SMV.doBookSyst) {                
                 ///// Systematic variations on histograms /////
                 for (int iSyst = 1; iSyst <= numSystsTotal; ++iSyst) {                    
                     ///// Systematic variations on basic histograms /////
                     
-                    if (iSyst != systUncES && iSyst != systJetSmear) {
+//                    if (iSyst != systUncES && iSyst != systJetSmear) {
                         /// Systematic Variations Up
                         SetupMapsAndFillHistograms(StVM_Basic_SystVarUp[iSyst], subSampBool_SystVarUp[iSyst], subSampVec, &ESPI_SystVarUp[iSyst], &EPI, &vecVecHistT_Inclusive_Syst, &histMap_1D_Syst, &histMap_2D_Syst, &histMap_3D_Syst, METSig_Raw, systStopBook, iSyst, false, PMRP.SMV.whichDiLepType, PMRP.PSIV.doVerbosity_Plots); 
                         
                         /// Systematic Variations Down
                         SetupMapsAndFillHistograms(StVM_Basic_SystVarDown[iSyst], subSampBool_SystVarDown[iSyst], subSampVec, &ESPI_SystVarDown[iSyst], &EPI, &vecVecHistT_Inclusive_Syst, &histMap_1D_Syst, &histMap_2D_Syst, &histMap_3D_Syst, METSig_Raw, systStopBook, -1 * iSyst, false, PMRP.SMV.whichDiLepType, PMRP.PSIV.doVerbosity_Plots);                        
-                    }
+//                    }
                     
                     ///// Systematic variations on smeared histograms /////
                     
@@ -1316,6 +1358,19 @@ int main( int argc, char* argv[] ) {
                     /// Systematic Variations Down
                     SetupMapsAndFillHistograms(StVM_Smear_MET_noType0_SystVarDown[iSyst], subSampBool_Smear_noType0_SystVarDown[iSyst], subSampVec, &SmearESPI_NoType0_SystVarDown[iSyst], &EPI, &vecVecHistT_MET_noType0_Smear_Syst, &histMap_1D_SmearMETnoType0_Syst, &histMap_2D_SmearMETnoType0_Syst, &histMap_3D_SmearMETnoType0_Syst, METSig_Raw, systStopBook, -1 * iSyst, true, PMRP.SMV.whichDiLepType, PMRP.PSIV.doVerbosity_Plots);
                     
+                }
+            }
+        }
+        else {
+            if (PMRP.SMV.doBookSyst) {
+                ///// Systematic variations on histograms /////
+                for (int iSyst = 1; iSyst <= numSystsTotal; ++iSyst) {
+                    ///// Systematic variations on basic histograms /////
+                    /// Systematic Variations Up
+                    SetupMapsAndFillHistograms(StVM_Basic_SystVarUp[iSyst], subSampBool_SystVarUp[iSyst], subSampVec, &ESPI_SystVarUp[iSyst], &EPI, &vecVecHistT_Inclusive_Syst, &histMap_1D_Syst, &histMap_2D_Syst, &histMap_3D_Syst, METSig_Raw, systStopBook, iSyst, false, PMRP.SMV.whichDiLepType, PMRP.PSIV.doVerbosity_Plots);
+                    
+                    /// Systematic Variations Down
+                    SetupMapsAndFillHistograms(StVM_Basic_SystVarDown[iSyst], subSampBool_SystVarDown[iSyst], subSampVec, &ESPI_SystVarDown[iSyst], &EPI, &vecVecHistT_Inclusive_Syst, &histMap_1D_Syst, &histMap_2D_Syst, &histMap_3D_Syst, METSig_Raw, systStopBook, -1 * iSyst, false, PMRP.SMV.whichDiLepType, PMRP.PSIV.doVerbosity_Plots);
                 }
             }
         }

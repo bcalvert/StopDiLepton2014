@@ -8,7 +8,7 @@ inline vector<TH1F *> * OneDProjectionReturnVec(TH1 * inputHist, int numDims, in
     TH3F * projPatsy3DHist;
     TString patsyNamebase = "patsy";
     TString patsyName;
-    int NBins;
+    int NBins = -1;
     int whichAxisToMix = 6 - (whichAxisForDist + whichAxisToProjTo);
     int axis1LB, axis1UB, axis2LB, axis2UB;
     switch (whichAxisForDist) {
@@ -85,9 +85,11 @@ int main( int argc, char* argv[] ) {
     TH2F * h_JetESUp = (TH2F *) JetESFile->Get("h_JESSystUncertUp");
     TH2F * h_JetESDown = (TH2F *) JetESFile->Get("h_JESSystUncertDown");
     
+    /*
     TFile * GenJetSmearFile = new TFile(baseDirOfficialSmearing + TString("pfJetResolutionMCtoDataCorrLUT.root"));
     TH2F * h_GenJetSmearHist = (TH2F*) GenJetSmearFile->Get("pfJetResolutionMCtoDataCorrLUT");
     TH2F * h_RecoJetLowPtSmearHist = ResolutionHistMaker(baseDirOfficialSmearing + TString("JetResolution.txt"));
+    */
     
     TFile * FullSimPUWeights = new TFile(baseDirPUReweighting + TString("WeightStop_FullSim.root"));
     TH3F * FullSimWeightHist = (TH3F *) FullSimPUWeights->Get("WHist");
@@ -362,9 +364,9 @@ int main( int argc, char* argv[] ) {
     VertRho = new vector<float>;
     VertIsFake = new vector<bool>;
     
-    int whichCheckBaseVal = 0;
+    int whichCheckBaseVal = 1;
     
-    int whichCheck = 0;
+    int whichCheck = 1;
     for (int k = 0; k < argc; ++k) {
         if (strncmp (argv[k],"-wCheck", 7) == 0) {
             whichCheck = strtol(argv[k+1], NULL, 10);
@@ -532,7 +534,7 @@ int main( int argc, char* argv[] ) {
     
     
     
-    bool passesFullSelection;
+    //bool passesFullSelection;
     vector<bool> vecPFS_SystVarUp; vecPFS_SystVarUp.resize(numSysts + 1);
     vector<bool> vecPFS_SystVarDown; vecPFS_SystVarDown.resize(numSysts + 1);
     
@@ -587,6 +589,8 @@ int main( int argc, char* argv[] ) {
         
         EMI_PF_SystVarUp[iSyst].EMIDefaultVarVals();
         EMI_PF_SystVarDown[iSyst].EMIDefaultVarVals();
+        EMI_PF_SystVarUp[iSyst].METType = 0;
+        EMI_PF_SystVarDown[iSyst].METType = 0;
         
         SmearEMI_PF_SystVarUp[iSyst].EMIDefaultVarVals();
         SmearEMI_PF_SystVarDown[iSyst].EMIDefaultVarVals();
@@ -611,7 +615,6 @@ int main( int argc, char* argv[] ) {
     
     //SUSY particle Gen Mass stuff
     float genStopMassCut = 0., genChi0MassCut = 0.;
-    float genCharginoMassCut = 0.;
     
     bool doBugCheckSignal = false;
     
@@ -636,6 +639,7 @@ int main( int argc, char* argv[] ) {
     EventGenMT2Info EGMT2I;
     EGMT2I.InitializeVecs();
     EGMT2I.DefaultVarVals();
+    
     
     float genMET, genMETPhi;
     
@@ -956,12 +960,10 @@ int main( int argc, char* argv[] ) {
                     SetOutTreeBranchJetInfo(outTree, &EJI_SystVarUp[iSyst],    1 * iSyst, false);
                     SetOutTreeBranchJetInfo(outTree, &EJI_SystVarDown[iSyst], -1 * iSyst, false);
                 }
-                //            cout << "iSyst b" << iSyst << endl;
                 if (InSystBound(iSyst, &systLB_MET, &systUB_MET)) {
                     SetOutTreeBranchMETInfo(outTree, &EMI_PF_SystVarUp[iSyst],    1 * iSyst, false, true);
                     SetOutTreeBranchMETInfo(outTree, &EMI_PF_SystVarDown[iSyst], -1 * iSyst, false, true);
                 }
-                //            cout << "iSyst c" << iSyst << endl;
                 if (InSystBound(iSyst, &systLB_SmearMET, &systUB_SmearMET)) {
                     SetOutTreeBranchMETInfo(outTree, &SmearEMI_PF_SystVarUp[iSyst],    1 * iSyst, true, true);
                     SetOutTreeBranchMETInfo(outTree, &SmearEMI_PF_SystVarDown[iSyst], -1 * iSyst, true, true);
@@ -1092,6 +1094,8 @@ int main( int argc, char* argv[] ) {
         //        Jets = new vector<PFJet>;
         doEvent = true;
         if (!PMRP.SMV.doData) {
+            
+            
             for (int iSyst = 1; iSyst <= numSysts; ++iSyst) {
                 if (InSystBound(iSyst, &systLB_Lepton, &systUB_Lepton)) {
                     vecVecIsoLeptonsCentValMETPatsy_SystVarUp[iSyst] = new vector<Lepton>;
@@ -1100,6 +1104,7 @@ int main( int argc, char* argv[] ) {
                     vecVecIsoLeptons_SystVarDown[iSyst] = new vector<Lepton>;
                 }
             }
+            
             doEvent_LepESUp = true;
             doEvent_LepESDown = true;
         }
@@ -1151,6 +1156,7 @@ int main( int argc, char* argv[] ) {
         //            cout << "test a " << endl;
         if (!PMRP.SMV.doData) {
             EGLPI.SetParticleInfo();
+            
             /*
              cout << endl;
              cout << "going to print electron info " << endl;
@@ -1792,6 +1798,7 @@ int main( int argc, char* argv[] ) {
             }
             
             SmearEMI_PF.CalcMETVariations(&ELI, &SmearEJI, whichCheck, PMRP.PSIV.levelJetVerbosity);
+            
             if (PMRP.SMV.doBookSyst) {
                 SmearEMI_PF_SystVarUp[systLepES].CalcMETVariations(&ELI_SystVarUp[systLepES], &SmearEJI, whichCheck, PMRP.PSIV.levelJetVerbosity);
                 SmearEMI_PF_SystVarDown[systLepES].CalcMETVariations(&ELI_SystVarDown[systLepES], &SmearEJI, whichCheck, PMRP.PSIV.levelJetVerbosity);
@@ -1851,6 +1858,7 @@ int main( int argc, char* argv[] ) {
         EMIToUseSystVarUp = &EMI_PF;
         if (!PMRP.PSIV.useOldNTuple) {
             EMI_noType0ToUseSystVarUp = &EMI_PF_Old;
+            EMI_noType0ToUseSystVarDown = &EMI_PF_Old;
         }
         
         if (PMRP.PSIV.levelLepVerbosity || PMRP.PSIV.levelJetVerbosity) {

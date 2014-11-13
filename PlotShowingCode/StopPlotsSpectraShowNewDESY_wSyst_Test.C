@@ -158,7 +158,7 @@ int main( int argc, char* argv[]) {
             
             
             HDS_Data.DoProjection(&PMS.vecIndMCParams, &RP.API, &HDP, "DataComp", false, doVerb);
-            HDS_MC.DoProjection(&PMS.vecIndMCParams, &RP.API, &HDP, "MCComp", false, doVerb);            
+            HDS_MC.DoProjection(&PMS.vecIndMCParams, &RP.API, &HDP, "MCComp", false, doVerb);
             HDS_MC.AddToStack(PMS.indMCStack);
             
             h_FracratioComp = GHPI.FracRatioHist_GHPI(HDS_Data.compSamp.first.grabbedHist_TH1F, HDS_MC.compSamp.first.grabbedHist_TH1F, RP.GHS.doAbsRatio, "ratioComp");
