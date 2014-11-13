@@ -1,5 +1,60 @@
 // Set of functions that set up the Three-Dimensional histograms that will be automatically booked and filled by the plot-making macro
 
+inline void ThreeDeeHistTVec_AddMT2CorrelationHists(vector<HistogramT> * inHistTVec, StopHistBinBounds * inSHBB, labelMap * mapVartoLabel, bool isSmear) {
+    // Histograms used for checking correlations of the various MT2s with other variables
+    
+    bool doSyst = true;
+    //bool noSyst = false;
+    
+    TString stringSmear = GetStringSmear(isSmear, false);
+    TString stringMET = "MET";
+    TString stringMT2ll = "MT2ll";
+    TString stringMT2lblb = "MT2lblb";
+    TString stringMT2bb_ZMET = "MT2bb_ZMET";
+    TString stringKT2_Top = "KT2_Top";
+    TString stringShape = "SignalShape";
+    
+    HistogramT H_MT2ll_vs_MT2lblb_vs_MT2bb_ZMET; H_MT2ll_vs_MT2lblb_vs_MT2bb_ZMET.DefaultVarVals();
+    H_MT2ll_vs_MT2lblb_vs_MT2bb_ZMET.SetName(stringSmear + stringMT2ll, "_vs_", stringMT2lblb + "_vs_" + stringMT2bb_ZMET);
+    H_MT2ll_vs_MT2lblb_vs_MT2bb_ZMET.xAxis.SetAxisSpecial("patsy", stringMT2ll, 2, doSyst);
+    H_MT2ll_vs_MT2lblb_vs_MT2bb_ZMET.SetIndAxisLabel(stringSmear + stringMT2ll, mapVartoLabel, 1);
+    H_MT2ll_vs_MT2lblb_vs_MT2bb_ZMET.yAxis.SetAxisSpecial("patsy", stringMT2lblb, 4, doSyst);
+    H_MT2ll_vs_MT2lblb_vs_MT2bb_ZMET.SetIndAxisLabel(stringSmear + stringMT2lblb, mapVartoLabel, 2);
+    H_MT2ll_vs_MT2lblb_vs_MT2bb_ZMET.zAxis.SetAxisSpecial("patsy", stringMT2lblb, 6, doSyst);
+    H_MT2ll_vs_MT2lblb_vs_MT2bb_ZMET.SetIndAxisLabel(stringSmear + stringMT2bb_ZMET, mapVartoLabel, 3);
+    
+    HistogramT H_MT2ll_vs_MT2lblb_vs_KT2_Top; H_MT2ll_vs_MT2lblb_vs_KT2_Top.DefaultVarVals();
+    H_MT2ll_vs_MT2lblb_vs_KT2_Top.SetName(stringSmear + stringMT2ll, "_vs_", stringMT2lblb + "_vs_" + stringKT2_Top);
+    H_MT2ll_vs_MT2lblb_vs_KT2_Top.xAxis.SetAxisSpecial("patsy", stringMT2ll, 2, doSyst);
+    H_MT2ll_vs_MT2lblb_vs_KT2_Top.SetIndAxisLabel(stringSmear + stringMT2ll, mapVartoLabel, 1);
+    H_MT2ll_vs_MT2lblb_vs_KT2_Top.yAxis.SetAxisSpecial("patsy", stringMT2lblb, 4, doSyst);
+    H_MT2ll_vs_MT2lblb_vs_KT2_Top.SetIndAxisLabel(stringSmear + stringMT2lblb, mapVartoLabel, 2);
+    H_MT2ll_vs_MT2lblb_vs_KT2_Top.zAxis.SetAxisSpecial("patsy", stringMT2lblb, 7, doSyst);
+    H_MT2ll_vs_MT2lblb_vs_KT2_Top.SetIndAxisLabel(stringSmear + stringKT2_Top, mapVartoLabel, 3);
+    
+    inHistTVec->push_back(H_MT2ll_vs_MT2lblb_vs_MT2bb_ZMET);
+    inHistTVec->push_back(H_MT2ll_vs_MT2lblb_vs_KT2_Top);
+}
+
+
+
+inline void ThreeDeeHistTVec_Inclusive(vector<HistogramT> * inHistTVec, StopHistBinBounds * inSHBB, labelMap * mapVartoLabel, int cutPlotLevel) {
+    bool noSmear = false;
+    if (cutPlotLevel > 0) return;
+    ThreeDeeHistTVec_AddMT2CorrelationHists(inHistTVec, inSHBB, mapVartoLabel, noSmear);
+}
+inline void ThreeDeeHistTVec_Inclusive_Smeared(vector<HistogramT> * inHistTVec, StopHistBinBounds * inSHBB, labelMap * mapVartoLabel, int cutPlotLevel) {
+    bool doSmear = true;
+    if (cutPlotLevel > 0 && cutPlotLevel < 2) return;
+    ThreeDeeHistTVec_AddMT2CorrelationHists(inHistTVec, inSHBB, mapVartoLabel, doSmear);
+}
+
+
+
+
+
+
+
 /*
 inline vector<HistogramT> * ThreeDeeHistTVec() {
 

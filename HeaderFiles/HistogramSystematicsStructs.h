@@ -1,5 +1,12 @@
 // Structs used as part of dealing with histogram systematics
 
+#include "TString.h"
+#include "TGraphAsymmErrors.h"
+using namespace std;
+
+typedef pair<float, float> valPlusErr;
+
+
 typedef struct ValError {
     float upError;
     float downError;
@@ -24,18 +31,23 @@ typedef struct ValError {
             return outVal;
         }
     }
+    void SetStatError(valPlusErr * inVPE) {
+        centVal = inVPE->first;
+        upError = inVPE->second;
+        downError = inVPE->second;
+    }
     void SetStatError(float inCV, float inStatError) {
         centVal = inCV;
         upError = inStatError;
         downError = inStatError;
     }
-  void SetSystError(float inCV, float upShift, float downShift, bool doSymError = false, bool doVerb = false) {
-    if (doVerb) {
-      cout << "inCV " << inCV << endl;
-      cout << "upShift " << upShift << endl;
-      cout << "downShift " << downShift << endl;
-    }
-    centVal = inCV;
+    void SetSystError(float inCV, float upShift, float downShift, bool doSymError = false, bool doVerb = false) {
+        if (doVerb) {
+            cout << "inCV " << inCV << endl;
+            cout << "upShift " << upShift << endl;
+            cout << "downShift " << downShift << endl;
+        }
+        centVal = inCV;
         float diffShiftUp, diffShiftDown;
         float errSum;
         
@@ -51,6 +63,12 @@ typedef struct ValError {
         
         diffShiftUp = inCV - upShift;
         diffShiftDown = inCV - downShift;
+        
+        if (doVerb) {
+            cout << "whichErrCase " << whichErrCase << endl;
+            cout << "diffShiftUp " << diffShiftUp << endl;
+            cout << "diffShiftDown " << diffShiftDown << endl;
+        }
         
         errSum = TMath::Sqrt(0.5*(diffShiftDown*diffShiftDown + diffShiftUp*diffShiftUp));
         
@@ -88,23 +106,23 @@ typedef struct ValError {
                     upError = abs(diffShiftUp);
                     downError = upError;
                     break;
-	    case 1:
-	      downError = abs(diffShiftDown);
-	      upError = downError;
-	      break;
-	    case -1:
-	      downError = abs(diffShiftDown);
-	      upError = downError;
-	      break;
-	      
+                case 1:
+                    downError = abs(diffShiftDown);
+                    upError = downError;
+                    break;
+                case -1:
+                    downError = abs(diffShiftDown);
+                    upError = downError;
+                    break;
+                    
                 default:
                     break;
             }
         }
-	if (doVerb) {	  
-	  cout << "upError " << upError << endl;
-	  cout << "downError " << downError << endl;
-	}
+        if (doVerb) {
+            cout << "upError " << upError << endl;
+            cout << "downError " << downError << endl;
+        }
     }
     void SetSystErrorHard(float inCV, float inUE, float inDE) {
         centVal = inCV;
@@ -115,6 +133,11 @@ typedef struct ValError {
          cout << "upError " << upError << endl;
          cout << "downError " << downError << endl;
          */
+    }
+    void SetSystError(ValError * inVEToCalcDiffUp, ValError * inVEToCalcDiffDown, bool doVerb = 0) {
+        float upShift = inVEToCalcDiffUp->centVal;
+        float downShift = inVEToCalcDiffDown->centVal;
+        this->SetSystError(this->centVal, upShift, downShift, false, doVerb);
     }
     void QuadSum(ValError * inErrToSumWithCare) {
         float upErrSum = 0.0, downErrSum = 0.0;
@@ -242,6 +265,21 @@ ValError operator+(ValError a, ValError b)
     return outErr;
 }
 
+ValError MakeFullSyst(ValError * inValCentVal, vector<ValError> * inVecSystUp, vector<ValError> * inVecSystDown, TString inName, bool doVerb = 0) {
+    ValError outVal;
+    outVal.DefaultVals();
+    outVal.Name = inName;
+    outVal.centVal = inValCentVal->centVal;
+    for (unsigned int iVE = 0; iVE < inVecSystUp->size(); ++iVE) {
+        ValError currVE;
+        currVE.DefaultVals();
+        currVE.centVal = outVal.centVal;
+        currVE.SetSystError(&inVecSystUp->at(iVE), &inVecSystDown->at(iVE), doVerb);
+        outVal = outVal + currVE;
+    }
+    return outVal;
+}
+
 typedef struct SampleSystematicsInfo {
     ValError StatError;
     vector<ValError> SystError;
@@ -351,9 +389,9 @@ typedef struct SampleSystematicsInfo {
         TH1F * histSystUp, * histSystDown;
         TString baseSearchString;
         
-        const int numSysts = 9;
-        bool isSmearSyst[numSysts] = {false, false, false, false, true, true, false, false, false};
-        TString namesSysts[numSysts] = {"LepEffSF", "LepES", "JetES", "BTagSF", "UncES", "JetSmear", "genRecoilRW", "genStopXSec", "EWKXSec"};
+        const int numSysts = 8;
+        bool isSmearSyst[numSysts] = {false, false, false, false, true, true, false, false};
+        TString namesSysts[numSysts] = {"LepEffSF", "LepES", "JetES", "BTagSF", "UncES", "JetSmear", "genRecoilRW", "EWKXSec"};
         
         TGraphAsymmErrors * currFracRatioGraph;
         TGraphAsymmErrors * errCompStatCentVal = ClonePoints(inputBaseMCHist);

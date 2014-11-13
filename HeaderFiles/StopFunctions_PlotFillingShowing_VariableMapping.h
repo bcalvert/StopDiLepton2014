@@ -78,8 +78,10 @@ inline void SetStringKey_StFMap_AddMETPerformance(StV_Map &inStVM, EventRecoilIn
 
 inline void SetStringKey_StFMap_AddMT2(StV_Map &inStVM, EventMT2Info * inEMT2I, int numJets) {
     TString stringMT2ll = "MT2ll";
-    TString stringMT2lb = "MT2lb";
-    TString baseMT2lbToTString = "typeMT2lb";
+    TString stringMT2lblb = "MT2lblb";
+    TString stringMT2bb_ZMET = "MT2bb_ZMET";
+    TString stringKT2_Top = "KT2_Top";
+    TString baseMT2lblbToTString = "typeMT2lblb";
     
     inStVM[stringMT2ll]                   = inEMT2I->EventMT2ll;
     const int numCuts = 5;
@@ -91,8 +93,10 @@ inline void SetStringKey_StFMap_AddMT2(StV_Map &inStVM, EventMT2Info * inEMT2I, 
         inStVM[stringCutVal]              = inEMT2I->EventMT2ll > cutVals[iCut];
     }        
     if (numJets > 1) {
-        inStVM[stringMT2lb]                   = inEMT2I->EventMT2lb;
-        inStVM[baseMT2lbToTString]            = inEMT2I->caseMT2lb;
+        inStVM[stringMT2lblb]                   = inEMT2I->EventMT2lblb;
+        inStVM[stringMT2bb_ZMET]                = inEMT2I->EventMT2bb_ZMET;
+        inStVM[stringKT2_Top]                   = inEMT2I->EventMT2bb_ZMET - inEMT2I->EventMT2lblb;
+        inStVM[baseMT2lblbToTString]            = inEMT2I->caseMT2lblb;
     }     
 }
 

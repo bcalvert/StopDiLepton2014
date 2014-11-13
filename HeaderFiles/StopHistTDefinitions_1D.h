@@ -39,7 +39,7 @@ inline void OneDeeHistTVec_AddMiscHists(vector<HistogramT> * inHistTVec, StopHis
 
 inline void OneDeeHistTVec_AddMiscLeptonHists(vector<HistogramT> * inHistTVec, StopHistBinBounds * inSHBB, labelMap * mapVartoLabel, int whichPos) {
     // Relatively unimportant lepton histograms, i.e. stuff we don't check that often
-    bool doSyst = true;
+    //bool doSyst = true;
     bool noSyst = false;
     
     int iLep = 0;
@@ -79,7 +79,7 @@ inline void OneDeeHistTVec_AddIndKinObjectHists_Check(vector<HistogramT> * inHis
 
 inline void OneDeeHistTVec_AddDiKinObjectHists_Check(vector<HistogramT> * inHistTVec, StopHistBinBounds * inSHBB, labelMap * mapVartoLabel, int typeObj, bool isSmear) {
     // Kinematic checks for di-structure visible objects -- di-lepton system, dijet system, di-b-jet system -- checks being geometry checks
-    bool doSyst = true;
+    //bool doSyst = true;
     bool noSyst = false;
     
     TString stringSmear = GetStringSmear(isSmear, false);
@@ -107,7 +107,7 @@ inline void OneDeeHistTVec_AddDiKinObjectHists_Check(vector<HistogramT> * inHist
 inline void OneDeeHistTVec_AddIndKinObjectHists_Main(vector<HistogramT> * inHistTVec, StopHistBinBounds * inSHBB, labelMap * mapVartoLabel, int typeObj, int isLead, bool isSmear) {
     // Main Kinematic distributions for individual visible objects -- leptons, jets, b-jets
     bool doSyst = true;
-    bool noSyst = false;
+    //bool noSyst = false;
     
     TString stringLead = GetStringLead(isLead, false);   
     TString stringSmear = GetStringSmear(isSmear, false);
@@ -138,10 +138,11 @@ inline void OneDeeHistTVec_AddDiKinObjectHists_Main(vector<HistogramT> * inHistT
     // Main kinematic distributions for di-structure visible objects -- di-lepton system, dijet system, di-b-jet system
     
     bool doSyst = true;
-    bool noSyst = false;
+    //bool noSyst = false;
     
     TString stringSmear = GetStringSmear(isSmear, false);
     TString stringObj = GetStringIndObj(typeObj, false);
+    
     
     TString objectName = stringSmear + "Di" + stringObj;
     TString objectVarKeyName = "Di" + stringObj;
@@ -152,20 +153,27 @@ inline void OneDeeHistTVec_AddDiKinObjectHists_Main(vector<HistogramT> * inHistT
     H_ObjPt.SetIndAxisLabel(objectName + "Pt", mapVartoLabel, 1);
     H_ObjPt.yAxis.SetAxisAsDefaultCountAxis("GeV");
     
+    HistogramT H_ObjPtCoarseBin; H_ObjPtCoarseBin.DefaultVarVals();
+    H_ObjPtCoarseBin.SetName(objectName, "Pt", "Coarse");
+    H_ObjPtCoarseBin.xAxis.SetAxisSpecial("patsy", objectVarKeyName + "Pt", 8, doSyst);
+    H_ObjPtCoarseBin.SetIndAxisLabel(objectName + "Pt", mapVartoLabel, 1);
+    H_ObjPtCoarseBin.yAxis.SetAxisAsDefaultCountAxis("GeV");
+    
     HistogramT H_ObjMass; H_ObjMass.DefaultVarVals();
     H_ObjMass.SetName(objectName, "Mass", "");
-    H_ObjMass.xAxis.SetAxis("patsy", objectVarKeyName + "Mass", &inSHBB->IHBB_Mass, doSyst);
-    H_ObjMass.SetIndAxisLabel(objectName + "Mass", mapVartoLabel, 1);
+    H_ObjMass.xAxis.SetAxis("patsy", objectVarKeyName + "InvMass", &inSHBB->IHBB_Mass, doSyst);
+    H_ObjMass.SetIndAxisLabel(objectName + "InvMass", mapVartoLabel, 1);
     H_ObjMass.yAxis.SetAxisAsDefaultCountAxis("GeV");
     
     inHistTVec->push_back(H_ObjPt);
+    inHistTVec->push_back(H_ObjPtCoarseBin);
     inHistTVec->push_back(H_ObjMass);
     
     if (includeZMassHist) {
         HistogramT H_ObjZMass; H_ObjZMass.DefaultVarVals();
         H_ObjZMass.SetName(objectName, "MassTight", "");
-        H_ObjZMass.xAxis.SetAxis("patsy", objectName + "Mass", &inSHBB->IHBB_ZMass, doSyst);
-        H_ObjZMass.SetIndAxisLabel(objectName + "Mass", mapVartoLabel, 1);
+        H_ObjZMass.xAxis.SetAxis("patsy", objectName + "InvMass", &inSHBB->IHBB_ZMass, doSyst);
+        H_ObjZMass.SetIndAxisLabel(objectName + "InvMass", mapVartoLabel, 1);
         H_ObjZMass.yAxis.SetAxisAsDefaultCountAxis("GeV");
         inHistTVec->push_back(H_ObjZMass);
     }
@@ -178,14 +186,16 @@ inline void OneDeeHistTVec_AddDeltaPhi(vector<HistogramT> * inHistTVec, StopHist
     // Histograms that contain relative deltaPhi between different visible (or not so "visible" *cough* MET) objects
     
     bool doSyst = true;
-    bool noSyst = false;
+    //bool noSyst = false;
     
     TString stringSmear = GetStringSmear(isSmear, false);
     
     
-    const int numSavedLeps = 2;    
+    const int numSavedLeps = 2;
+    /*
     const int numSavedJets = 2;    
     const int numSavedBJets = 2;
+    */
     
     int intLep  = 0;
     int intJet  = 1;
@@ -247,14 +257,19 @@ inline void OneDeeHistTVec_AddDeltaPhi(vector<HistogramT> * inHistTVec, StopHist
 
 
 inline void OneDeeHistTVec_AddMT2Hists(vector<HistogramT> * inHistTVec, StopHistBinBounds * inSHBB, labelMap * mapVartoLabel, bool isSmear) {
-    // Histograms for MT2ll and MT2lb
+    // Histograms for MT2ll and MT2lblb
     
     bool doSyst = true;
-    bool noSyst = false;
+    //bool noSyst = false;
     
     TString stringSmear = GetStringSmear(isSmear, false);
     TString stringMT2ll = "MT2ll";
-    TString stringMT2lb = "MT2lb";
+    TString stringMT2lblb = "MT2lblb";
+    TString stringMT2bb_ZMET = "MT2bb_ZMET";
+    TString stringKT2_Top = "KT2_Top";
+    
+    TString stringShape = "SignalShape";
+    TString stringShapeOBC = "SignalShapeOBC";
     
     HistogramT H_MT2ll; H_MT2ll.DefaultVarVals();
     H_MT2ll.SetName(stringSmear, stringMT2ll, "");
@@ -279,31 +294,97 @@ inline void OneDeeHistTVec_AddMT2Hists(vector<HistogramT> * inHistTVec, StopHist
     H_MT2llZoom.SetIndAxisLabel(stringSmear + stringMT2ll, mapVartoLabel, 1);
     H_MT2llZoom.yAxis.SetAxisAsDefaultCountAxis("GeV");
     
-    HistogramT H_MT2lb; H_MT2lb.DefaultVarVals();
-    H_MT2lb.SetName(stringSmear, stringMT2lb, "");
-    H_MT2lb.xAxis.SetAxis("patsy", stringMT2lb, &inSHBB->IHBB_EnergyPtMET, doSyst);
-    H_MT2lb.SetIndAxisLabel(stringSmear + stringMT2lb, mapVartoLabel, 1);
-    H_MT2lb.yAxis.SetAxisAsDefaultCountAxis("GeV");
+    HistogramT H_MT2lblb; H_MT2lblb.DefaultVarVals();
+    H_MT2lblb.SetName(stringSmear, stringMT2lblb, "");
+    H_MT2lblb.xAxis.SetAxis("patsy", stringMT2lblb, &inSHBB->IHBB_EnergyPtMET, doSyst);
+    H_MT2lblb.SetIndAxisLabel(stringSmear + stringMT2lblb, mapVartoLabel, 1);
+    H_MT2lblb.yAxis.SetAxisAsDefaultCountAxis("GeV");
+    
+    HistogramT H_MT2llShape; H_MT2llShape.DefaultVarVals();
+    H_MT2llShape.SetName(stringSmear, stringMT2ll, stringShape);
+    H_MT2llShape.xAxis.SetAxisSpecial("patsy", stringMT2ll, 1, doSyst);
+    H_MT2llShape.SetIndAxisLabel(stringSmear + stringMT2ll, mapVartoLabel, 1);
+    H_MT2llShape.yAxis.SetAxisAsDefaultCountAxis("GeV", "");
+    
+    HistogramT H_MT2llShapeOBC; H_MT2llShapeOBC.DefaultVarVals();
+    H_MT2llShapeOBC.SetName(stringSmear, stringMT2ll, stringShapeOBC);
+    H_MT2llShapeOBC.xAxis.SetAxisSpecial("patsy", stringMT2ll, 2, doSyst);
+    H_MT2llShapeOBC.SetIndAxisLabel(stringSmear + stringMT2ll, mapVartoLabel, 1);
+    H_MT2llShapeOBC.yAxis.SetAxisAsDefaultCountAxis("GeV", "");
+    
+    HistogramT H_MT2lblbShape; H_MT2lblbShape.DefaultVarVals();
+    H_MT2lblbShape.SetName(stringSmear, stringMT2lblb, stringShape);
+    H_MT2lblbShape.xAxis.SetAxisSpecial("patsy", stringMT2lblb, 3, doSyst);
+    H_MT2lblbShape.SetIndAxisLabel(stringSmear + stringMT2lblb, mapVartoLabel, 1);
+    H_MT2lblbShape.yAxis.SetAxisAsDefaultCountAxis("GeV", "");
+    
+    HistogramT H_MT2lblbShapeOBC; H_MT2lblbShapeOBC.DefaultVarVals();
+    H_MT2lblbShapeOBC.SetName(stringSmear, stringMT2lblb, stringShapeOBC);
+    H_MT2lblbShapeOBC.xAxis.SetAxisSpecial("patsy", stringMT2lblb, 4, doSyst);
+    H_MT2lblbShapeOBC.SetIndAxisLabel(stringSmear + stringMT2lblb, mapVartoLabel, 1);
+    H_MT2lblbShapeOBC.yAxis.SetAxisAsDefaultCountAxis("GeV", "");
+    
+    HistogramT H_MT2bb_ZMET; H_MT2bb_ZMET.DefaultVarVals();
+    H_MT2bb_ZMET.SetName(stringSmear, stringMT2bb_ZMET, "");
+    H_MT2bb_ZMET.xAxis.SetAxis("patsy", stringMT2bb_ZMET, &inSHBB->IHBB_EnergyPtMET, doSyst);
+    H_MT2bb_ZMET.SetIndAxisLabel(stringSmear + stringMT2bb_ZMET, mapVartoLabel, 1);
+    H_MT2bb_ZMET.yAxis.SetAxisAsDefaultCountAxis("GeV");
+    
+    HistogramT H_MT2bb_ZMETShape; H_MT2bb_ZMETShape.DefaultVarVals();
+    H_MT2bb_ZMETShape.SetName(stringSmear, stringMT2bb_ZMET, stringShape);
+    H_MT2bb_ZMETShape.xAxis.SetAxisSpecial("patsy", stringMT2bb_ZMET, 5, doSyst);
+    H_MT2bb_ZMETShape.SetIndAxisLabel(stringSmear + stringMT2bb_ZMET, mapVartoLabel, 1);
+    H_MT2bb_ZMETShape.yAxis.SetAxisAsDefaultCountAxis("GeV", "");
+    
+    HistogramT H_MT2bb_ZMETShapeOBC; H_MT2bb_ZMETShapeOBC.DefaultVarVals();
+    H_MT2bb_ZMETShapeOBC.SetName(stringSmear, stringMT2bb_ZMET, stringShapeOBC);
+    H_MT2bb_ZMETShapeOBC.xAxis.SetAxisSpecial("patsy", stringMT2bb_ZMET, 6, doSyst);
+    H_MT2bb_ZMETShapeOBC.SetIndAxisLabel(stringSmear + stringMT2bb_ZMET, mapVartoLabel, 1);
+    H_MT2bb_ZMETShapeOBC.yAxis.SetAxisAsDefaultCountAxis("GeV", "");
+    
+    HistogramT H_KT2_Top; H_KT2_Top.DefaultVarVals();
+    H_KT2_Top.SetName(stringSmear, stringKT2_Top, "");
+    H_KT2_Top.xAxis.SetAxis("patsy", stringKT2_Top, &inSHBB->IHBB_KT2, doSyst);
+    H_KT2_Top.SetIndAxisLabel(stringSmear + stringKT2_Top, mapVartoLabel, 1);
+    H_KT2_Top.yAxis.SetAxisAsDefaultCountAxis("GeV");
+    
+    HistogramT H_KT2_TopShape; H_KT2_TopShape.DefaultVarVals();
+    H_KT2_TopShape.SetName(stringSmear, stringKT2_Top, stringShape);
+    H_KT2_TopShape.xAxis.SetAxisSpecial("patsy", stringKT2_Top, 7, doSyst);
+    H_KT2_TopShape.SetIndAxisLabel(stringSmear + stringKT2_Top, mapVartoLabel, 1);
+    H_KT2_TopShape.yAxis.SetAxisAsDefaultCountAxis("GeV", "");
+
     
     inHistTVec->push_back(H_MT2ll);
+    inHistTVec->push_back(H_MT2llShape);
+    inHistTVec->push_back(H_MT2llShapeOBC);
     inHistTVec->push_back(H_MT2llZoom);
     for (int iMT2Cut = 0; iMT2Cut < numCutVals; ++iMT2Cut) {
         inHistTVec->push_back(H_MT2llPassCut[iMT2Cut]);
     }
-    inHistTVec->push_back(H_MT2lb);    
+    inHistTVec->push_back(H_MT2lblb);
+    inHistTVec->push_back(H_MT2lblbShape);
+    inHistTVec->push_back(H_MT2lblbShapeOBC);
+    
+    inHistTVec->push_back(H_MT2bb_ZMET);
+    inHistTVec->push_back(H_MT2bb_ZMETShape);
+    inHistTVec->push_back(H_MT2bb_ZMETShapeOBC);
+    
+    inHistTVec->push_back(H_KT2_Top);
+    inHistTVec->push_back(H_KT2_TopShape);
 }
 
 
 inline void OneDeeHistTVec_AddMT2Hists_SpecialCuts(vector<HistogramT> * inHistTVec, StopHistBinBounds * inSHBB, labelMap * mapVartoLabel, bool isSmear) {
-    // Histograms for MT2ll and MT2lb with special cuts put in
+    // Histograms for MT2ll and MT2lblb with special cuts put in
     
     
     bool doSyst = true;
-    bool noSyst = false;
+    //bool noSyst = false;
     
     TString stringSmear = GetStringSmear(isSmear, false);
     TString stringMT2ll = "MT2ll";
-    TString stringMT2lb = "MT2lb";
+    TString stringMT2lblb = "MT2lblb";
         
     const float PI = 3.14159265;
     SampCut SC_DPhi_0_1Div3PI;
@@ -371,110 +452,111 @@ inline void OneDeeHistTVec_AddMT2Hists_SpecialCuts(vector<HistogramT> * inHistTV
     H_MT2ll_DPhiLep0Lep1Far.specialHistCutFloat.SetParams(&SC_DPhi_1Div3PI_2Div3PI);
     H_MT2ll_DPhiLep0Lep1Far.specialHistCutFloatVar = stringDPhiLep0Lep1BaseString;
     
-    HistogramT H_MT2lb_DPhiBLep0BLep1Close; H_MT2lb_DPhiBLep0BLep1Close.DefaultVarVals();
-    H_MT2lb_DPhiBLep0BLep1Close.SetName(stringSmear, stringMT2lb, stringDPhiBLep0BLep1BaseString + stringClose);
-    H_MT2lb_DPhiBLep0BLep1Close.xAxis.SetAxis("patsy", stringMT2lb, &inSHBB->IHBB_EnergyPtMET, doSyst);
-    H_MT2lb_DPhiBLep0BLep1Close.SetIndAxisLabel(stringSmear + stringMT2lb, mapVartoLabel, 1);
-    H_MT2lb_DPhiBLep0BLep1Close.yAxis.SetAxisAsDefaultCountAxis("GeV");
-    H_MT2lb_DPhiBLep0BLep1Close.specialHistCutFloat.SetParams(&SC_DPhi_0_1Div3PI);
-    H_MT2lb_DPhiBLep0BLep1Close.specialHistCutFloatVar = stringDPhiBLep0BLep1BaseString;
+    HistogramT H_MT2lblb_DPhiBLep0BLep1Close; H_MT2lblb_DPhiBLep0BLep1Close.DefaultVarVals();
+    H_MT2lblb_DPhiBLep0BLep1Close.SetName(stringSmear, stringMT2lblb, stringDPhiBLep0BLep1BaseString + stringClose);
+    H_MT2lblb_DPhiBLep0BLep1Close.xAxis.SetAxis("patsy", stringMT2lblb, &inSHBB->IHBB_EnergyPtMET, doSyst);
+    H_MT2lblb_DPhiBLep0BLep1Close.SetIndAxisLabel(stringSmear + stringMT2lblb, mapVartoLabel, 1);
+    H_MT2lblb_DPhiBLep0BLep1Close.yAxis.SetAxisAsDefaultCountAxis("GeV");
+    H_MT2lblb_DPhiBLep0BLep1Close.specialHistCutFloat.SetParams(&SC_DPhi_0_1Div3PI);
+    H_MT2lblb_DPhiBLep0BLep1Close.specialHistCutFloatVar = stringDPhiBLep0BLep1BaseString;
     
-    HistogramT H_MT2lb_DPhiBLep0BLep1Mid; H_MT2lb_DPhiBLep0BLep1Mid.DefaultVarVals();
-    H_MT2lb_DPhiBLep0BLep1Mid.SetName(stringSmear, stringMT2lb, stringDPhiBLep0BLep1BaseString + stringMid);
-    H_MT2lb_DPhiBLep0BLep1Mid.xAxis.SetAxis("patsy", stringMT2lb, &inSHBB->IHBB_EnergyPtMET, doSyst);
-    H_MT2lb_DPhiBLep0BLep1Mid.SetIndAxisLabel(stringSmear + stringMT2lb, mapVartoLabel, 1);
-    H_MT2lb_DPhiBLep0BLep1Mid.yAxis.SetAxisAsDefaultCountAxis("GeV");
-    H_MT2lb_DPhiBLep0BLep1Mid.specialHistCutFloat.SetParams(&SC_DPhi_1Div3PI_2Div3PI);
-    H_MT2lb_DPhiBLep0BLep1Mid.specialHistCutFloatVar = stringDPhiBLep0BLep1BaseString;
+    HistogramT H_MT2lblb_DPhiBLep0BLep1Mid; H_MT2lblb_DPhiBLep0BLep1Mid.DefaultVarVals();
+    H_MT2lblb_DPhiBLep0BLep1Mid.SetName(stringSmear, stringMT2lblb, stringDPhiBLep0BLep1BaseString + stringMid);
+    H_MT2lblb_DPhiBLep0BLep1Mid.xAxis.SetAxis("patsy", stringMT2lblb, &inSHBB->IHBB_EnergyPtMET, doSyst);
+    H_MT2lblb_DPhiBLep0BLep1Mid.SetIndAxisLabel(stringSmear + stringMT2lblb, mapVartoLabel, 1);
+    H_MT2lblb_DPhiBLep0BLep1Mid.yAxis.SetAxisAsDefaultCountAxis("GeV");
+    H_MT2lblb_DPhiBLep0BLep1Mid.specialHistCutFloat.SetParams(&SC_DPhi_1Div3PI_2Div3PI);
+    H_MT2lblb_DPhiBLep0BLep1Mid.specialHistCutFloatVar = stringDPhiBLep0BLep1BaseString;
     
-    HistogramT H_MT2lb_DPhiBLep0BLep1Far; H_MT2lb_DPhiBLep0BLep1Far.DefaultVarVals();
-    H_MT2lb_DPhiBLep0BLep1Far.SetName(stringSmear, stringMT2lb, stringDPhiBLep0BLep1BaseString + stringFar);
-    H_MT2lb_DPhiBLep0BLep1Far.xAxis.SetAxis("patsy", stringMT2lb, &inSHBB->IHBB_EnergyPtMET, doSyst);
-    H_MT2lb_DPhiBLep0BLep1Far.SetIndAxisLabel(stringSmear + stringMT2lb, mapVartoLabel, 1);
-    H_MT2lb_DPhiBLep0BLep1Far.yAxis.SetAxisAsDefaultCountAxis("GeV");
-    H_MT2lb_DPhiBLep0BLep1Far.specialHistCutFloat.SetParams(&SC_DPhi_1Div3PI_2Div3PI);
-    H_MT2lb_DPhiBLep0BLep1Far.specialHistCutFloatVar = stringDPhiBLep0BLep1BaseString;
+    HistogramT H_MT2lblb_DPhiBLep0BLep1Far; H_MT2lblb_DPhiBLep0BLep1Far.DefaultVarVals();
+    H_MT2lblb_DPhiBLep0BLep1Far.SetName(stringSmear, stringMT2lblb, stringDPhiBLep0BLep1BaseString + stringFar);
+    H_MT2lblb_DPhiBLep0BLep1Far.xAxis.SetAxis("patsy", stringMT2lblb, &inSHBB->IHBB_EnergyPtMET, doSyst);
+    H_MT2lblb_DPhiBLep0BLep1Far.SetIndAxisLabel(stringSmear + stringMT2lblb, mapVartoLabel, 1);
+    H_MT2lblb_DPhiBLep0BLep1Far.yAxis.SetAxisAsDefaultCountAxis("GeV");
+    H_MT2lblb_DPhiBLep0BLep1Far.specialHistCutFloat.SetParams(&SC_DPhi_1Div3PI_2Div3PI);
+    H_MT2lblb_DPhiBLep0BLep1Far.specialHistCutFloatVar = stringDPhiBLep0BLep1BaseString;
+    
+    /*
+    HistogramT H_MT2lblb_DPhiJet0Jet1Close; H_MT2lblb_DPhiJet0Jet1Close.DefaultVarVals();
+    H_MT2lblb_DPhiJet0Jet1Close.SetName(stringSmear, stringMT2lblb, stringDPhiJet0Jet1BaseString + stringClose);
+    H_MT2lblb_DPhiJet0Jet1Close.xAxis.SetAxis("patsy", stringMT2lblb, &inSHBB->IHBB_EnergyPtMET, doSyst);
+    H_MT2lblb_DPhiJet0Jet1Close.SetIndAxisLabel(stringSmear + stringMT2lblb, mapVartoLabel, 1);
+    H_MT2lblb_DPhiJet0Jet1Close.yAxis.SetAxisAsDefaultCountAxis("GeV");
+    H_MT2lblb_DPhiJet0Jet1Close.specialHistCutFloat.SetParams(&SC_DPhi_0_1Div3PI);
+    H_MT2lblb_DPhiJet0Jet1Close.specialHistCutFloatVar = stringDPhiJet0Jet1BaseString;
+    
+    HistogramT H_MT2lblb_DPhiJet0Jet1Mid; H_MT2lblb_DPhiJet0Jet1Mid.DefaultVarVals();
+    H_MT2lblb_DPhiJet0Jet1Mid.SetName(stringSmear, stringMT2lblb, stringDPhiJet0Jet1BaseString + stringMid);
+    H_MT2lblb_DPhiJet0Jet1Mid.xAxis.SetAxis("patsy", stringMT2lblb, &inSHBB->IHBB_EnergyPtMET, doSyst);
+    H_MT2lblb_DPhiJet0Jet1Mid.SetIndAxisLabel(stringSmear + stringMT2lblb, mapVartoLabel, 1);
+    H_MT2lblb_DPhiJet0Jet1Mid.yAxis.SetAxisAsDefaultCountAxis("GeV");
+    H_MT2lblb_DPhiJet0Jet1Mid.specialHistCutFloat.SetParams(&SC_DPhi_1Div3PI_2Div3PI);
+    H_MT2lblb_DPhiJet0Jet1Mid.specialHistCutFloatVar = stringDPhiJet0Jet1BaseString;
+    
+    HistogramT H_MT2lblb_DPhiJet0Jet1Far; H_MT2lblb_DPhiJet0Jet1Far.DefaultVarVals();
+    H_MT2lblb_DPhiJet0Jet1Far.SetName(stringSmear, stringMT2lblb, stringDPhiJet0Jet1BaseString + stringFar);
+    H_MT2lblb_DPhiJet0Jet1Far.xAxis.SetAxis("patsy", stringMT2lblb, &inSHBB->IHBB_EnergyPtMET, doSyst);
+    H_MT2lblb_DPhiJet0Jet1Far.SetIndAxisLabel(stringSmear + stringMT2lblb, mapVartoLabel, 1);
+    H_MT2lblb_DPhiJet0Jet1Far.yAxis.SetAxisAsDefaultCountAxis("GeV");
+    H_MT2lblb_DPhiJet0Jet1Far.specialHistCutFloat.SetParams(&SC_DPhi_1Div3PI_2Div3PI);
+    H_MT2lblb_DPhiJet0Jet1Far.specialHistCutFloatVar = stringDPhiJet0Jet1BaseString;
+    */
     
     
-    HistogramT H_MT2lb_DPhiJet0Jet1Close; H_MT2lb_DPhiJet0Jet1Close.DefaultVarVals();
-    H_MT2lb_DPhiJet0Jet1Close.SetName(stringSmear, stringMT2lb, stringDPhiJet0Jet1BaseString + stringClose);
-    H_MT2lb_DPhiJet0Jet1Close.xAxis.SetAxis("patsy", stringMT2lb, &inSHBB->IHBB_EnergyPtMET, doSyst);
-    H_MT2lb_DPhiJet0Jet1Close.SetIndAxisLabel(stringSmear + stringMT2lb, mapVartoLabel, 1);
-    H_MT2lb_DPhiJet0Jet1Close.yAxis.SetAxisAsDefaultCountAxis("GeV");
-    H_MT2lb_DPhiJet0Jet1Close.specialHistCutFloat.SetParams(&SC_DPhi_0_1Div3PI);
-    H_MT2lb_DPhiJet0Jet1Close.specialHistCutFloatVar = stringDPhiJet0Jet1BaseString;
+    SampCut SC_MT2lblb_BothB, SC_MT2lblb_LeadB, SC_MT2lblb_SubB, SC_MT2lblb_NoB;
+    SC_MT2lblb_BothB.SetParamsWindow("", -0.1, 0.1, 2);
+    SC_MT2lblb_LeadB.SetParamsWindow("", 0.9, 1.1, 2);
+    SC_MT2lblb_SubB.SetParamsWindow("", 1.9, 2.1, 2);
+    SC_MT2lblb_NoB.SetParamsWindow("", 2.9, 3.1, 2);
     
-    HistogramT H_MT2lb_DPhiJet0Jet1Mid; H_MT2lb_DPhiJet0Jet1Mid.DefaultVarVals();
-    H_MT2lb_DPhiJet0Jet1Mid.SetName(stringSmear, stringMT2lb, stringDPhiJet0Jet1BaseString + stringMid);
-    H_MT2lb_DPhiJet0Jet1Mid.xAxis.SetAxis("patsy", stringMT2lb, &inSHBB->IHBB_EnergyPtMET, doSyst);
-    H_MT2lb_DPhiJet0Jet1Mid.SetIndAxisLabel(stringSmear + stringMT2lb, mapVartoLabel, 1);
-    H_MT2lb_DPhiJet0Jet1Mid.yAxis.SetAxisAsDefaultCountAxis("GeV");
-    H_MT2lb_DPhiJet0Jet1Mid.specialHistCutFloat.SetParams(&SC_DPhi_1Div3PI_2Div3PI);
-    H_MT2lb_DPhiJet0Jet1Mid.specialHistCutFloatVar = stringDPhiJet0Jet1BaseString;
-    
-    HistogramT H_MT2lb_DPhiJet0Jet1Far; H_MT2lb_DPhiJet0Jet1Far.DefaultVarVals();
-    H_MT2lb_DPhiJet0Jet1Far.SetName(stringSmear, stringMT2lb, stringDPhiJet0Jet1BaseString + stringFar);
-    H_MT2lb_DPhiJet0Jet1Far.xAxis.SetAxis("patsy", stringMT2lb, &inSHBB->IHBB_EnergyPtMET, doSyst);
-    H_MT2lb_DPhiJet0Jet1Far.SetIndAxisLabel(stringSmear + stringMT2lb, mapVartoLabel, 1);
-    H_MT2lb_DPhiJet0Jet1Far.yAxis.SetAxisAsDefaultCountAxis("GeV");
-    H_MT2lb_DPhiJet0Jet1Far.specialHistCutFloat.SetParams(&SC_DPhi_1Div3PI_2Div3PI);
-    H_MT2lb_DPhiJet0Jet1Far.specialHistCutFloatVar = stringDPhiJet0Jet1BaseString;
-    
-    
-    SampCut SC_MT2lb_BothB, SC_MT2lb_LeadB, SC_MT2lb_SubB, SC_MT2lb_NoB;
-    SC_MT2lb_BothB.SetParamsWindow("", -0.1, 0.1, 2);
-    SC_MT2lb_LeadB.SetParamsWindow("", 0.9, 1.1, 2);
-    SC_MT2lb_SubB.SetParamsWindow("", 1.9, 2.1, 2);
-    SC_MT2lb_NoB.SetParamsWindow("", 2.9, 3.1, 2);
-    
-    TString baseMT2lbToTString = "typeMT2lb";
+    TString baseMT2lblbToTString = "typeMT2lblb";
     
     TString stringBothB = "BothB";
     TString stringLeadB = "LeadB";
     TString stringSubB = "SubB";
     TString stringNoB = "NoB";
     
-    HistogramT H_MT2lb_BothJetB; H_MT2lb_BothJetB.DefaultVarVals();
-    H_MT2lb_BothJetB.SetName(stringSmear, stringMT2lb, baseMT2lbToTString + stringBothB);
-    H_MT2lb_BothJetB.xAxis.SetAxis("patsy", stringMT2lb, &inSHBB->IHBB_EnergyPtMET, doSyst);
-    H_MT2lb_BothJetB.SetIndAxisLabel(stringSmear + stringMT2lb, mapVartoLabel, 1);
-    H_MT2lb_BothJetB.yAxis.SetAxisAsDefaultCountAxis("GeV");
-    H_MT2lb_BothJetB.specialHistCutFloat.SetParams(&SC_MT2lb_BothB);
-    H_MT2lb_BothJetB.specialHistCutFloatVar = baseMT2lbToTString;
+    HistogramT H_MT2lblb_BothJetB; H_MT2lblb_BothJetB.DefaultVarVals();
+    H_MT2lblb_BothJetB.SetName(stringSmear, stringMT2lblb, baseMT2lblbToTString + stringBothB);
+    H_MT2lblb_BothJetB.xAxis.SetAxis("patsy", stringMT2lblb, &inSHBB->IHBB_EnergyPtMET, doSyst);
+    H_MT2lblb_BothJetB.SetIndAxisLabel(stringSmear + stringMT2lblb, mapVartoLabel, 1);
+    H_MT2lblb_BothJetB.yAxis.SetAxisAsDefaultCountAxis("GeV");
+    H_MT2lblb_BothJetB.specialHistCutFloat.SetParams(&SC_MT2lblb_BothB);
+    H_MT2lblb_BothJetB.specialHistCutFloatVar = baseMT2lblbToTString;
     
-    HistogramT H_MT2lb_LeadJetB; H_MT2lb_LeadJetB.DefaultVarVals();
-    H_MT2lb_LeadJetB.SetName(stringSmear, stringMT2lb, baseMT2lbToTString + stringLeadB);
-    H_MT2lb_LeadJetB.xAxis.SetAxis("patsy", stringMT2lb, &inSHBB->IHBB_EnergyPtMET, doSyst);
-    H_MT2lb_LeadJetB.SetIndAxisLabel(stringSmear + stringMT2lb, mapVartoLabel, 1);
-    H_MT2lb_LeadJetB.yAxis.SetAxisAsDefaultCountAxis("GeV");
-    H_MT2lb_LeadJetB.specialHistCutFloat.SetParams(&SC_MT2lb_LeadB);
-    H_MT2lb_LeadJetB.specialHistCutFloatVar = baseMT2lbToTString;
+    HistogramT H_MT2lblb_LeadJetB; H_MT2lblb_LeadJetB.DefaultVarVals();
+    H_MT2lblb_LeadJetB.SetName(stringSmear, stringMT2lblb, baseMT2lblbToTString + stringLeadB);
+    H_MT2lblb_LeadJetB.xAxis.SetAxis("patsy", stringMT2lblb, &inSHBB->IHBB_EnergyPtMET, doSyst);
+    H_MT2lblb_LeadJetB.SetIndAxisLabel(stringSmear + stringMT2lblb, mapVartoLabel, 1);
+    H_MT2lblb_LeadJetB.yAxis.SetAxisAsDefaultCountAxis("GeV");
+    H_MT2lblb_LeadJetB.specialHistCutFloat.SetParams(&SC_MT2lblb_LeadB);
+    H_MT2lblb_LeadJetB.specialHistCutFloatVar = baseMT2lblbToTString;
     
-    HistogramT H_MT2lb_SubJetB; H_MT2lb_SubJetB.DefaultVarVals();
-    H_MT2lb_SubJetB.SetName(stringSmear, stringMT2lb, baseMT2lbToTString + stringSubB);
-    H_MT2lb_SubJetB.xAxis.SetAxis("patsy", stringMT2lb, &inSHBB->IHBB_EnergyPtMET, doSyst);
-    H_MT2lb_SubJetB.SetIndAxisLabel(stringSmear + stringMT2lb, mapVartoLabel, 1);
-    H_MT2lb_SubJetB.yAxis.SetAxisAsDefaultCountAxis("GeV");
-    H_MT2lb_SubJetB.specialHistCutFloat.SetParams(&SC_MT2lb_SubB);
-    H_MT2lb_SubJetB.specialHistCutFloatVar = baseMT2lbToTString;
+    HistogramT H_MT2lblb_SubJetB; H_MT2lblb_SubJetB.DefaultVarVals();
+    H_MT2lblb_SubJetB.SetName(stringSmear, stringMT2lblb, baseMT2lblbToTString + stringSubB);
+    H_MT2lblb_SubJetB.xAxis.SetAxis("patsy", stringMT2lblb, &inSHBB->IHBB_EnergyPtMET, doSyst);
+    H_MT2lblb_SubJetB.SetIndAxisLabel(stringSmear + stringMT2lblb, mapVartoLabel, 1);
+    H_MT2lblb_SubJetB.yAxis.SetAxisAsDefaultCountAxis("GeV");
+    H_MT2lblb_SubJetB.specialHistCutFloat.SetParams(&SC_MT2lblb_SubB);
+    H_MT2lblb_SubJetB.specialHistCutFloatVar = baseMT2lblbToTString;
     
-    HistogramT H_MT2lb_NoJetB; H_MT2lb_NoJetB.DefaultVarVals();
-    H_MT2lb_NoJetB.SetName(stringSmear, stringMT2lb, baseMT2lbToTString + stringNoB);
-    H_MT2lb_NoJetB.xAxis.SetAxis("patsy", stringMT2lb, &inSHBB->IHBB_EnergyPtMET, doSyst);
-    H_MT2lb_NoJetB.SetIndAxisLabel(stringSmear + stringMT2lb, mapVartoLabel, 1);
-    H_MT2lb_NoJetB.yAxis.SetAxisAsDefaultCountAxis("GeV");
-    H_MT2lb_NoJetB.specialHistCutFloat.SetParams(&SC_MT2lb_NoB);
-    H_MT2lb_NoJetB.specialHistCutFloatVar = baseMT2lbToTString;
+    HistogramT H_MT2lblb_NoJetB; H_MT2lblb_NoJetB.DefaultVarVals();
+    H_MT2lblb_NoJetB.SetName(stringSmear, stringMT2lblb, baseMT2lblbToTString + stringNoB);
+    H_MT2lblb_NoJetB.xAxis.SetAxis("patsy", stringMT2lblb, &inSHBB->IHBB_EnergyPtMET, doSyst);
+    H_MT2lblb_NoJetB.SetIndAxisLabel(stringSmear + stringMT2lblb, mapVartoLabel, 1);
+    H_MT2lblb_NoJetB.yAxis.SetAxisAsDefaultCountAxis("GeV");
+    H_MT2lblb_NoJetB.specialHistCutFloat.SetParams(&SC_MT2lblb_NoB);
+    H_MT2lblb_NoJetB.specialHistCutFloatVar = baseMT2lblbToTString;
     
     
     inHistTVec->push_back(H_MT2ll_DPhiZMETClose);
     inHistTVec->push_back(H_MT2ll_DPhiZMETMid);
     inHistTVec->push_back(H_MT2ll_DPhiZMETFar);
     
-    inHistTVec->push_back(H_MT2lb_BothJetB);
-    inHistTVec->push_back(H_MT2lb_LeadJetB);
-    inHistTVec->push_back(H_MT2lb_SubJetB);
-    inHistTVec->push_back(H_MT2lb_NoJetB);
+    inHistTVec->push_back(H_MT2lblb_BothJetB);
+    inHistTVec->push_back(H_MT2lblb_LeadJetB);
+    inHistTVec->push_back(H_MT2lblb_SubJetB);
+    inHistTVec->push_back(H_MT2lblb_NoJetB);
 }
 
 
@@ -482,7 +564,7 @@ inline void OneDeeHistTVec_AddBasicMETSigHists(vector<HistogramT> * inHistTVec, 
     // histograms for MET Significance
     
     bool doSyst = true;
-    bool noSyst = false;
+    //bool noSyst = false;
     
     TString stringSmear = GetStringSmear(isSmear, false);
     TString stringMETSigRaw = "METSigRaw";
@@ -513,7 +595,7 @@ inline void OneDeeHistTVec_AddBasicMETHists(vector<HistogramT> * inHistTVec, Sto
     // Basic histograms for MET
     
     bool doSyst = true;
-    bool noSyst = false;
+    //bool noSyst = false;
     
     TString stringSmear = GetStringSmear(isSmear, false);
     TString stringMET = "MET";
@@ -560,7 +642,7 @@ inline void OneDeeHistTVec_AddMETPerformanceHists_SpecialCuts(vector<HistogramT>
     
     // MET Performance variables -- UPar/UPerp, but with special cuts/requirements
     bool doSyst = true;
-    bool noSyst = false;    
+    //bool noSyst = false;    
     
     TString stringSmear = GetStringSmear(isSmear, false);
     TString stringUPar = "UPar";
@@ -608,7 +690,7 @@ inline void OneDeeHistTVec_AddMETPerformanceHists_SpecialCuts(vector<HistogramT>
 
 inline void OneDeeHistTVec_AddMETPerformanceHists(vector<HistogramT> * inHistTVec, StopHistBinBounds * inSHBB, labelMap * mapVartoLabel, bool isSmear) {
     bool doSyst = true;
-    bool noSyst = false;
+    //bool noSyst = false;
     
     // MET Performance variables -- UPar/UPerp
         
@@ -646,7 +728,7 @@ inline void OneDeeHistTVec_AddCompJetHists(vector<HistogramT> * inHistTVec, Stop
     
     // plots relevant to the total behavior of jets in the event
     bool doSyst = true;
-    bool noSyst = false;
+    //bool noSyst = false;
     
     TString stringSmear = GetStringSmear(isSmear, false);
     TString stringMET = "MET";
@@ -739,9 +821,9 @@ inline void OneDeeHistTVec_AddCompJetHists(vector<HistogramT> * inHistTVec, Stop
  H_MET_div_Meff_PassMT2llCut120.doXSyst = true; 
  
  */
-inline void OneDeeHistTVec_Basic(vector<HistogramT> * inHistTVec, StopHistBinBounds * inSHBB, labelMap * mapVartoLabel, bool isSignal) {
+inline void OneDeeHistTVec_Basic(vector<HistogramT> * inHistTVec, StopHistBinBounds * inSHBB, labelMap * mapVartoLabel, int cutPlotLevel) {
     OneDeeHistTVec_AddMiscHists(inHistTVec, inSHBB, mapVartoLabel);
-    if (!isSignal) {
+    if (cutPlotLevel <= 0) {
         for (int iLep = 0; iLep < 2; ++iLep) {
             OneDeeHistTVec_AddMiscLeptonHists(inHistTVec, inSHBB, mapVartoLabel, iLep);
         }
@@ -767,7 +849,6 @@ inline void OneDeeHistTVec_DiObjKinematics(vector<HistogramT> * inHistTVec, Stop
     for (int iObj = 0; iObj < numObjs; ++iObj) {
         if (iObj == isLep) {
             addZMass = true;
-            if (isSmear) continue;
         }
         else {
             addZMass = false;
@@ -783,9 +864,9 @@ inline void OneDeeHistTVec_DiObjKinematics(vector<HistogramT> * inHistTVec, Stop
     }
 }
 
-inline void OneDeeHistTVec_AddMET_MT2(vector<HistogramT> * inHistTVec, StopHistBinBounds * inSHBB, labelMap * mapVartoLabel, bool isSmear = false, bool isSignal = false) {
-    if (isSignal && !isSmear) return;
-    if (!isSignal) {
+inline void OneDeeHistTVec_AddMET_MT2(vector<HistogramT> * inHistTVec, StopHistBinBounds * inSHBB, labelMap * mapVartoLabel, bool isSmear = false, int cutPlotLevel = false) {
+    if (cutPlotLevel > 1 && !isSmear) return;
+    if (cutPlotLevel > 1) {
         OneDeeHistTVec_AddBasicMETSigHists(inHistTVec, inSHBB, mapVartoLabel, isSmear);
         OneDeeHistTVec_AddBasicMETHists(inHistTVec, inSHBB, mapVartoLabel, isSmear);
         OneDeeHistTVec_AddMETPerformanceHists(inHistTVec, inSHBB, mapVartoLabel, isSmear);
@@ -798,26 +879,26 @@ inline void OneDeeHistTVec_AddMET_MT2(vector<HistogramT> * inHistTVec, StopHistB
 inline void OneDeeHistTVec_AddCompJet(vector<HistogramT> * inHistTVec, StopHistBinBounds * inSHBB, labelMap * mapVartoLabel, bool isSmear = false) {    
     OneDeeHistTVec_AddCompJetHists(inHistTVec, inSHBB, mapVartoLabel, isSmear);
 }
-inline void OneDeeHistTVec_Inclusive(vector<HistogramT> * inHistTVec, StopHistBinBounds * inSHBB, labelMap * mapVartoLabel, bool isSignal) {
+inline void OneDeeHistTVec_Inclusive(vector<HistogramT> * inHistTVec, StopHistBinBounds * inSHBB, labelMap * mapVartoLabel, int cutPlotLevel) {
     bool noSmear = false;
     
     
-    OneDeeHistTVec_Basic(inHistTVec, inSHBB, mapVartoLabel, isSignal);
-    if (!isSignal) {
+    OneDeeHistTVec_Basic(inHistTVec, inSHBB, mapVartoLabel, cutPlotLevel);
+    if (cutPlotLevel <= 0) {
         OneDeeHistTVec_AddCompJetHists(inHistTVec, inSHBB, mapVartoLabel, noSmear);        
         OneDeeHistTVec_IndObjKinematics(inHistTVec, inSHBB, mapVartoLabel, true, noSmear);
         OneDeeHistTVec_DiObjKinematics(inHistTVec, inSHBB, mapVartoLabel, true, noSmear);
         OneDeeHistTVec_AddDeltaPhi(inHistTVec, inSHBB, mapVartoLabel, noSmear);
     }
-    OneDeeHistTVec_AddMET_MT2(inHistTVec, inSHBB, mapVartoLabel, noSmear, isSignal);
+    OneDeeHistTVec_AddMET_MT2(inHistTVec, inSHBB, mapVartoLabel, noSmear, cutPlotLevel);
 }
-inline void OneDeeHistTVec_Inclusive_Smeared(vector<HistogramT> * inHistTVec, StopHistBinBounds * inSHBB, labelMap * mapVartoLabel, bool isSignal) {
+inline void OneDeeHistTVec_Inclusive_Smeared(vector<HistogramT> * inHistTVec, StopHistBinBounds * inSHBB, labelMap * mapVartoLabel, int cutPlotLevel) {
     bool doSmear = true;
-    if (!isSignal) {
+    if (cutPlotLevel <= 0) {
         OneDeeHistTVec_AddCompJetHists(inHistTVec, inSHBB, mapVartoLabel, doSmear);    
         OneDeeHistTVec_IndObjKinematics(inHistTVec, inSHBB, mapVartoLabel, false, doSmear);
         OneDeeHistTVec_DiObjKinematics(inHistTVec, inSHBB, mapVartoLabel, false, doSmear);
         OneDeeHistTVec_AddDeltaPhi(inHistTVec, inSHBB, mapVartoLabel, doSmear);
     }
-    OneDeeHistTVec_AddMET_MT2(inHistTVec, inSHBB, mapVartoLabel, doSmear, isSignal);
+    OneDeeHistTVec_AddMET_MT2(inHistTVec, inSHBB, mapVartoLabel, doSmear, cutPlotLevel);
 }

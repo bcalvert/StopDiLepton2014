@@ -38,6 +38,7 @@ typedef struct SystT {
     //Copied over from StopFunctionDefinitions_v2.h
     // int whichSystType is used to demarcate between different systematics, with positive values designating a "shift up" systematic and negative values designating a "shift down" systematic -- note that systematics with no "shift" to them, i.e. GenTopRW which is unidirectional, are marked with a positive shift type by default
     // whichSystType number meanings:
+    // MC based systematics
     // 1: Lepton Energy Scale
     // 2: Jet Energy Scale
     // 3: B RealTag Eff SF Shift
@@ -47,6 +48,9 @@ typedef struct SystT {
     // 7: Lepton Efficiency SF Shift
     // 8: Gen Recoil RW
     // 9: Stop XSec Shift
+    
+    // DD based systematics -- just Fake Lep for now
+    // 1: Fake Lepton Estimate systematic
     
     void SetParams(vector<TString> * vecSystNames, vector<int> * vecWST, int index) {
         
@@ -60,6 +64,39 @@ typedef struct SystT {
         name = systVarKey;
     }    
 } SystT;
+
+struct SpecialAxisBounds {
+    vector< vector<Double_t> > vecVecBinEdges;
+    vector<int> vecNumBins;
+    void DefaultVarVals() {
+        vecVecBinEdges.resize(0);
+        vecNumBins.resize(0);
+        
+
+        AddInMT2llBounds_NonControl(&vecVecBinEdges, &vecNumBins);
+        AddInMT2llBounds_Control(&vecVecBinEdges, &vecNumBins);
+
+        AddInMT2lblbBounds_NonControl(&vecVecBinEdges, &vecNumBins);
+        AddInMT2lblbBounds_Control(&vecVecBinEdges, &vecNumBins);
+
+        AddInMT2bb_ZMETBounds_NonControl(&vecVecBinEdges, &vecNumBins);
+        AddInMT2bb_ZMETBounds_Control(&vecVecBinEdges, &vecNumBins);
+        
+        AddInKT2_TopBounds(&vecVecBinEdges, &vecNumBins);
+
+        AddInDilepPtBounds(&vecVecBinEdges, &vecNumBins);
+    }
+    
+    void PrintVals() {
+        for (unsigned int iSpecAxis = 0; iSpecAxis < vecVecBinEdges.size(); ++iSpecAxis) {
+            cout << "iSpecAxis " << iSpecAxis << endl;
+            for (int iBin = 0; iBin <= vecNumBins[iSpecAxis]; ++iBin) {
+                cout << "iBin " << iBin << endl;
+                cout << "value is " << vecVecBinEdges[iSpecAxis][iBin] << endl;
+            }
+        }
+    }
+};
 
 typedef struct InputHistBinBounds {
     int nBins;
@@ -82,6 +119,7 @@ typedef struct AxisT {
     int axisSpecialType;
     int axisVarMapType; // 0 NonMET; 1 MET
     int axisVarCode;
+
     void SetAxis(TString inLabel, TString inAxisVarKey, int inNBins, float inAxisMin, float inAxisMax, bool inDoAxisSyst) {
         axisLabel = inLabel;
         axisVarKey = inAxisVarKey;
@@ -98,9 +136,16 @@ typedef struct AxisT {
         axisMax = inHBB->axisUB;
         doAxisSyst = inDoAxisSyst;
     }
-    void SetAxisAsDefaultCountAxis(TString unitString) {
+    void SetAxisSpecial(TString inLabel, TString inAxisVarKey, int inAxisSpecialType, bool inDoAxisSyst) {
+        axisLabel = inLabel;
+        axisVarKey = inAxisVarKey;
+        numBins = -1;
+        axisSpecialType = inAxisSpecialType;
+        doAxisSyst = inDoAxisSyst;
+    }
+    void SetAxisAsDefaultCountAxis(TString unitString, TString addString = "NUM ") {
         axisLabel = "Number of Events / ";
-        axisLabel += "NUM ";
+        axisLabel += addString;
         axisLabel += unitString;
     }
 } AxisT;
@@ -188,7 +233,7 @@ typedef struct HistogramT {
             else if (whichDim == 3) zAxis.axisLabel = label;           
         }
     }
-    TH1F * BookOneDeeHist(SampleT * inSampleT, vector<int> * inNBinsVec, vector<Double_t *> inBinEdgesVec) {
+    TH1F * BookOneDeeHist(SampleT * inSampleT, SpecialAxisBounds * inSAB) {
         TString histName = name;
         histName.Replace(histName.Index("PATSY"), 5, inSampleT->histNameSuffix);
         //        cout << "inHistSuffix " << inSampleT->histNameSuffix << endl;
@@ -197,8 +242,8 @@ typedef struct HistogramT {
         int nXBins;
         Double_t * xBinEdges;
         if (xAxis.numBins < 1) {
-            nXBins = inNBinsVec->at(xAxis.axisSpecialType - 1);
-            xBinEdges = inBinEdgesVec[xAxis.axisSpecialType - 1];
+            nXBins = inSAB->vecNumBins[xAxis.axisSpecialType - 1];
+            xBinEdges = &inSAB->vecVecBinEdges[xAxis.axisSpecialType - 1][0];
             outHist1D = new TH1F(histName, stringAxis, nXBins, xBinEdges);
         }
         else {
@@ -207,7 +252,7 @@ typedef struct HistogramT {
         outHist1D->Sumw2();
         return outHist1D;
     }
-    TH2F * BookTwoDeeHist(SampleT * inSampleT, vector<int> * inNBinsVec, vector<Double_t *> inBinEdgesVec) {
+    TH2F * BookTwoDeeHist(SampleT * inSampleT, SpecialAxisBounds * inSAB) {
         TString histName = name;
         histName.Replace(histName.Index("PATSY"), 5, inSampleT->histNameSuffix);
         //        cout << "histName " << histName << endl;
@@ -215,11 +260,11 @@ typedef struct HistogramT {
         int nXBins, nYBins;
         Double_t * xBinEdges, * yBinEdges;
         if (xAxis.numBins < 1) {
-            nXBins = inNBinsVec->at(xAxis.axisSpecialType - 1);
-            xBinEdges = inBinEdgesVec[xAxis.axisSpecialType - 1 ];
+            nXBins = inSAB->vecNumBins[xAxis.axisSpecialType - 1];
+            xBinEdges = &inSAB->vecVecBinEdges[xAxis.axisSpecialType - 1 ][0];
             if (yAxis.numBins < 1) {
-                nYBins = inNBinsVec->at(yAxis.axisSpecialType - 1);
-                yBinEdges = inBinEdgesVec[yAxis.axisSpecialType - 1];
+                nYBins = inSAB->vecNumBins[yAxis.axisSpecialType - 1];
+                yBinEdges = &inSAB->vecVecBinEdges[yAxis.axisSpecialType - 1][0];
                 outHist2D = new TH2F(histName, stringAxis, nXBins, xBinEdges, nYBins, yBinEdges);
             }
             else {
@@ -228,8 +273,8 @@ typedef struct HistogramT {
         }
         else {
             if (yAxis.numBins < 1) {
-                nYBins = inNBinsVec->at(yAxis.axisSpecialType - 1);
-                yBinEdges = inBinEdgesVec[yAxis.axisSpecialType - 1];
+                nYBins = inSAB->vecNumBins[yAxis.axisSpecialType - 1];
+                yBinEdges = &inSAB->vecVecBinEdges[yAxis.axisSpecialType - 1][0];
                 outHist2D = new TH2F(histName, stringAxis, xAxis.numBins, xAxis.axisMin, xAxis.axisMax, nYBins, yBinEdges);
             }
             else {
@@ -239,7 +284,7 @@ typedef struct HistogramT {
         outHist2D->Sumw2();
         return outHist2D;
     }
-    TH3F * BookThreeDeeHist(SampleT * inSampleT, vector<int> * inNBinsVec, vector<Double_t *> inBinEdgesVec) {
+    TH3F * BookThreeDeeHist(SampleT * inSampleT, SpecialAxisBounds * inSAB) {
         TString histName = name;
         histName.Replace(histName.Index("PATSY"), 5, inSampleT->histNameSuffix);
         //        cout << "histName " << histName << endl;
@@ -252,12 +297,12 @@ typedef struct HistogramT {
                 cout << "For debugging purposes, this issue ^ happened with the hist " << name << endl;
             }
             else {
-                nXBins = inNBinsVec->at(xAxis.axisSpecialType - 1);
-                xBinEdges = inBinEdgesVec[xAxis.axisSpecialType - 1];
-                nYBins = inNBinsVec->at(yAxis.axisSpecialType - 1);
-                yBinEdges = inBinEdgesVec[yAxis.axisSpecialType - 1];
-                nZBins = inNBinsVec->at(zAxis.axisSpecialType - 1);
-                zBinEdges = inBinEdgesVec[zAxis.axisSpecialType - 1];
+                nXBins = inSAB->vecNumBins[xAxis.axisSpecialType - 1];
+                xBinEdges = &inSAB->vecVecBinEdges[xAxis.axisSpecialType - 1][0];
+                nYBins = inSAB->vecNumBins[yAxis.axisSpecialType - 1];
+                yBinEdges = &inSAB->vecVecBinEdges[yAxis.axisSpecialType - 1][0];
+                nZBins = inSAB->vecNumBins[zAxis.axisSpecialType - 1];
+                zBinEdges = &inSAB->vecVecBinEdges[zAxis.axisSpecialType - 1][0];
                 outHist3D = new TH3F(histName, stringAxis, nXBins, xBinEdges, nYBins, yBinEdges, nZBins, zBinEdges);
             }
         }

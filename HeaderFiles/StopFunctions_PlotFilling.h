@@ -7,6 +7,11 @@ using namespace std;
 #include "./StopFunctions_PlotFillingShowing_VariableMapping.h"
 
 inline void SetPassCutMap(passCutMap &inputCutMap, vector<SampleT> * subSampVec, EventStructPointerInfo * inESPI, int whichDiLepTypeGlobal, bool hasMoreThan2Leps, bool doVerbosity = false) {
+    
+    float cutMT2ll = 80.;
+    float cutMT2bb_ZMET = 170.;
+    float cutMT2lblb = 150.;
+    
     for (unsigned int iSS = 0; iSS < subSampVec->size(); ++iSS) {
         inputCutMap[subSampVec->at(iSS).histNameSuffix] = false;
         if (whichDiLepTypeGlobal > -1 && inESPI->addELI->EventDiLepType != whichDiLepTypeGlobal) {
@@ -34,6 +39,14 @@ inline void SetPassCutMap(passCutMap &inputCutMap, vector<SampleT> * subSampVec,
             if (inESPI->addEMI->EventMET < subSampVec->at(iSS).cutMET) continue;
             //            if (subSampVec->at(iSS).doZVeto >= 0 && inESPI->addELI->EventDiLepinZMass == subSampVec->at(iSS).doZVeto) continue;
             if (!(subSampVec->at(iSS).doZVeto < 0 || inESPI->addELI->EventDiLepinZMass != subSampVec->at(iSS).doZVeto)) continue;
+        }
+        if (subSampVec->at(iSS).histNameSuffix.Contains("FullCut")) {
+            if (subSampVec->at(iSS).histNameSuffix.Contains("TTBarControl")) {
+                if (inESPI->addEMI->MET_EMT2I.EventMT2ll > cutMT2ll || inESPI->addEMI->MET_EMT2I.EventMT2lblb > cutMT2lblb || inESPI->addEMI->MET_EMT2I.EventMT2bb_ZMET > cutMT2bb_ZMET) continue;
+            }
+            else if (subSampVec->at(iSS).histNameSuffix.Contains("Signal")) {
+                if (inESPI->addEMI->MET_EMT2I.EventMT2ll < cutMT2ll && inESPI->addEMI->MET_EMT2I.EventMT2lblb < cutMT2lblb && inESPI->addEMI->MET_EMT2I.EventMT2bb_ZMET < cutMT2bb_ZMET) continue;
+            }
         }
         if (doVerbosity) cout << "test 5" << endl;
         if (subSampVec->at(iSS).histNameSuffix.Contains("BothinBarrel")) {
@@ -156,7 +169,7 @@ inline void HistogramFill(passCutMap * inputCutMap, StV_Map * inStVM, vector<Sam
                     //Check to see if should be blinded data
                     if (subSampVec->at(iSS).blindDataChannel && inESPI->addBEI->blindData && inESPI->addBEI->doData) {
                         if (HistTVec->at(iHT).HistContainsStringAsAxisVar("MT2ll", numDims) && inESPI->addEMI->MET_EMT2I.EventMT2ll > MT2llCut) continue;
-                        if (HistTVec->at(iHT).HistContainsStringAsAxisVar("MT2lb", numDims) && inESPI->addEMI->MET_EMT2I.EventMT2lb > MT2lbCut) continue;                        
+                        if (HistTVec->at(iHT).HistContainsStringAsAxisVar("MT2lb", numDims) && inESPI->addEMI->MET_EMT2I.EventMT2lblb > MT2lbCut) continue;                        
                     }
                     
                     if (!HistTVec->at(iHT).EventPassesHistSpecificCut(inStVM, doVerbosity)) continue;

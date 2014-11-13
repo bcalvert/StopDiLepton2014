@@ -33,6 +33,7 @@
 #include "./StopStructs_RecoEventParticleInfo.h"
 #include "./Typedefs.h"
 #include "./StopStructDefinitions.h"
+#include "./HistogramPlottingFunctions.h"
 #include "./HistogramPlottingStructs_SampleCut.h"
 #include "./HistogramPlottingStructs.h"
 #include "./HistogramPlottingStructs_StopSpecific.h"

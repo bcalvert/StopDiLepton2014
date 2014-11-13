@@ -48,6 +48,22 @@ void SetMETLatexString(LatexString * inLS, int typeMET = 0, TString textExtra = 
     inLS->SetLatex(useNDC, textSize, alignText, xLB, yLB, textToShow, latexColor);
 }
 
+void SetDilepLatexString(LatexString * inLS, int typeDilep = -1) {
+    const TString nameDilep[3] = {"#mu#mu", "ee", "e#mu"};
+    TString stringDilep;
+    if (typeDilep > -1) {
+        stringDilep = nameDilep[typeDilep];
+    }
+    bool useNDC = true;
+    float textSize = 0.104;
+    int alignText = 11;
+    float xLB = 0.22;
+    float yLB = 0.86;
+    Color_t latexColor = kBlack;
+    inLS->SetLatex(useNDC, textSize, alignText, xLB, yLB, stringDilep, latexColor);
+}
+
+
 
 void BaseCanvasSetup(TCanvas * InputCanvas, bool logYPad1) {
     InputCanvas->Divide(1, 2);

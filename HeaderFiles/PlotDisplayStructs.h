@@ -6,6 +6,14 @@ typedef pair<int, int> intBounds;
 typedef pair<TString, intBounds> indMCParams;
 
 
+TString CorrGrabName(TString grabName, int sampleType) {
+    TString outString = grabName;
+    if ((sampleType == 0 || sampleType == 100) && outString.Contains("Smear")) {
+        outString.Replace(outString.Index("Smear"), 5, "");
+    }
+    return outString;
+}
+
 typedef struct AxisProjInfo {
     int numDims, whichAxisToProjTo, whichAxisForDist, axisProjLB, axisProjUB;
     int whichAxisToMix;
@@ -195,6 +203,31 @@ typedef struct IndSamplePlotInfo {
         if (grabbedHist != NULL) cout << "current grabbed hist is " << grabbedHist->Integral() << endl;        
     }
     
+    void DivideHistogramBins(vector<TString> * inNamesToDivide, bool doTH1Fs = true) {
+        bool doDivide = false;
+        TString nameHist = grabbedHist->GetName();
+        for (unsigned int iName = 0; iName < inNamesToDivide->size(); ++iName) {
+            if (nameHist.Contains(inNamesToDivide->at(iName))) {
+                doDivide = true;
+            }
+        }
+        if (doDivide) {
+            if (doTH1Fs) {
+                HistDivBinContent(grabbedHist_TH1F);
+                for (unsigned int iSyst = 0; iSyst < vecGrabbedHist_SystVarUp_TH1F.size(); ++iSyst) {
+                    HistDivBinContent(vecGrabbedHist_SystVarUp_TH1F[iSyst]);
+                    HistDivBinContent(vecGrabbedHist_SystVarDown_TH1F[iSyst]);
+                }
+            }
+            else {
+                HistDivBinContent(grabbedHist);
+                for (unsigned int iSyst = 0; iSyst < vecGrabbedHist_SystVarUp_TH1F.size(); ++iSyst) {
+                    HistDivBinContent(vecGrabbedHist_SystVarUp[iSyst]);
+                    HistDivBinContent(vecGrabbedHist_SystVarDown[iSyst]);
+                }
+            }
+        }
+    }
     
     // Dealing with the name and sample type
     void SetSampleType(bool doVerbosity = false) {
@@ -217,6 +250,9 @@ typedef struct IndSamplePlotInfo {
         }
         else if (nameISPI.Contains("T2tt") || nameISPI.Contains("T2bw")) {
             sampleType = -1;
+        }
+        else if (nameISPI.Contains("FakeLep")) {
+            sampleType = 100;
         }
         else {
             for (int iVV = 0; iVV < numVV; ++iVV) {
@@ -260,6 +296,7 @@ typedef struct IndSamplePlotInfo {
         vecGrabbedHist_SystVarDown[iSyst] = (TH1 *) grabbedHist->Clone(grabbedHist->GetName() + systName + TString("Down_Patsy_") + nameISPI);
     }
     void GrabHist(TString grabName, bool doVerbosity = false) {
+        grabName = CorrGrabName(grabName, sampleType);
         if (doVerbosity) {
             cout << "for file " << inputFile->GetName() << endl;
             cout << "currently trying to grab histogram " << grabName << endl;
@@ -278,20 +315,22 @@ typedef struct IndSamplePlotInfo {
     }
     void GrabHist(vector<TString> * vecGrabNames, bool doVerbosity = false) {
         TH1 * currHist = 0;
+        TString grabName = "";
         for (unsigned int iSamp = 0; iSamp < vecGrabNames->size(); ++iSamp) {
+            grabName = CorrGrabName(vecGrabNames->at(iSamp), sampleType);
             if (doVerbosity) {
                 cout << "for file " << inputFile->GetName() << endl;
-                cout << "currently trying to grab histogram " << vecGrabNames->at(iSamp) << endl;
-                if (inputFile->Get(vecGrabNames->at(iSamp)) != NULL) {
+                cout << "currently trying to grab histogram " << grabName << endl;
+                if (inputFile->Get(grabName) != NULL) {
                     cout << "histo is available to grab " << endl;
                     cout << "weight that it will be scaled by " << weight_CentVal << endl;
                 }
             }
             if (currHist == NULL) {
-                currHist = (TH1 *) inputFile->Get(vecGrabNames->at(iSamp));
+                currHist = (TH1 *) inputFile->Get(grabName);
             }
             else {
-                currHist->Add((TH1 *) inputFile->Get(vecGrabNames->at(iSamp)));
+                currHist->Add((TH1 *) inputFile->Get(grabName));
             }
         }
         grabbedHist = currHist;
@@ -303,6 +342,7 @@ typedef struct IndSamplePlotInfo {
         TString grabName;
         for (unsigned int iSyst = 0; iSyst < vecSystNameAppends->size(); ++iSyst) {
             grabName = baseHistGrabName;
+            grabName = CorrGrabName(grabName, sampleType);
             grabName += vecSystNameAppends->at(iSyst);
             grabName += "Shift";
             if (vecShouldGrabSyst[iSyst]) {
@@ -357,6 +397,7 @@ typedef struct IndSamplePlotInfo {
                 currHistSystDown = 0;
                 for (unsigned int iSamp = 0; iSamp < vecBaseHistGrabNames->size(); ++iSamp) {
                     grabName = vecBaseHistGrabNames->at(iSamp);
+                    grabName = CorrGrabName(grabName, sampleType);
                     grabName += vecSystNameAppends->at(iSyst);
                     grabName += "Shift";
                     
@@ -484,6 +525,10 @@ typedef struct IndSamplePlotInfo {
     }
     // stuff for histogram projection (for making final 1D output distributions)
     void SetTH1F_Projection(AxisProjInfo * inAPI, HistDisplayParams * inHDP, bool doVerbosity = false) {
+        vector<TString> vecStringsToDivide;
+        vecStringsToDivide.push_back("SignalShape");
+        vecStringsToDivide.push_back("Coarse");
+        
         grabbedHist_TH1F = inAPI->DoProjection_Agglomerate(grabbedHist, inHDP->addName);
         grabbedHist_TH1F->RebinX(inHDP->RBNX);
         HistogramUnderflowOverflow(grabbedHist_TH1F, inHDP->doUnderflow, inHDP->doOverflow);
@@ -496,6 +541,7 @@ typedef struct IndSamplePlotInfo {
             vecGrabbedHist_SystVarDown_TH1F[iSyst]->RebinX(inHDP->RBNX);
             HistogramUnderflowOverflow(vecGrabbedHist_SystVarDown_TH1F[iSyst], inHDP->doUnderflow, inHDP->doOverflow);
         }
+        DivideHistogramBins(&vecStringsToDivide);
     }
     void SetTH1F_PassCut(vector<int> * vecCutValues, vector<TString> * vecCutVarNames, int whichIntType, vector<TString> * vecSystNameAppends, bool doSyst = true, int levelVerbosity = 0) {
         if (doSyst && vecSystNameAppends->size() != vecGrabbedHist_SystVarUp.size()) {
@@ -616,6 +662,8 @@ typedef struct HistogramDisplayStructs {
     SampDisplay compSamp;
     vector<SampDisplay> vecSampDisplay_IndMC; //c.f. typedef at top of header file
     
+    
+    
     void PrintCompSystHistNames() {
         for (unsigned int iSyst = 0; iSyst < compSamp.first.vecGrabbedHist_SystVarUp_TH1F.size(); ++iSyst) {
             cout << "upSyst name " << compSamp.first.vecGrabbedHist_SystVarUp_TH1F[iSyst]->GetName() << endl;
@@ -625,6 +673,39 @@ typedef struct HistogramDisplayStructs {
     void DefaultVarVals() {
         vecISPI_asLoaded.resize(0);
         vecSampDisplay_IndMC.resize(0);        
+    }
+    void WriteToFile(vector<TFile *> * vecOutFiles, vector<indMCParams> * inVecIndMCParams, vector<TString> * inVecSystNames, vector<int> * vecIndexMC = 0) {
+        //if vecIndexMC is non-existent, vecOutFiles should be size 1
+        if (!vecIndexMC) {
+            vecOutFiles->at(0)->cd();
+            TString nameHist = compSamp.first.grabbedHist->GetName();
+            cout << "nameHist " << nameHist << endl;
+            if (nameHist.Contains("Data")) {
+                compSamp.first.grabbedHist->SetName("data_obs");
+            }
+            else {
+                compSamp.first.grabbedHist->SetName("Signal");
+            }
+            compSamp.first.grabbedHist->Write();
+        }
+        else {
+            for (unsigned int iIndMC = 0; iIndMC < vecSampDisplay_IndMC.size(); ++iIndMC) {
+                TString trimName = inVecIndMCParams->at(iIndMC).first;
+                trimName.Replace(trimName.Index("_"), 1, "");
+                vecOutFiles->at(vecIndexMC->at(iIndMC))->cd();
+                vecSampDisplay_IndMC[iIndMC].first.grabbedHist->SetName(trimName);
+                vecSampDisplay_IndMC[iIndMC].first.grabbedHist->Write();
+                for (unsigned int iSyst = 0; iSyst < vecSampDisplay_IndMC[iIndMC].first.vecGrabbedHist_SystVarUp.size(); ++iSyst) {
+                    TString systName = inVecSystNames->at(iSyst);
+                    systName.Replace(systName.Index("_"), 1, "");
+                    vecSampDisplay_IndMC[iIndMC].first.vecGrabbedHist_SystVarUp[iSyst]->SetName(trimName + systName + TString("Up"));
+                    vecSampDisplay_IndMC[iIndMC].first.vecGrabbedHist_SystVarUp[iSyst]->Write();
+                    
+                    vecSampDisplay_IndMC[iIndMC].first.vecGrabbedHist_SystVarDown[iSyst]->SetName(trimName + systName + TString("Down"));
+                    vecSampDisplay_IndMC[iIndMC].first.vecGrabbedHist_SystVarDown[iSyst]->Write();
+                }
+            }
+        }
     }
     void SetSystSize(int size = 0, bool doSyst = false) {
         if (doSyst) {
@@ -683,7 +764,8 @@ typedef struct HistogramDisplayStructs {
                 }
                 HistMainAttSet(vecSampDisplay_IndMC[iIndMC].first.grabbedHist_TH1F, &vecSampDisplay_IndMC[iIndMC].second);
             }
-            SortIndMC(sortByInt);
+//            SortIndMC(sortByInt);
+            SortIndMC(true);
         }
         else {
             HistogramAdderProjector(inAPI, inHDP, &vecISPI_asLoaded, &compSamp.first, compName, doProj, doVerbosity); 
@@ -692,6 +774,17 @@ typedef struct HistogramDisplayStructs {
     }
     ////////////////////////////////////////////////////////////////////////
     /// Functions related to yield calculations ///
+    void SetUpHistosForSaving(TString compName, vector<indMCParams> * vecIndMCParams, int levelVerbosity = 0) {
+        if (levelVerbosity) {
+            cout << "about to Set up the histos for saving " << endl;
+        }
+        if (vecSampDisplay_IndMC.size() > 0) {
+            HistogramAdder(&vecISPI_asLoaded, &compSamp.first, compName, levelVerbosity, &vecSampDisplay_IndMC, vecIndMCParams);
+        }
+        else {
+            HistogramAdder(&vecISPI_asLoaded, &compSamp.first, compName, levelVerbosity);
+        }
+    }
     void DoPassCutHisto(vector<int> * vecCutValues, vector<TString> * vecCutVarNames, int whichIntType, TString compName, vector<indMCParams> * vecIndMCParams, vector<TString> * vecSystNameAppends, bool doSyst = true, int levelVerbosity = 0) {
         if (levelVerbosity) {
             cout << "about to run SetTH1F_PassCut on compSamp" << endl;
@@ -766,7 +859,7 @@ typedef struct HistogramDisplayStructs {
         
         unsigned int numIndMC = inVecMCLegEntries->size();
         vecSampDisplay_IndMC.resize(numIndMC);
-        for (int iIndMC = 0; iIndMC < numIndMC; ++iIndMC) {
+        for (unsigned int iIndMC = 0; iIndMC < numIndMC; ++iIndMC) {
             fillDS.SetParams(inVecMCColors->at(iIndMC), IndMCFillStyle, IndMCFillWidth, IndMCFillSize);
             lineDS.SetParams(inVecMCColors->at(iIndMC), IndMCLineStyle, IndMCLineWidth, IndMCLineSize);
             vecSampDisplay_IndMC[iIndMC].second.SetParams(inVecMCLegEntries->at(iIndMC), fillDS, lineDS, markerDS, inVecMCSortParams->at(iIndMC));
@@ -775,6 +868,9 @@ typedef struct HistogramDisplayStructs {
     void SortIndMC(bool sortByInt = false) {
         if (sortByInt) {
             sort(vecSampDisplay_IndMC.begin(), vecSampDisplay_IndMC.end(), greater<SampDisplay>());
+            for (unsigned int iIndMC = 0; iIndMC < vecSampDisplay_IndMC.size(); ++iIndMC) {
+                cout << "Integral for sample: " << vecSampDisplay_IndMC[iIndMC].first.nameISPI << " is " << vecSampDisplay_IndMC[iIndMC].first.grabbedHist_TH1F->Integral() << endl;
+            }
         }
         else {
             sort(vecSampDisplay_IndMC.begin(), vecSampDisplay_IndMC.end(), less<SampDisplay>());   
@@ -811,7 +907,10 @@ typedef struct GlobalHistPlotInfo {
     vector<LatexString> vecLatexStrings;
     AxisDisplayParams fracRatioADP;
     void DefaultVarVals() {
-        vecLatexStrings.resize(4); //TopCMSPreliminary String is index 0, Integrated Lumi string is index 1, Gen cut string is index 2, MET String is index 3
+        vecLatexStrings.resize(5);
+        //TopCMSPreliminary String is index 0, Integrated Lumi string is index 1
+        //Gen cut string is index 2, MET String is index 3
+        //Dilep String is index 4
         fracRatioADP.DefaultVarVals();
     }
     void SetFracRatioADPNameRange(bool doAbsRatio, float fracRatioYAxisRangeLB, float fracRatioYAxisRangeUB) {
@@ -838,16 +937,17 @@ typedef struct GlobalHistPlotInfo {
         TH1F * outHist = FracRatioHist(topHist, botHist, fracRatioADP.axisStringPart1, fracRatioADP.axisStringPart2, fracRatioADP.axisRangePart1, fracRatioADP.axisRangePart2, doAbsRatio, fracRatioName);
         return outHist;
     }
-    void SetLatexStringVec(float intLumi, int typeMET = 0, TString extraMETText = "", TString genCutUsed = "", bool isPrelim = true) {
+    void SetLatexStringVec(float intLumi, int typeMET = 0, TString extraMETText = "", int typeDiLep = -1, TString genCutUsed = "", bool isPrelim = true) {
         SetCMSPreliminaryLatex(&vecLatexStrings[0], isPrelim);
         SetLumiLatex(&vecLatexStrings[1], intLumi);
         SetGenCutLatex(&vecLatexStrings[2],  genCutUsed);
         SetMETLatexString(&vecLatexStrings[3], typeMET, extraMETText);
+        SetDilepLatexString(&vecLatexStrings[4], typeDiLep);
     }
     void DrawLatexStrings(TCanvas * inputCanvas, int whichPad = 1, bool doVerbosity = false, int begIndex = 0, int endIndex = -1) {
         int startIndex = begIndex;
         int finalIndex = endIndex > -1 ? endIndex : (int) vecLatexStrings.size() - 1;
-        for (unsigned int iLS = startIndex; iLS <= finalIndex; ++iLS) {
+        for (int iLS = startIndex; iLS <= finalIndex; ++iLS) {
             if (doVerbosity) {
                 cout << "iLS = " << iLS << ", and text is " << vecLatexStrings[iLS].text << endl;                
             }
@@ -875,4 +975,9 @@ bool SortHists_FirstHistSmaller(const SampDisplay &a, const SampDisplay &b, bool
 inline bool operator<(const SampDisplay &a, const SampDisplay &b)
 {
     return (a.second.sortParam < b.second.sortParam);
+}
+
+inline bool operator>(const SampDisplay &a, const SampDisplay &b)
+{
+    return a.first.grabbedHist_TH1F->Integral() < b.first.grabbedHist_TH1F->Integral();
 }

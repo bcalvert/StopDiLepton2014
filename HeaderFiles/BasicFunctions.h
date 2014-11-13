@@ -8,6 +8,21 @@
 #include "TLorentzVector.h"
 #include "./HistogramStyleFunctions.h"
 #include "TGraph.h"
+
+using namespace std;
+inline void DebugStatement(int inputIntToCheck, vector<int> * inputAllowedValsForInt, TString intVarName, TString nameFunction) {
+    bool intFails = true;
+    for (unsigned int iCheck = 0; iCheck < inputAllowedValsForInt->size(); ++iCheck) {
+        if (inputIntToCheck == inputAllowedValsForInt->at(iCheck)) {
+            intFails = false;
+        }
+    }
+    if (intFails) {
+        cout << "in function: " << nameFunction << " the integer with variable name " << intVarName;
+        cout << " failed a check because its value " << inputIntToCheck << " was not one of the allowed values" << endl;
+    }
+}
+
 inline float nDigits(float number, int digits) {
     return round(number * std::pow(10.,digits)) / std::pow(10.,digits);
 }
@@ -485,7 +500,8 @@ inline Double_t ElectronEffectiveArea(float elecEta) {
 inline TLorentzVector LeptonScaleSystShift(TLorentzVector inputLepVec, int inputLepPDGID, int shiftDirection) {
     // Shift Leptons within energy scales
     // Note that these numbers might need to be update
-    float barrelEtaEnd = 1.4442; float endcapEtaStart = 1.566;
+    float barrelEtaEnd = 1.4442;
+    //float endcapEtaStart = 1.566;
     float electronESEB = 0.006; float electronESEE = 0.015;
     float muonES = 0.002;
     float scaleToUse = 0;
@@ -718,4 +734,85 @@ inline TGraph * DivideGraph(TGraph * inputGraph1, TGraph * inputGraph2, TString 
         outGraph->SetPoint(iPoint, x1, y1/y2);
     }
     return outGraph;
+}
+
+inline void HistDivBinContent(TH1 * inputTH1) {
+    float binTotalVolume;
+    TAxis * xAxis = inputTH1->GetXaxis();
+    TAxis * yAxis = inputTH1->GetYaxis();
+    TAxis * zAxis = inputTH1->GetZaxis();
+    float currBinContent, currBinErr;
+    for (int iBinX = 1; iBinX <= xAxis->GetNbins(); ++iBinX) {
+        for (int iBinY = 1; iBinY <= yAxis->GetNbins(); ++iBinY) {
+            for (int iBinZ = 1; iBinZ <= zAxis->GetNbins(); ++iBinZ) {
+                binTotalVolume = xAxis->GetBinWidth(iBinX) * yAxis->GetBinWidth(iBinY) * zAxis->GetBinWidth(iBinZ);
+                currBinContent = inputTH1->GetBinContent(iBinX, iBinY, iBinZ);
+                currBinErr = inputTH1->GetBinError(iBinX, iBinY, iBinZ);
+                inputTH1->SetBinContent(iBinX, iBinY, iBinZ, currBinContent / binTotalVolume);
+                inputTH1->SetBinError(iBinX, iBinY, iBinZ, currBinErr / binTotalVolume);
+            }
+        }
+    }
+}
+
+
+
+
+float ScaleBackCalcBasic(TFile * inputFile, bool doVerbosity = false, int whichSyst = 0, vector<TString> * vecSystString = 0) {
+    TString mcplot = "h_nVtx_inclusive";
+    TString mcplot_preRW = "h_BasicWeightIntegral_inclusive";
+    
+    TString fileName = inputFile->GetName();
+    TString badSysts[2] = {"JetSmear", "UncES"};
+    bool isBadSyst = false;
+    if (whichSyst != 0) {
+        for (int iBadSyst = 0; iBadSyst < 3; ++iBadSyst) {
+            if (vecSystString->at(abs(whichSyst) - 1).Contains(badSysts[iBadSyst])) {
+                isBadSyst = true;
+            }
+        }
+        if (vecSystString->at(abs(whichSyst) - 1).Contains("genStop")) {
+            if ((fileName.Contains("T2tt") || fileName.Contains("T2bw"))) {
+                mcplot += vecSystString->at(abs(whichSyst) - 1) + TString("Shift");
+                mcplot_preRW += vecSystString->at(abs(whichSyst) - 1) + TString("Shift");
+                if (whichSyst > 0) {
+                    mcplot += "Up";
+                    mcplot_preRW += "Up";
+                }
+                else {
+                    mcplot += "Down";
+                    mcplot_preRW += "Down";
+                }
+            }
+        }
+        else {
+            if (!isBadSyst) {
+                mcplot += vecSystString->at(abs(whichSyst) - 1) + TString("Shift");
+                mcplot_preRW += vecSystString->at(abs(whichSyst) - 1) + TString("Shift");
+                if (whichSyst > 0) {
+                    mcplot += "Up";
+                    mcplot_preRW += "Up";
+                }
+                else {
+                    mcplot += "Down";
+                    mcplot_preRW += "Down";
+                }
+            }
+        }
+    }
+    if (doVerbosity) {
+        cout << "from file " << fileName << endl;
+        cout << "mcplot to grab " << mcplot << endl;
+        cout << "mcplot_preRW to grab " << mcplot_preRW << endl;
+    }
+    TH1F * nVtxOrigHist;
+    TH1F * nVtxNewHist;
+    int NBinsX, NBinsXNew;
+    float scaleBack;
+    nVtxOrigHist = (TH1F*) inputFile->Get(mcplot_preRW);
+    nVtxNewHist = (TH1F*) inputFile->Get(mcplot);
+    NBinsX = nVtxOrigHist->GetNbinsX();
+    NBinsXNew = nVtxNewHist->GetNbinsX();
+    scaleBack = (float) nVtxOrigHist->Integral(1, NBinsX + 1) / nVtxNewHist->Integral(1, NBinsXNew + 1);
+    return scaleBack;
 }

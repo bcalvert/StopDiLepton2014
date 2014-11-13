@@ -51,7 +51,8 @@ inline bool PassesFullSelection(EventMETInfo * inEMI, EventJetInfo * inEJI, Even
 inline void PrintEvent(BasicEventInfo * inBEI, EventMETInfo * inEMI, EventJetInfo * inEJI, EventLepInfo * inELI, EventDiStructureInfo * inEDSI, float MT2llThresh) {
     if (inEMI->MET_EMT2I.EventMT2ll > MT2llThresh && PassesFullSelection(inEMI, inEJI, inELI)) {
         cout << "EMI.EventMT2ll " << inEMI->MET_EMT2I.EventMT2ll << endl;
-        cout << "EMI.EventMT2lb " << inEMI->MET_EMT2I.EventMT2lb << endl;
+        cout << "EMI.EventMT2lblb " << inEMI->MET_EMT2I.EventMT2lblb << endl;
+        cout << "EMI.EventMT2bb_ZMET " << inEMI->MET_EMT2I.EventMT2bb_ZMET << endl;
         inEMI->PrintVals();
         cout << "DiLepMass " << inEDSI->DP_DiLepton.BVC.Vec_Mass << endl;
         cout << "DiLepPt " << inEDSI->DP_DiLepton.BVC.Vec_Pt << endl;
@@ -139,6 +140,7 @@ inline bool EventPassTrigger(BasicEventInfo * inBEI, EventLepInfo * inELI) {
     }
     return stillDoEvent;
 }
+/*
 inline float nVtxWeight(BasicEventInfo * inBEI, TH2F * nVtxSFHistOviToDESY, TH2F * nVtxSFHist_v2, TH2F * h_S7toS10RWHist, TH2F * nVtxSFHist) {
     float outNVtxWeight = inBEI->weight;
     if (!inBEI->doData) {
@@ -170,7 +172,7 @@ inline float nVtxWeight(BasicEventInfo * inBEI, TH1F * nVtxSFHistOviToDESY, TH1F
     }
     return outNVtxWeight;
 }
-
+*/
 
 
 inline bool IndJetNotBPassPt(PFJet * inJet, float pTCut) {

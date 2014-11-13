@@ -4,11 +4,14 @@ typedef struct StopHistBinBounds {
     // Contains the general set of InputHistBinBounds that the stop analysis uses for various
     // types of histograms -- most names should be fairly self-explanatory
     
+    SpecialAxisBounds SAB;
+    
     InputHistBinBounds IHBB_Phi;
     InputHistBinBounds IHBB_DPhi;
     InputHistBinBounds IHBB_Eta;
     InputHistBinBounds IHBB_EnergyPtMET;
     InputHistBinBounds IHBB_EnergyPtMET_SR;
+    InputHistBinBounds IHBB_KT2;
     InputHistBinBounds IHBB_PxPy;
     InputHistBinBounds IHBB_PxPy_SR;
     
@@ -19,6 +22,13 @@ typedef struct StopHistBinBounds {
     InputHistBinBounds IHBB_NVtx;
     InputHistBinBounds IHBB_NVtx_SR;
     void DefaultVarVals() {
+        SAB.DefaultVarVals();
+        /*
+        cout << "about to print vals " << endl;
+        SAB.PrintVals();
+        cout << "just printed vals " << endl;
+        */
+        
         const float PI = 3.14159265;
 
         int PhiBinN    = 50;
@@ -81,5 +91,10 @@ typedef struct StopHistBinBounds {
         float nVtxBinLB_SR     = 0.5;
         float nVtxBinUB_SR     = 35.5;
         IHBB_NVtx_SR.SetVals(nVtxBinN_SR, nVtxBinLB_SR, nVtxBinUB_SR);
+        
+        int KT2BinN = 40;
+        float KT2BinLB = -100;
+        float KT2BinUB = 300;
+        IHBB_KT2.SetVals(KT2BinN, KT2BinLB, KT2BinUB);
     }
 } StopHistBinBounds;

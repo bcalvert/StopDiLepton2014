@@ -197,7 +197,7 @@ inline void SetStringKey_StSMap_DiObjects(labelMap &mapVartoLabel, int typeObj, 
     TString stringObjLabel = GetStringIndObj(typeObj, true);
     
     mapVartoLabel[stringSmear + "Di" + stringObj + "Pt"] =  stringSmearLabel + "Di" + stringObjLabel + TString("p_{T} [GeV]");
-    mapVartoLabel[stringSmear + "Di" + stringObj + "Mass"] =  stringSmearLabel + "Di" + stringObjLabel + TString("Inv. Mass [GeV]");
+    mapVartoLabel[stringSmear + "Di" + stringObj + "InvMass"] =  stringSmearLabel + "Di" + stringObjLabel + TString("Inv. Mass [GeV]");
     mapVartoLabel[stringSmear + "Di" + stringObj + "Eta"] =  stringSmearLabel + "Di" + stringObjLabel + TString("#eta");
     mapVartoLabel[stringSmear + "Di" + stringObj + "Phi"] =  stringSmearLabel + "Di" + stringObjLabel + TString("#phi");
 }
@@ -206,15 +206,22 @@ inline void SetStringKey_StSMap_MET(labelMap &mapVartoLabel, bool isSmear) {
     TString stringSmear = GetStringSmear(isSmear, false);
     TString stringSmearLabel = GetStringSmear(isSmear, true);
     
+    TString stringMT2ll = "M_{T2}(ll)";
+    TString stringMT2lblb = "M_{T2}(lb)(lb)";
+    TString stringMT2bb_ZMET = "M_{T2}^{#slash{W}}(bb)";
+    TString stringKT2_Top = "#kappa_{T2}^{top}";
+    
     mapVartoLabel["RawMETSig"]    = "RawMET Significance";
     
-    mapVartoLabel[stringSmear + "MT2ll"]        = stringSmearLabel + "MT2_{ll} [GeV]";
-    mapVartoLabel[stringSmear + "MT2ll80"]      = TString("Event ") + stringSmearLabel + "MT2_{ll} > 80 GeV";
-    mapVartoLabel[stringSmear + "MT2ll90"]      = TString("Event ") + stringSmearLabel + "MT2_{ll} > 90 GeV";
-    mapVartoLabel[stringSmear + "MT2ll100"]     = TString("Event ") + stringSmearLabel + "MT2_{ll} > 100 GeV";
-    mapVartoLabel[stringSmear + "MT2ll110"]     = TString("Event ") + stringSmearLabel + "MT2_{ll} > 110 GeV";
-    mapVartoLabel[stringSmear + "MT2ll120"]     = TString("Event ") + stringSmearLabel + "MT2_{ll} > 120 GeV";
-    mapVartoLabel[stringSmear + "MT2lb"]        = TString("Event ") + stringSmearLabel + "MT2_{(lb)(lb)} [GeV]";
+    mapVartoLabel[stringSmear + "MT2ll"]        = stringSmearLabel + stringMT2ll + " [GeV]";
+    mapVartoLabel[stringSmear + "MT2ll80"]      = stringSmearLabel + stringMT2ll + " > 80 GeV";
+    mapVartoLabel[stringSmear + "MT2ll90"]      = stringSmearLabel + stringMT2ll + " > 90 GeV";
+    mapVartoLabel[stringSmear + "MT2ll100"]     = stringSmearLabel + stringMT2ll + " > 100 GeV";
+    mapVartoLabel[stringSmear + "MT2ll110"]     = stringSmearLabel + stringMT2ll + " > 110 GeV";
+    mapVartoLabel[stringSmear + "MT2ll120"]     = stringSmearLabel + stringMT2ll + " > 120 GeV";
+    mapVartoLabel[stringSmear + "MT2lblb"]      = stringSmearLabel + stringMT2lblb + " [GeV]";
+    mapVartoLabel[stringSmear + "MT2bb_ZMET"]   = stringSmearLabel + stringMT2bb_ZMET + " [GeV]";
+    mapVartoLabel[stringSmear + "KT2_Top"]   = stringSmearLabel + stringKT2_Top + " [GeV]";
     
     mapVartoLabel[stringSmear + "MET"]          = stringSmearLabel + "#slash{E}_{T} [GeV]";
     mapVartoLabel[stringSmear + "METX"]         = stringSmearLabel + "#slash{E}_{x} [GeV]";
@@ -222,10 +229,10 @@ inline void SetStringKey_StSMap_MET(labelMap &mapVartoLabel, bool isSmear) {
     mapVartoLabel[stringSmear + "METPhi"]       = stringSmearLabel + "#slash{E}_{T} #phi [rad]";
     
     mapVartoLabel[stringSmear + "UPar"]         = stringSmearLabel + "u_{#parallel} [GeV]";
-    mapVartoLabel[stringSmear + "UParPlusqT"]   = stringSmearLabel + "u_{#parallel} + q_{T} [GeV]";
+    mapVartoLabel[stringSmear + "UParPlusqT"]   = stringSmearLabel + "u_{#parallel} + q_{T}^{Z} [GeV]";
     mapVartoLabel[stringSmear + "UPerp"]        = stringSmearLabel + "u_{#perp}  [GeV]";
     mapVartoLabel["SumEt"] = "#Sigma E_{T} [GeV]";
-    mapVartoLabel["SumEtSubqT"] = "#Sigma E_{T} - q_{T}^{#gamma} [GeV]";
+    mapVartoLabel["SumEtSubqT"] = "#Sigma E_{T} - q_{T}^{Z} [GeV]";
 }
 
 inline void SetStringKey_StSMap_Basic(labelMap &mapVartoLabel, bool isSmear) {

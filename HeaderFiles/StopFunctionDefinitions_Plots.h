@@ -139,36 +139,36 @@ inline vector<TH1F *> * OneDProjectionReturnVec(TH1 * inputHist, int numDims, in
  #include "./StopHistTDefinitions/StopHistTDefinitions_3D.h"
  */
 
-inline void SetHistTVec_Inclusive(vector<HistogramT> * inHistTVec, StopHistBinBounds * inSHBB, labelMap * mapVartoLabel, int numDims, bool isSignal) {
+inline void SetHistTVec_Inclusive(vector<HistogramT> * inHistTVec, StopHistBinBounds * inSHBB, labelMap * mapVartoLabel, int numDims, int cutPlotLevel) {
     bool noSmear = false;
     
     switch (numDims) {
         case 1:
-            OneDeeHistTVec_Inclusive(inHistTVec, inSHBB, mapVartoLabel, isSignal);
+            OneDeeHistTVec_Inclusive(inHistTVec, inSHBB, mapVartoLabel, cutPlotLevel);
             break;
         case 2:
-            TwoDeeHistTVec_Inclusive(inHistTVec, inSHBB, mapVartoLabel, isSignal);            
+            TwoDeeHistTVec_Inclusive(inHistTVec, inSHBB, mapVartoLabel, cutPlotLevel);            
             break;
         case 3:
-            //ThreeDeeHistTVec_Inclusive(inHistTVec, inSHBB, mapVartoLabel);
+            ThreeDeeHistTVec_Inclusive(inHistTVec, inSHBB, mapVartoLabel, cutPlotLevel);
             break;
         default:
             cout << "num of Dims should be 1, 2, or 3 -- it is " << numDims << endl;
             break;
     }
 }
-inline void SetHistTVec_Inclusive_Smeared(vector<HistogramT> * inHistTVec, StopHistBinBounds * inSHBB, labelMap * mapVartoLabel, int numDims, bool isSignal) {
+inline void SetHistTVec_Inclusive_Smeared(vector<HistogramT> * inHistTVec, StopHistBinBounds * inSHBB, labelMap * mapVartoLabel, int numDims, int cutPlotLevel) {
     bool noSmear = false;
     
     switch (numDims) {
         case 1:
-            OneDeeHistTVec_Inclusive_Smeared(inHistTVec, inSHBB, mapVartoLabel, isSignal);
+            OneDeeHistTVec_Inclusive_Smeared(inHistTVec, inSHBB, mapVartoLabel, cutPlotLevel);
             break;
         case 2:
-            TwoDeeHistTVec_Inclusive_Smeared(inHistTVec, inSHBB, mapVartoLabel, isSignal);            
+            TwoDeeHistTVec_Inclusive_Smeared(inHistTVec, inSHBB, mapVartoLabel, cutPlotLevel);            
             break;
         case 3:
-            //ThreeDeeHistTVec_Inclusive_Smeared(inHistTVec, inSHBB, mapVartoLabel);
+            ThreeDeeHistTVec_Inclusive_Smeared(inHistTVec, inSHBB, mapVartoLabel, cutPlotLevel);
             break;
         default:
             cout << "num of Dims should be 1, 2, or 3 -- it is " << numDims << endl;
@@ -183,10 +183,18 @@ inline void AddSystHists(vector<HistogramT> * outputHistTVec, vector<HistogramT>
             currHistName = inputHistTVec->at(iHist).name;
             for (unsigned int iSyst = 0; iSyst < inputSystTVec->size(); ++iSyst) {
                 currSystName = inputSystTVec->at(iSyst).name;
+                //11/6/14 -- commented this so that we can include smearing systematics on any MET cuts we do
+                //11/10/14 -- decommented this because it doesn't work
                 if ((currSystName.Contains("Smear") || currSystName.Contains("UncES")) && !(currHistName.Contains("Smear"))) continue;
                 if (currSystName.Contains("genStop") && !isSignal) continue;
                 currHistT = inputHistTVec->at(iHist);
+                if (doVerbosity) {
+                    cout << "in adding systematics, currHistT name is " << currHistT.name << endl;
+                }
                 currHistT.name += currSystName;
+                if (doVerbosity) {
+                    cout << "in adding systematics, currHistT name after adding systematics is " << currHistT.name << endl;
+                }
                 /*
                 if (inputHistTVec->at(iHist).xAxis.doAxisSyst) currHistT.xAxis.axisVarKey += inputSystTVec->at(iSyst).systVarKey;
                 if (inputHistTVec->at(iHist).yAxis.doAxisSyst) currHistT.yAxis.axisVarKey += inputSystTVec->at(iSyst).systVarKey;
@@ -208,8 +216,10 @@ inline void SetSubSampVec(vector<SampleT> * subSampVec, int whichSubSampType = -
     
     SampCutInt DiLepInZMass; DiLepInZMass.SetParamsBound("_InZMass", 1, 1);
     /*######Define Subchannels###########*/
+    /*
     TString lepNameSuffix[3] = {"_mumu", "_ee", "_emu"};
-    TString lepHistXAxisSuffix[3] = {"_{#mu#mu}", "_{ee}", "_{e#mu}"};    
+    TString lepHistXAxisSuffix[3] = {"_{#mu#mu}", "_{ee}", "_{e#mu}"};
+    */
     TString ZVetoString = "_ZVeto";
     TString METCutString = "_METGeq40";
     TString JetCutString = "_Jet2";
@@ -219,14 +229,14 @@ inline void SetSubSampVec(vector<SampleT> * subSampVec, int whichSubSampType = -
     TString stringJetCut[5] = {"", "_Jet2", "_Jet2_METGeq40", "_Jet2_BJet1", "_Jet2_BJet1_METGeq40"};
     
     int cutJet[5] = {-1, 2, 2, 2, 2};
-    int cutBJet[5] = {-1, -1, -1, 2, 2};
+    int cutBJet[5] = {-1, -1, -1, 1, 1};
     int cutMETVals[5] = {0, 0, 40, 0, 40};
     
     vector< vector< SampleT > > vecSampT_ZSF; vecSampT_ZSF.resize(2);
     
     for (unsigned int iDiLepMass = 0; iDiLepMass < 2; ++iDiLepMass) {
         vecSampT_ZSF[iDiLepMass].resize(5);
-        for (unsigned int iJetMET = 0; iJetMET < 4; ++iJetMET) {
+        for (unsigned int iJetMET = 0; iJetMET < 5; ++iJetMET) {
             vecSampT_ZSF[iDiLepMass][iJetMET].DefaultVarVals();
             
             vecSampT_ZSF[iDiLepMass][iJetMET].doZVeto = iDiLepMass;
@@ -251,6 +261,16 @@ inline void SetSubSampVec(vector<SampleT> * subSampVec, int whichSubSampType = -
     events_FullCut.histYaxisSuffix = ""; events_FullCut.histZaxisSuffix = "";
     events_FullCut.whichdiLepType = -1; events_FullCut.doZVeto = 1; events_FullCut.cutNJets = 2; events_FullCut.cutNBJets = 1; events_FullCut.cutMET = 40.;
     events_FullCut.blindDataChannel = 1;
+    
+    SampleT events_FullCutTTBarControl; events_FullCutTTBarControl.histNameSuffix = "_FullCutTTBarControl"; events_FullCutTTBarControl.histXaxisSuffix = "";
+    events_FullCutTTBarControl.histYaxisSuffix = ""; events_FullCutTTBarControl.histZaxisSuffix = "";
+    events_FullCutTTBarControl.whichdiLepType = -1; events_FullCutTTBarControl.doZVeto = 1; events_FullCutTTBarControl.cutNJets = 2; events_FullCutTTBarControl.cutNBJets = 1; events_FullCutTTBarControl.cutMET = 40.;
+    events_FullCutTTBarControl.blindDataChannel = 1;
+    
+    SampleT events_FullCutSignal; events_FullCutSignal.histNameSuffix = "_FullCutSignal"; events_FullCutSignal.histXaxisSuffix = "";
+    events_FullCutSignal.histYaxisSuffix = ""; events_FullCutSignal.histZaxisSuffix = "";
+    events_FullCutSignal.whichdiLepType = -1; events_FullCutSignal.doZVeto = 1; events_FullCutSignal.cutNJets = 2; events_FullCutSignal.cutNBJets = 1; events_FullCutSignal.cutMET = 40.;
+    events_FullCutSignal.blindDataChannel = 1;
     
     SampleT events_FullCutMET0; events_FullCutMET0.histNameSuffix = "_FullCutMET0"; events_FullCutMET0.histXaxisSuffix = ""; 
     events_FullCutMET0.histYaxisSuffix = ""; events_FullCutMET0.histZaxisSuffix = "";
@@ -300,19 +320,23 @@ inline void SetSubSampVec(vector<SampleT> * subSampVec, int whichSubSampType = -
         subSampVec->push_back(events_ZCR);
     }
     subSampVec->push_back(events_FullCut);
-    subSampVec->push_back(events_FullCutMET0);
-    subSampVec->push_back(events_FullCutMET20);
-    subSampVec->push_back(events_FullCutMET60);
-    subSampVec->push_back(events_FullCutOnly2Leps);
-    subSampVec->push_back(events_FullCutISR_100); subSampVec->push_back(events_FullCutISR_200);
+    subSampVec->push_back(events_FullCutTTBarControl);
+    subSampVec->push_back(events_FullCutSignal);
+    if (whichSubSampType < 2) {
+        subSampVec->push_back(events_FullCutMET0);
+        subSampVec->push_back(events_FullCutMET20);
+        subSampVec->push_back(events_FullCutMET60);
+        subSampVec->push_back(events_FullCutOnly2Leps);
+        subSampVec->push_back(events_FullCutISR_100); subSampVec->push_back(events_FullCutISR_200);
+        subSampVec->push_back(events_FullCutISR_100Only2Leps); subSampVec->push_back(events_FullCutISR_200Only2Leps);
+    }
     subSampVec->push_back(allEvents);
-    subSampVec->push_back(events_FullCutISR_100Only2Leps); subSampVec->push_back(events_FullCutISR_200Only2Leps); 
-    
 }
 
-inline void SetSystVec(vector<SystT> * inVecSystT, bool includeJetSmear) {
+inline void SetSystVec(vector<SystT> * inVecSystT, bool includeJetSmear, bool doFakeLep = false) {
     // int whichSystType is used to demarcate between different systematics, with positive values designating a "shift up" systematic and negative values designating a "shift down" systematic -- note that systematics with no "shift" to them, i.e. GenTopRW which is unidirectional, are marked with a positive shift type by default
     // whichSystType number meanings:
+    // MC based systematics
     // 1: Lepton Energy Scale
     // 2: Jet Energy Scale
     // 3: B RealTag Eff SF Shift
@@ -322,42 +346,54 @@ inline void SetSystVec(vector<SystT> * inVecSystT, bool includeJetSmear) {
     // 7: Lepton Efficiency SF Shift
     // 8: Gen Recoil RW
     // 9: Stop XSec Shift
+    
+    // DD based systematics
+    // 1: FakeEst Shift
     vector<TString> vecSystNames;
     vector<int> vecSystType;
+    
     vecSystNames.push_back("");
     vecSystType.push_back(0);
-    vecSystNames.push_back("LepES");
-    vecSystType.push_back(1);
-    vecSystNames.push_back("JetES");
-    vecSystType.push_back(2);
-    vecSystNames.push_back("BTagEffSF");
-    vecSystType.push_back(3);
-    vecSystNames.push_back("BMisTagSF");
-    vecSystType.push_back(4);
-    if (includeJetSmear) {
-        vecSystNames.push_back("JetSmear");
-        vecSystType.push_back(5);
-        vecSystNames.push_back("UncES");        
-        vecSystType.push_back(6);
+    if (!doFakeLep) {
+        vecSystNames.push_back("LepES");
+        vecSystType.push_back(1);
+        vecSystNames.push_back("JetES");
+        vecSystType.push_back(2);
+        vecSystNames.push_back("BTagEffSF");
+        vecSystType.push_back(3);
+        vecSystNames.push_back("BMisTagSF");
+        vecSystType.push_back(4);
+        if (includeJetSmear) {
+            vecSystNames.push_back("JetSmear");
+            vecSystType.push_back(5);
+            vecSystNames.push_back("UncES");
+            vecSystType.push_back(6);
+        }
+        vecSystNames.push_back("LepEffSF");
+        vecSystType.push_back(7);
+        vecSystNames.push_back("genRecoilRW");
+        vecSystType.push_back(8);
     }
-    vecSystNames.push_back("LepEffSF");
-    vecSystType.push_back(7);
-    vecSystNames.push_back("genRecoilRW");
-    vecSystType.push_back(8);
+    else {
+        vecSystNames.push_back("FakeEst");
+        vecSystType.push_back(1);
+    }
+    /*
     vecSystNames.push_back("genStopXSec");
     vecSystType.push_back(9);
-    cout << "test " << endl;
+    */
+    //cout << "test " << endl;
     inVecSystT->resize(0);
-    cout << "test 2" << endl;
+    //cout << "test 2" << endl;
     SystT currSystT;
     for (unsigned int iSyst = 0; iSyst < vecSystNames.size() - 1; ++iSyst) {
-        cout << "iSyst " << iSyst << endl;
+        //cout << "iSyst " << iSyst << endl;
         currSystT.SetParams(&vecSystNames, &vecSystType, iSyst + 1);
         inVecSystT->push_back(currSystT);
         currSystT.SetParams(&vecSystNames, &vecSystType, -1 * (iSyst + 1));
         inVecSystT->push_back(currSystT);
     }
-    cout << "done " << endl;
+    //cout << "done " << endl;
 }
 inline TString DescriptorString(SampleT inputSubSamp) {
     //descriptor strings
