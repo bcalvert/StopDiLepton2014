@@ -1,0 +1,17 @@
+######################################
+EfficiencyMaps/
+######################################
+Added a bunch of macros used for Signal Efficiency map making
+1) MakeLeptFiltSF.C -- Calculates the gen-level lepton filter efficiency per mass point (it's roughly 55%, but it does depend upon SUSY masses)
+2) MakeCoarseEffMap.C -- Calculate the signal efficiency in the SUSY mass plane for passing a given set of MT2 cuts (whether 1D, 2D, or 3D)
+3) MakeSmoothedEffMap.C -- Take the coarse efficiency maps from 2) and smooth them out to ameliorate the point-to-point statistical fluctations in the signal MC
+4) MakeSignalYield.C -- Take the smoothed efficiency maps from 3) and turn them into # of signal events passing a given set of MT2 cuts
+5) DrawSignalStuff.C -- Draw the maps made in any of 1), 2), 3), or 4), also has an option to take the results of 4) and spit them out into text form
+6) MakeSignalYieldText.C -- Calls the DrawSignalStuff.C macro with the signal yield text option and saves it to a file (for use in C&C analysis)
+7) MakeSignalYieldMT2_IndivPoint.C -- Takes the signal yield maps from 4) and turns them into actual 1D, 2D, or 3D MT2 histograms
+
+
+Also added in a control script
+makeSignalEffMaps.sh
+
+That enables one to do 1), 2), 3), 4), or 6) in a reasonable fashion
