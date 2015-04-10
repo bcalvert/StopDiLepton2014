@@ -23,6 +23,241 @@ inline void DebugStatement(int inputIntToCheck, vector<int> * inputAllowedValsFo
     }
 }
 
+inline bool EqualBinWidths(TH1F * inputHist) {
+    bool hasEqualBinWidths = true;
+    float currBinWidth, nextBinWidth;
+    for (int iBinX = 1; iBinX < inputHist->GetNbinsX(); ++iBinX) {
+        currBinWidth = inputHist->GetXaxis()->GetBinWidth(iBinX);
+        nextBinWidth = inputHist->GetXaxis()->GetBinWidth(iBinX + 1);
+        if (fabs(currBinWidth - nextBinWidth) > 1E-3) {
+            hasEqualBinWidths = false;
+        }
+    }
+    return hasEqualBinWidths;
+}
+inline float GetPercentile(TH1F * inputHist, float valPercentile, bool doVerbosity = 0) {
+    int nBinsX = inputHist->GetNbinsX();
+    float totInt = inputHist->Integral();
+    float currCDFVal = 0.0;
+    TAxis * xAxis = inputHist->GetXaxis();
+    for (int iBinX = 1; iBinX <= nBinsX; ++iBinX) {
+        currCDFVal += (inputHist->GetBinContent(iBinX))/totInt;
+        if (doVerbosity) {
+            cout << "iBinX " << iBinX << endl;
+            cout << "currCDFVal " << currCDFVal << endl;
+        }
+        if (currCDFVal > valPercentile) {
+            //current bin is the threshold bin
+            return xAxis->GetBinCenter(iBinX);
+        }
+    }
+    return 1.0;
+}
+inline float GetStatValue(TH1F * inputHist, int whichPercentile, bool doVerbosity = 0) {
+    //whichPercentile: 0 -- use mean, otherwise, look at array of definitions
+    float arrPercentile[3] = {0.0, 0.5, 0.9};
+
+    float returnVal = 0.0;
+    if (!whichPercentile) {
+        if (doVerbosity) {
+            cout << "inputHist mean " << inputHist->GetMean() << endl;
+        }
+        returnVal = inputHist->GetMean();
+    }
+    else {
+        returnVal = GetPercentile(inputHist, arrPercentile[whichPercentile], doVerbosity);
+    }
+    return returnVal;
+}
+
+inline float CalculateRecoil(float inVecMag, float inVecPhi, float axisPhi, int whichComponent) {
+    //whichComponent = 0 for parallel
+    //whichComponent = 1 for perpendicular
+    if (whichComponent == 0) {
+        return inVecMag * TMath::Cos(inVecPhi - axisPhi);
+    }
+    else if (whichComponent == 1) {
+        return inVecMag * TMath::Sin(inVecPhi - axisPhi);
+    }
+    else {
+        cout << "whichComponent needs to be 0 or 1; it is " << whichComponent << endl;
+    }
+    return -9999;
+}
+
+inline void PrintHistogram(TH1 * inputHist, bool doUnderflow, bool doOverflow, TH1 * referenceHist = NULL) {
+
+    int nBinsX = inputHist->GetNbinsX();
+    int nBinsY = inputHist->GetNbinsY();
+    int nBinsZ = inputHist->GetNbinsZ();
+    
+    if (referenceHist) {
+        int nBinsXRef = referenceHist->GetNbinsX();
+        int nBinsYRef = referenceHist->GetNbinsY();
+        int nBinsZRef = referenceHist->GetNbinsZ();
+        
+        if (nBinsX != nBinsXRef || nBinsY != nBinsYRef || nBinsZ != nBinsZRef) {
+            cout << "reference hist and input hist don't match in number of bins!" << endl;
+            return;
+        }
+    }
+    
+    TAxis * xAxis = inputHist->GetXaxis();
+    TAxis * yAxis = inputHist->GetYaxis();
+    TAxis * zAxis = inputHist->GetZaxis();
+    
+    int yLB = nBinsY > 1 ? !doUnderflow : 1;
+    int yUB = nBinsY > 1 ? nBinsY + doOverflow : 1;
+    
+    int zLB = nBinsZ > 1 ? !doUnderflow : 1;
+    int zUB = nBinsZ > 1 ? nBinsZ + doOverflow : 1;
+    
+    float currBinContent, currBinErr;
+    float currBinContentRef;
+    
+    float currBinXLowEdge, currBinXUpEdge;
+    float currBinYLowEdge, currBinYUpEdge;
+    float currBinZLowEdge, currBinZUpEdge;
+    
+    cout << "currHistName " << inputHist->GetName();
+    for (int iBinX = !doUnderflow; iBinX <= nBinsX + doOverflow; ++iBinX) {
+        currBinXLowEdge = xAxis->GetBinLowEdge(iBinX);
+        currBinXUpEdge = xAxis->GetBinUpEdge(iBinX);
+        for (int iBinY = yLB; iBinY <= yUB; ++iBinY) {
+            currBinYLowEdge = yAxis->GetBinLowEdge(iBinY);
+            currBinYUpEdge = yAxis->GetBinUpEdge(iBinY);
+            for (int iBinZ = zLB; iBinZ <= zUB; ++iBinZ) {
+                currBinZLowEdge = zAxis->GetBinLowEdge(iBinZ);
+                currBinZUpEdge = zAxis->GetBinUpEdge(iBinZ);
+                currBinContent = inputHist->GetBinContent(iBinX, iBinY, iBinZ);
+                currBinErr = inputHist->GetBinError(iBinX, iBinY, iBinZ);
+                
+                cout << "{iBinX:iBinY:iBinZ} = {" << iBinX << ":" << iBinY << ":" << iBinZ <<"}" << endl;
+                cout << "{xLB:xUB} = {" << currBinXLowEdge << ":" << currBinXUpEdge << "}" << endl;
+                cout << "{yLB:yUB} = {" << currBinYLowEdge << ":" << currBinYUpEdge << "}" << endl;
+                cout << "{zLB:zUB} = {" << currBinZLowEdge << ":" << currBinZUpEdge << "}" << endl;
+                if (referenceHist) {
+                    currBinContentRef = referenceHist->GetBinContent(iBinX, iBinY, iBinZ);
+                    cout << "currRelPercentVal " << 100 * ((currBinContent / currBinContentRef) - 1.0) << endl;
+                }
+                else {
+                    cout << "currVal +- err " << currBinContent << " +- " << currBinErr << endl;
+                }
+            }
+        }
+    }
+}
+
+inline void SetMCStatSystHist(TH1 * inputHist, int dirSyst = 0, bool doVerbosity = 0) {
+    //Used for turning a clone of a central value histogram into a central value +- statistical error
+    if (dirSyst == 0) {
+        cout << "about to make a syst variation but no syst direction!" << endl;
+    }
+    int nBinsX = inputHist->GetNbinsX();
+    int nBinsY = inputHist->GetNbinsY();
+    int nBinsZ = inputHist->GetNbinsZ();
+    float currBinContent, currBinErr;
+    for (int iBinX = 1; iBinX <= nBinsX; ++iBinX) {
+        for (int iBinY = 1; iBinY <= nBinsY; ++iBinY) {
+            for (int iBinZ = 1; iBinZ <= nBinsZ; ++iBinZ) {
+                currBinContent = inputHist->GetBinContent(iBinX, iBinY, iBinZ);
+                currBinErr = inputHist->GetBinError(iBinX, iBinY, iBinZ);
+                inputHist->SetBinContent(iBinX, iBinY, iBinZ, currBinContent + (dirSyst * currBinErr));
+                if (doVerbosity) {
+                    cout << "currBinContent " << currBinContent << endl;
+                    cout << "currBinErr " << currBinErr << endl;
+                    cout << "dirSyst " << dirSyst << endl;
+                    cout << "resulting bin content " << currBinContent + (dirSyst * currBinErr) << endl;
+                }
+            }
+        }
+    }
+}
+
+inline void SetHistStatErrFromMCStatSyst(TH1 * inputHistCV, TH1 * inputHistMCStatUp, bool doVerbosity = 0) {
+    //Used for setting the statistical error of a central value histogram assuming one has a MCStat Shifted Up histogram a la the above function, SetMCStatSystHist
+    int nBinsX = inputHistCV->GetNbinsX();
+    int nBinsY = inputHistCV->GetNbinsY();
+    int nBinsZ = inputHistCV->GetNbinsZ();
+    
+    int nBinsX_MCStatUp = inputHistMCStatUp->GetNbinsX();
+    int nBinsY_MCStatUp = inputHistMCStatUp->GetNbinsY();
+    int nBinsZ_MCStatUp = inputHistMCStatUp->GetNbinsZ();
+    
+    if (nBinsX != nBinsX_MCStatUp || nBinsY != nBinsY_MCStatUp || nBinsZ != nBinsZ_MCStatUp) {
+        cout << "bins don't match! " << endl;
+        cout << "nBinsX:nBinsX_MCStatUp " << nBinsX << ":" << nBinsX_MCStatUp << endl;
+        cout << "nBinsY:nBinsY_MCStatUp " << nBinsY << ":" << nBinsY_MCStatUp << endl;
+        cout << "nBinsZ:nBinsZ_MCStatUp " << nBinsZ << ":" << nBinsZ_MCStatUp << endl;
+    }
+    
+    float currBinContent, currBinErrToSet;
+    for (int iBinX = 1; iBinX <= nBinsX; ++iBinX) {
+        for (int iBinY = 1; iBinY <= nBinsY; ++iBinY) {
+            for (int iBinZ = 1; iBinZ <= nBinsZ; ++iBinZ) {
+                currBinContent = inputHistCV->GetBinContent(iBinX, iBinY, iBinZ);
+                currBinErrToSet = inputHistMCStatUp->GetBinContent(iBinX, iBinY, iBinZ);
+                if (currBinErrToSet > 2 * currBinContent) {
+                    if (doVerbosity) {
+                        cout << "going to correct currBinErrToSet so that it's not too large! This shouldn't affect the limit " << endl;
+                    }
+                    currBinErrToSet = 2 * currBinContent - 1E-4;
+                }
+                inputHistCV->SetBinError(iBinX, iBinY, iBinZ, currBinErrToSet - currBinContent);
+                if (doVerbosity) {
+                    cout << "currBinContent " << currBinContent << endl;
+                    cout << "currBinErrToSet " << currBinErrToSet << endl;
+                    cout << "resulting bin error " << inputHistCV->GetBinError(iBinX, iBinY, iBinZ) << endl;
+                }
+            }
+        }
+    }
+}
+
+inline void FixMCStatSystDownHistFromCVStatErr(TH1 * inputHistCV, TH1 * inputHistMCStatDown, bool doVerbosity = 0) {
+    //Used for setting the statistical error of a central value histogram assuming one has a MCStat Shifted Up histogram a la the above function, SetMCStatSystHist
+    int nBinsX = inputHistCV->GetNbinsX();
+    int nBinsY = inputHistCV->GetNbinsY();
+    int nBinsZ = inputHistCV->GetNbinsZ();
+    
+    int nBinsX_MCStatDown = inputHistMCStatDown->GetNbinsX();
+    int nBinsY_MCStatDown = inputHistMCStatDown->GetNbinsY();
+    int nBinsZ_MCStatDown = inputHistMCStatDown->GetNbinsZ();
+    
+    if (nBinsX != nBinsX_MCStatDown || nBinsY != nBinsY_MCStatDown || nBinsZ != nBinsZ_MCStatDown) {
+        cout << "bins don't match! " << endl;
+        cout << "nBinsX:nBinsX_MCStatDown " << nBinsX << ":" << nBinsX_MCStatDown << endl;
+        cout << "nBinsY:nBinsY_MCStatDown " << nBinsY << ":" << nBinsY_MCStatDown << endl;
+        cout << "nBinsZ:nBinsZ_MCStatDown " << nBinsZ << ":" << nBinsZ_MCStatDown << endl;
+    }
+    
+    float currCVBinErr, currCVBinContent, currMCStatDownBinContent;
+    for (int iBinX = 1; iBinX <= nBinsX; ++iBinX) {
+        for (int iBinY = 1; iBinY <= nBinsY; ++iBinY) {
+            for (int iBinZ = 1; iBinZ <= nBinsZ; ++iBinZ) {
+                currMCStatDownBinContent = inputHistMCStatDown->GetBinContent(iBinX, iBinY, iBinZ);
+                currCVBinErr = inputHistCV->GetBinError(iBinX, iBinY, iBinZ);
+                currCVBinContent = inputHistCV->GetBinContent(iBinX, iBinY, iBinZ);
+                if (currCVBinContent - currCVBinErr > currMCStatDownBinContent) {
+                    if (doVerbosity) {
+                        cout << "going to correct currMCStatDownBinContent so that it's not spuriously 0! This shouldn't greatly affect the limit " << endl;
+                        cout << "currCVBinContent - currCVBinErr " << currCVBinContent - currCVBinErr << endl;
+                        cout << "currMCStatDownBinContent " << currMCStatDownBinContent << endl;
+                    }
+                    currMCStatDownBinContent = currCVBinContent - currCVBinErr;
+                }
+                inputHistMCStatDown->SetBinContent(iBinX, iBinY, iBinZ, currMCStatDownBinContent);
+                if (doVerbosity) {
+                    cout << "currCVBinContent " << currCVBinContent << endl;
+                    cout << "currCVBinErr " << currCVBinErr << endl;
+                    cout << "currMCStatDownBinContent " << currMCStatDownBinContent << endl;
+                }
+            }
+        }
+    }
+}
+
+
 inline float nDigits(float number, int digits) {
     return round(number * std::pow(10.,digits)) / std::pow(10.,digits);
 }
@@ -287,11 +522,13 @@ inline void BadBinCheck(int &checkInt, int inputAxisNBins) {
         checkInt = inputAxisNBins;
     }
 }
-inline void BinFinder(int * address, TH1 * hist, float x, float y, float z, bool doVerbosity = 0) {
+inline void BinFinder(int * address, TH1 * hist, float x, float y, float z, bool doBadBinCheck, bool doVerbosity = 0) {
     TAxis * xAxis = hist->GetXaxis();
     TAxis * yAxis, * zAxis;
     address[0] = xAxis->FindBin(x);
-    BadBinCheck(address[0], xAxis->GetNbins());
+    if (doBadBinCheck) {
+        BadBinCheck(address[0], xAxis->GetNbins());
+    }
     if (doVerbosity) {
         cout << "for hist " << hist->GetName() << endl;
         cout << "for x, " << x << " address[0] is " << address[0] << endl;
@@ -299,7 +536,9 @@ inline void BinFinder(int * address, TH1 * hist, float x, float y, float z, bool
     yAxis = hist->GetYaxis();
     if (yAxis->GetNbins() != 1) {
         address[1] = yAxis->FindBin(y);
-        BadBinCheck(address[1], yAxis->GetNbins());
+        if (doBadBinCheck) {
+            BadBinCheck(address[1], yAxis->GetNbins());
+        }
         if (doVerbosity) {
             cout << "for y, " << y << " address[1] is " << address[1] << endl;
         }
@@ -307,7 +546,9 @@ inline void BinFinder(int * address, TH1 * hist, float x, float y, float z, bool
     zAxis = hist->GetZaxis();
     if (zAxis->GetNbins() != 1) {
         address[2] = zAxis->FindBin(z);
-        BadBinCheck(address[2], zAxis->GetNbins());
+        if (doBadBinCheck) {
+            BadBinCheck(address[2], zAxis->GetNbins());
+        }
         if (doVerbosity) {
             cout << "for z, " << z << " address[2] is " << address[2] << endl;
         }
@@ -363,7 +604,7 @@ inline void PassFailORCut3D(TH1 * inHist, double &numPassCut, double &numPassCut
     numPassCutErr = TMath::Sqrt(totalEventsErr*totalEventsErr - numFailCutErr * numFailCutErr);
 }
 
-inline void PassFailCut(TH1 * inHist, double &numPassCut, double &numPassCutErr, double &numFailCut, double &numFailCutErr, int * binAddreses, int whichIntType) {
+inline void PassFailCut(TH1 * inHist, double &numPassCut, double &numPassCutErr, double &numFailCut, double &numFailCutErr, int * binAddreses, int whichIntType, bool doVerbosity = 0) {
     //whichIntType
     //0 is AND
     //1 is OR
@@ -414,6 +655,7 @@ inline void PassFailCuts(vector<double> * vecIntegrals, vector<double> * vecInte
     double numPassCutErr, numFailCutErr;
     PassFailCut(inHist, numPassCut, numPassCutErr, numFailCut, numFailCutErr, binAddreses, whichIntType);
     if (doVerbosity) {
+        cout << "doing cut type of whichIntType " << whichIntType << endl;
         cout << "numPass Cut " << numPassCut << " +- " << numPassCutErr << endl;
         cout << "numFail Cut " << numFailCut << " +- " << numFailCutErr << endl;
     }
@@ -653,7 +895,7 @@ inline TH1F * PassCutHisto(TH1 * inputHist, vector<int> * values, vector<TString
         cout << "x:y:z = " << x << ":" << y << ":" << z << endl;
         cout << "inputHist name " << inputHist->GetName() << endl;
     }
-    BinFinder(binAddreses, inputHist, x, y, z);
+    BinFinder(binAddreses, inputHist, x, y, z, true, levelVerbosity);
     vector<double> vecIntegrals;
     vector<double> vecIntegralErrors;
     PassFailCuts(&vecIntegrals, &vecIntegralErrors, binAddreses, inputHist, whichIntType, levelVerbosity);
@@ -815,4 +1057,20 @@ inline float ScaleBackCalcBasic(TFile * inputFile, bool doVerbosity = false, int
     NBinsXNew = nVtxNewHist->GetNbinsX();
     scaleBack = (float) nVtxOrigHist->Integral(1, NBinsX + 1) / nVtxNewHist->Integral(1, NBinsXNew + 1);
     return scaleBack;
+}
+
+void ZeroOutNegHistBins(TH1 * inputHist) {
+    int NBinsX = inputHist->GetNbinsX();
+    int NBinsY = inputHist->GetNbinsY();
+    int NBinsZ = inputHist->GetNbinsZ();
+    for (int iBinX = 0; iBinX <= NBinsX + 1; ++iBinX) {
+        for (int iBinY = 0; iBinY <= NBinsY + 1; ++iBinY) {
+            for (int iBinZ = 0; iBinZ <= NBinsZ + 1; ++iBinZ) {
+                if (inputHist->GetBinContent(iBinX, iBinY, iBinZ) < 0) {
+                    inputHist->SetBinContent(iBinX, iBinY, iBinZ, 0);
+                    inputHist->SetBinError(iBinX, iBinY, iBinZ, 0);
+                }
+            }
+        }
+    }
 }

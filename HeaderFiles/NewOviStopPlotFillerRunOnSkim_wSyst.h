@@ -30,6 +30,7 @@
 #include "./StopStructs_BasicParticleFunctions.h"
 #include "./StopStructs_ParticlePointers.h"
 #include "./StopStructs_GenEventParticleInfo.h"
+#include "./StopFunctions_HadronicResolution.h"
 #include "./StopStructs_RecoEventParticleInfo.h"
 #include "./Typedefs.h"
 #include "./StopStructDefinitions.h"

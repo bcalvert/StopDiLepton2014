@@ -27,6 +27,7 @@
 #include "./StopStructs_BasicParticleFunctions.h"
 #include "./StopStructs_ParticlePointers.h"
 #include "./StopStructs_GenEventParticleInfo.h"
+#include "./StopFunctions_HadronicResolution.h"
 #include "./StopStructs_RecoEventParticleInfo.h"
 #include "./StopStructs_RecoEventParticleFunctions.h"
 #include "./Typedefs.h"
@@ -36,6 +37,8 @@
 #include "./StopFunctionDefinitions_Plots.h"
 #include "./StopFillFunctions.h"
 #include "./StopPlotStructs_PlotMakingMacro.h"
+#include "./StopFakeLeptonFunctions.h"
+#include "./StopPlotHaddInfo.h"
 #include <fstream>
 #include <string>
 #include <iostream>

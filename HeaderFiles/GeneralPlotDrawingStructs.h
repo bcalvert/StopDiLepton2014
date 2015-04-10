@@ -127,11 +127,11 @@ typedef struct AncillaryDrawingVariables {
         topLeg.SetFillStyle(0);
         topLeg.SetLineColor(kWhite);
         topLeg.SetLineWidth(0);
-	topLeg.SetTextFont(62);
-	botLeg.SetFillStyle(0);
+        topLeg.SetTextFont(62);
+        botLeg.SetFillStyle(0);
         botLeg.SetLineColor(kWhite);
         botLeg.SetLineWidth(0);
-	botLeg.SetTextFont(62);
+        botLeg.SetTextFont(62);
     }
     void SetLegBounds(XYBounds * inXYB, bool setTopLeg = true, bool doVerbosity = false) {
         if (doVerbosity) {

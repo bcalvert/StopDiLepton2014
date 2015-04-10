@@ -1,0 +1,154 @@
+######################################
+HeaderFiles/BasicFunctions.h
+######################################
+
+1) Added in new functions
+
+1a) EqualBinWidths -- checks if a given 1D input histogram has equal bin widths or variable bin widths (probably a function I can call within TH1 framework...)
+
+1b) GetPercentile -- returns the x-value (using bin-center) for a 1D histogram when the integral (from the left) reaches a desired percentile value
+
+1c) GetStatValue -- function used for returning a "statistical value" from an input 1D histogram based on desired choices (used for useful plotting of 3D histograms)
+
+1d) CalculateRecoil -- Takes input transverse vector (magnitude and phi) and calculates the desired recoil component relative to some axis
+
+1e) PrintHistogram -- Prints out the information for an input histogram (TH1, 2, or 3 dim)
+
+1f) SetMCStatSystHist -- Takes in input histogram and turns it into central value +- stat error (with + or - chosen) -- used for MC stat shape systematic
+
+1g) SetHistStatErrFromMCStatSyst -- Basically reverse the above function, reading an input histogram which is CV + stat. error and turning into histogram with bin content equal to CV and bin stat. error equal to stat. error
+
+1h) FixMCStatSystDownHistFromCVStatErr -- looks like it's the above but the other direction
+
+1i) ZeroOutNegHistBins -- zeroes out any bins with negative bin content in the input TH1
+
+2) Edited pre-existing functions
+
+2a) BinFinder -- added boolean for whether or not to do the "bad bin check"
+
+2b) PassFailCut -- added in option for Verbosity
+
+######################################
+HeaderFiles/GeneralPlotDrawingFunctions.h
+######################################
+
+1) Added in function
+
+1a) SetProjectionLatex -- used for showing the 3D projections used to make the 1D histogram being shown (3D shape stuff)
+
+2) Edited pre-existing functions
+
+2a) SetGenCutLatex -- changed the xLB and yLB parameters for where the text gets shown
+
+######################################
+HeaderFiles/HistogramPlottingFunctions.h
+######################################
+
+1) Added in functions, all of the form "AddIn${MT2}_TopBounds${numDim}DShape, where ${MT2} is either KT2 or MT2bb_ZMET, or MT2lblb, or MT2ll, and ${numDim} is 2 or 3 (used for setting up custom binnings for the 2D/3D shape stuff)
+
+
+######################################
+HeaderFiles/HistogramPlottingStructs.h
+######################################
+
+1) In the SpecialAxisBounds struct, added in functions for the histogram custom binnings
+
+
+######################################
+HeaderFiles/HistogramPlottingStructs_StopSpecific.h
+######################################
+
+1) In the StopHistBinBounds struct, added in some additional guys for the sqrt(pT) and sqrt(pX||py) histograms (jet resolution for example)
+
+
+######################################
+HeaderFiles/HistogramStyleFunctions.h
+######################################
+
+1) Added in functions, SetCanvasColor, SetAxisColor, SetBlackPlot, used to help streamline setting up plot style
+
+
+######################################
+HeaderFiles/HistogramSystematics2.h
+######################################
+
+1) Added in functions
+
+1a) CombineSystematics -- Function that takes as input central value histogram and vector of systematic varied histograms to combine them into set of two output histograms accounting for full systematic variation
+
+2) Edited some pre-existing functions
+2a) pointSystErr -- Added some verbosity statements
+2b) FracGraph -- fixed a bug in which up/down error it was showing
+
+######################################
+HeaderFiles/HistogramSystematicsStructs.h
+######################################
+
+1) Added in functions in ValError struct
+1a) Scale -- scales the variables in the ValError struct by a constant
+1b) QuadSub -- subtracts another ValError in quadrature
+1c) SubtractVE -- subtracts another ValError either linearly or in quadrature (if latter, calls QuadSub)
+
+2) In SampleSystematicsInfo struct
+2a) changed number of systs
+2b) Added in some additional handles for the FakeLepton Systematic
+2c) Added in function SetSystGraphsShapes -- sets up the Systematic Error Graphs for input MC shapes (used when plotting)
+
+3) Added a function SSISubtraction -- Function take a "composite" SSI, inSSIToSubtractFrom, that contains a sub-sample SSI, "inSSIToSubtract" and subtract the sub-sample SSI from the "composite" SSI for the Stat Error and Systematic Errors
+
+######################################
+HeaderFiles/NewOviStopPlotFillerRunOnSkim_wSyst.h
+######################################
+
+Added in include statement for StopFunctions_HadronicResolution.h
+
+######################################
+HeaderFiles/NewOviStopPlotSkimmer_Legacy.h
+######################################
+
+Added in include statements for StopFunctions_HadronicResolution.h, StopFakeLeptonFunctions.h, and StopPlotHaddInfo.h
+
+######################################
+HeaderFiles/PlotDisplayStructs.h
+######################################
+
+1) In the struct AxisProjInfo (API)
+1a) New function GetCanvNameAPI -- returns a string for the canvas name based on the API parameters
+1b) "if/then" catch in the SetAxesProjBounds_Agglomerate function
+1c) SetAxesProjBounds_Agglomerate -- sets the title of output histogram
+1d) SetAxesProjBounds_IndDist -- sets the title of output histogram
+1e) GetProjectionString -- new function that returns a "projection string" based on the API parameters
+
+2) In the struct HistDisplayParams
+2a) Added DefaultVarVals function
+2b) Added function SetParamsFromCommandLine -- that reads input command line and sets parameters
+2c) Added the variable whichIndMCSort, used for deciding whether to sort the individual MC (when plotting THStack) by integrals or fixed organization
+
+3) In the struct IndSamplePlotInfo (ISPI)
+3a) weight_CentVal_StatErr -- weight used for scaling the histograms to account for stat. error
+3b) New function PrintBinContent -- Prints out the bin content of each individual histogram saved in the ISPI (using PrintHistogram function)
+3c) ZeroOutNegBins -- Calls the ZeroOutNegHistBins function for each individual histogram saved in the ISPI
+3d) SetSampleType -- slightly updated the VV names array
+3e) SetSystHistAsClone -- slightly changed function in two ways
+3e1) function now cares about whether or not one is dealing with a shape systematic histogram
+3e2) Added in the accounting for the Data-driven normalization systematic histograms
+3f) New function GrabHistSystShape -- Function used to grab the shape systematic histograms for a given ISPI (used when plotting Shape plots)
+3g) New function CloneHists_NonTTBar -- Function that grabs all the non-ttbar histograms and clones them into a composite Non-TTBar histogram
+3h) New function CalculateSystsShapes -- Function that calls the SetSystGraphsShapes function for the SSI saved inside the ISPI
+
+4) In the struct HistogramDisplayStructs (HDS)
+4a) New SampDisplay nonTTBarSD -- used for nonTTBar MC
+4b) Changed WriteToFile
+4b1) added in verbosity option
+4b2) Added in histogram printing as checks
+4b3) Added in saving of NonTTBar Composite
+4c) New function ZeroOutNegBins -- Calls ZeroOutNegBins on each ISPI in the HDS
+4d) Changed DoProjection function -- added in variability for how ind MC are sorted (based on the whichIndMCSort from input HistDisplayParams)
+4e) New function CalculateSystsCompShape -- calls CalculateSystsShapes for compSamp.first
+4f) Changed function CalculateSysts_IndMC -- included calculating systs for the NonTTBar Samp Display
+4g) New function SetInputFileShape -- sets input files for the shape histograms
+4h) New function GrabCentralValues -- grabs central value histograms
+4i) New function GrabSystValues -- same as 4h) but for systematic shifts
+
+5) In the struct GlobalHistPlotInfo (GHPI)
+5a) New function AddProjectionLatexStrings -- adds latex strings based on the API projection values

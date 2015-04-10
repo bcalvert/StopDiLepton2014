@@ -112,6 +112,11 @@ inline void pointSystErr(Double_t centVal, Double_t shiftUp, Double_t shiftDown,
                 break;
         }
     }
+    if (doVerbosity) {
+        cout << "whichErrCase " << whichErrCase << endl;
+        cout << "errUp " << errUp << endl;
+        cout << "errDown " << errDown << endl;
+    }
 }
 
 TGraphAsymmErrors * GraphSystErrorSet_SingleSource(TH1 * HistCentralVal, TH1 * HistShiftUp, TH1 * HistShiftDown, TString systString, bool doSymError = false, int doVerbosity = -1) {
@@ -387,7 +392,7 @@ TGraphAsymmErrors * NormalizationSystGraph(TH1 * centValMCHist, float normFactor
 }
 
 
-inline TGraphAsymmErrors * FracGraph(TH1 * centValMCHist, TGraphAsymmErrors * errGraphSystPlusStat, bool doAbsRatio, float yAxisRange) {
+inline TGraphAsymmErrors * FracGraph(TH1 * centValMCHist, TGraphAsymmErrors * errGraphJustSyst, bool doAbsRatio, float yAxisRange) {
     double x, y;
     double rel, relUpErr, relDownErr;
     Double_t binWidth;
@@ -415,11 +420,11 @@ inline TGraphAsymmErrors * FracGraph(TH1 * centValMCHist, TGraphAsymmErrors * er
             relDownErr = 0;
         }
         else {
-//            relUpErr = (doAbsRatio) ? errGraphSystPlusStat->GetErrorYlow(i) :  errGraphSystPlusStat->GetErrorYhigh(i);
-            relUpErr = (!doAbsRatio) ? errGraphSystPlusStat->GetErrorYlow(i) :  errGraphSystPlusStat->GetErrorYhigh(i);
+//            relUpErr = (doAbsRatio) ? errGraphJustSyst->GetErrorYlow(i) :  errGraphJustSyst->GetErrorYhigh(i);
+            relUpErr = (!doAbsRatio) ? errGraphJustSyst->GetErrorYlow(i) :  errGraphJustSyst->GetErrorYhigh(i);
             relUpErr /= centValMCHist->GetBinContent(i);
-//            relDownErr = (doAbsRatio) ? errGraphSystPlusStat->GetErrorYhigh(i) :  errGraphSystPlusStat->GetErrorYlow(i);
-            relDownErr = (!doAbsRatio) ? errGraphSystPlusStat->GetErrorYhigh(i) :  errGraphSystPlusStat->GetErrorYlow(i);
+//            relDownErr = (doAbsRatio) ? errGraphJustSyst->GetErrorYhigh(i) :  errGraphJustSyst->GetErrorYlow(i);
+            relDownErr = (!doAbsRatio) ? errGraphJustSyst->GetErrorYhigh(i) :  errGraphJustSyst->GetErrorYlow(i);
             relDownErr /= centValMCHist->GetBinContent(i);
         }
         ratioGraph->SetPointEYhigh(i, relUpErr);
@@ -432,7 +437,7 @@ inline TGraphAsymmErrors * FracGraph(TH1 * centValMCHist, TGraphAsymmErrors * er
 }
 
 
-inline TGraphAsymmErrors * FracGraph(TH1 * centValMCHist, TGraphAsymmErrors * errGraphSystPlusStat, bool doAbsRatio, float yAxisLB, float yAxisUB) {
+inline TGraphAsymmErrors * FracGraph(TH1 * centValMCHist, TGraphAsymmErrors * errGraphJustSyst, bool doAbsRatio, float yAxisLB, float yAxisUB) {
     double x, y;
     double rel, relUpErr, relDownErr;
     Double_t binWidth;
@@ -462,11 +467,11 @@ inline TGraphAsymmErrors * FracGraph(TH1 * centValMCHist, TGraphAsymmErrors * er
             relDownErr = 0;
         }
         else {
-            //            relUpErr = (doAbsRatio) ? errGraphSystPlusStat->GetErrorYlow(i) :  errGraphSystPlusStat->GetErrorYhigh(i);
-            relUpErr = (!doAbsRatio) ? errGraphSystPlusStat->GetErrorYlow(i) :  errGraphSystPlusStat->GetErrorYhigh(i);
+            //            relUpErr = (doAbsRatio) ? errGraphJustSyst->GetErrorYlow(i) :  errGraphJustSyst->GetErrorYhigh(i);
+            relUpErr = (!doAbsRatio) ? errGraphJustSyst->GetErrorYlow(i) :  errGraphJustSyst->GetErrorYhigh(i);
             relUpErr /= centValMCHist->GetBinContent(i);
-            //            relDownErr = (doAbsRatio) ? errGraphSystPlusStat->GetErrorYhigh(i) :  errGraphSystPlusStat->GetErrorYlow(i);
-            relDownErr = (!doAbsRatio) ? errGraphSystPlusStat->GetErrorYhigh(i) :  errGraphSystPlusStat->GetErrorYlow(i);
+            //            relDownErr = (doAbsRatio) ? errGraphJustSyst->GetErrorYhigh(i) :  errGraphJustSyst->GetErrorYlow(i);
+            relDownErr = (!doAbsRatio) ? errGraphJustSyst->GetErrorYhigh(i) :  errGraphJustSyst->GetErrorYlow(i);
             relDownErr /= centValMCHist->GetBinContent(i);
         }
         ratioGraph->SetPointEYhigh(i, relUpErr);
@@ -510,4 +515,49 @@ void SmoothedTGraph(TGraphAsymmErrors * inputTGraph) {
     UpErr->Smooth(NSmooth);
     DownErr->Smooth(NSmooth);
     SetPointsAsymmGraphfromHists(inputTGraph, UpErr, DownErr);
+}
+
+void CombineSystematics(TH1 * inputHistCV, TH1 * outputHist_SystVarUp, TH1 * outputHist_SystVarDown, vector<TH1 *> * vecInputHist_SystVarUp, vector<TH1 *> * vecInputHist_SystVarDown, bool doVerbosity = false) {
+    
+    //Function that takes as input central value histogram and vector of systematic varied histograms to combine them into set of two output histograms accounting for full systematic variation
+    double currErrSum_SystVarUp, currErrSum_SystVarDown;
+    
+    int nBinsX = inputHistCV->GetNbinsX();
+    int nBinsY = inputHistCV->GetNbinsY();
+    int nBinsZ = inputHistCV->GetNbinsZ();
+    
+    double currYieldCV, currYieldSystUp, currYieldSystDown;
+    double currErr_SystUp, currErr_SystDown;
+    
+    unsigned int nSyst = vecInputHist_SystVarDown->size();
+    
+    for (int iBinX = 0; iBinX <= nBinsX + 1; ++iBinX) {
+        for (int iBinY = 0; iBinY <= nBinsY + 1; ++iBinY) {
+            for (int iBinZ = 0; iBinZ <= nBinsZ + 1; ++iBinZ) {
+                currErrSum_SystVarUp = 0.0;
+                currErrSum_SystVarDown = 0.0;
+                
+                currYieldCV = inputHistCV->GetBinContent(iBinX, iBinY, iBinZ);
+                for (unsigned int iSyst = 0; iSyst < nSyst; ++iSyst) {
+                    currYieldSystUp = vecInputHist_SystVarUp->at(iSyst)->GetBinContent(iBinX, iBinY, iBinZ);
+                    currYieldSystDown = vecInputHist_SystVarDown->at(iSyst)->GetBinContent(iBinX, iBinY, iBinZ);
+                    pointSystErr(currYieldCV, currYieldSystUp, currYieldSystDown, currErr_SystUp, currErr_SystDown, false, doVerbosity);
+                    if (doVerbosity) {
+                        cout << "iSyst " << iSyst << endl;
+                        cout << "iBinX " << iBinX << endl;
+                        cout << "iBinY " << iBinY << endl;
+                        cout << "iBinZ " << iBinZ << endl;
+                        cout << "currYieldCV " << currYieldCV << endl;
+                        cout << "currYieldSystUp " << currYieldSystDown << endl;
+                        cout << "currErr_SystUp " << currErr_SystUp << endl;
+                        cout << "currErr_SystDown " << currErr_SystDown << endl;
+                    }
+                    currErrSum_SystVarUp += TMath::Power(currErr_SystUp, 2);
+                    currErrSum_SystVarDown += TMath::Power(currErr_SystDown, 2);
+                }
+                outputHist_SystVarUp->SetBinContent(iBinX, iBinY, iBinZ, currYieldCV + TMath::Sqrt(currErrSum_SystVarUp));
+                outputHist_SystVarDown->SetBinContent(iBinX, iBinY, iBinZ, currYieldCV - TMath::Sqrt(currErrSum_SystVarDown));
+            }
+        }
+    }
 }

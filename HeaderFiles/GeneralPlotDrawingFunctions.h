@@ -1,11 +1,25 @@
+#include <sstream>
+
 // Set of very general functions used as part of making plots -- a lot of these are called in other functions/header files
+
+void SetProjectionLatex(LatexString * inLS, int whichProjection, TString cutUsed = "") {
+    bool useNDC = true;
+    float textSize = 0.04;
+    int alignText = 11;
+    float xLB = 0.22;
+    float yLB = whichProjection ? 0.76 : 0.86;
+    TString textToShow = cutUsed;
+    Color_t latexColor = kBlack;
+    
+    inLS->SetLatex(useNDC, textSize, alignText, xLB, yLB, textToShow, latexColor);
+}
 
 void SetGenCutLatex(LatexString * inLS, TString cutUsed = "") {
     bool useNDC = true;
     float textSize = 0.04;
     int alignText = 11;
-    float xLB = 0.2;
-    float yLB = 0.96;
+    float xLB = 0.22;
+    float yLB = 0.86;
     TString textToShow = cutUsed;
     Color_t latexColor = kBlack;
     

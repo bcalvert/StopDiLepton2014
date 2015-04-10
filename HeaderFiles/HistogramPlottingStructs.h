@@ -73,18 +73,31 @@ struct SpecialAxisBounds {
         vecNumBins.resize(0);
         
 
-        AddInMT2llBounds_NonControl(&vecVecBinEdges, &vecNumBins);
-        AddInMT2llBounds_Control(&vecVecBinEdges, &vecNumBins);
+        AddInMT2llBounds_NonControl(&vecVecBinEdges, &vecNumBins); //1
+        AddInMT2llBounds_Control(&vecVecBinEdges, &vecNumBins); //2
 
-        AddInMT2lblbBounds_NonControl(&vecVecBinEdges, &vecNumBins);
-        AddInMT2lblbBounds_Control(&vecVecBinEdges, &vecNumBins);
+        AddInMT2lblbBounds_NonControl(&vecVecBinEdges, &vecNumBins); //3
+        AddInMT2lblbBounds_Control(&vecVecBinEdges, &vecNumBins); //4
 
-        AddInMT2bb_ZMETBounds_NonControl(&vecVecBinEdges, &vecNumBins);
-        AddInMT2bb_ZMETBounds_Control(&vecVecBinEdges, &vecNumBins);
+        AddInMT2bb_ZMETBounds_NonControl(&vecVecBinEdges, &vecNumBins); //5
+        AddInMT2bb_ZMETBounds_Control(&vecVecBinEdges, &vecNumBins); //6
         
-        AddInKT2_TopBounds(&vecVecBinEdges, &vecNumBins);
+        AddInKT2_TopBounds(&vecVecBinEdges, &vecNumBins); //7
 
-        AddInDilepPtBounds(&vecVecBinEdges, &vecNumBins);
+        AddInDilepPtBounds(&vecVecBinEdges, &vecNumBins); //8
+        
+        
+        AddInMT2llBounds2DShape(&vecVecBinEdges, &vecNumBins); //9
+        AddInMT2llBounds3DShape(&vecVecBinEdges, &vecNumBins); //10
+        
+        AddInMT2lblbBounds2DShape(&vecVecBinEdges, &vecNumBins); //11
+        AddInMT2lblbBounds3DShape(&vecVecBinEdges, &vecNumBins); //12
+        
+        AddInMT2bb_ZMETBounds2DShape(&vecVecBinEdges, &vecNumBins); //13
+        AddInMT2bb_ZMETBounds3DShape(&vecVecBinEdges, &vecNumBins); //14
+        
+        AddInKT2_TopBounds2DShape(&vecVecBinEdges, &vecNumBins); //15
+        AddInKT2_TopBounds3DShape(&vecVecBinEdges, &vecNumBins); //16
     }
     
     void PrintVals() {
@@ -199,7 +212,6 @@ typedef struct HistogramT {
         stringAxis += yAxis.axisLabel;
         stringAxis += ";";
         stringAxis += zAxis.axisLabel;
-        stringAxis += ";";
     }
     void SetName(TString string1 = "", TString string2 = "", TString string3 = "") {
         name = "h_";

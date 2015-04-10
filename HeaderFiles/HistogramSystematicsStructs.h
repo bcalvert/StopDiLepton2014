@@ -31,6 +31,11 @@ typedef struct ValError {
             return outVal;
         }
     }
+    void Scale(float scaleFactor) {
+        centVal *= scaleFactor;
+        upError *= scaleFactor;
+        downError *= scaleFactor;
+    }
     void SetStatError(valPlusErr * inVPE) {
         centVal = inVPE->first;
         upError = inVPE->second;
@@ -149,6 +154,21 @@ typedef struct ValError {
         upError = TMath::Sqrt(upErrSum);
         downError = TMath::Sqrt(downErrSum);
     }
+    void QuadSub(ValError * inErrToSubtractWithCare) {
+        float upErrSum = 0.0, downErrSum = 0.0;
+        upErrSum += upError*upError;
+        upErrSum -= inErrToSubtractWithCare->upError*inErrToSubtractWithCare->upError;
+        
+        downErrSum += downError*downError;
+        downErrSum -= inErrToSubtractWithCare->downError*inErrToSubtractWithCare->downError;
+        if (upErrSum < 0 || downErrSum < 0) {
+            cout << "the errors for the inErr you're subtracting are larger than the original!" << endl;
+            cout << "upErrSum " << upErrSum << endl;
+            cout << "downErrSum " << downErrSum << endl;
+        }
+        upError = TMath::Sqrt(upErrSum);
+        downError = TMath::Sqrt(downErrSum);
+    }
     float SymError(int SymType = 0) {
         float outError;
         //SymType: 0: True average, 1: Geometric Average, 2: Quadrature average
@@ -230,7 +250,7 @@ typedef struct ValError {
                     //sprintf(buf,"CentVal: %0.4f, UpErr: %0.4f, DownErr: %0.4f", centVal, 1 + (upError/centVal), 1 + (downError/centVal));
                     
                     if  (centVal > 0) {
-                        sprintf(buf,"CentVal: %0.4f, UpErr: %0.4f, DownErr: %0.4f", centVal, 1 + (upError/centVal), 1 + (downError/centVal));
+                        sprintf(buf,"CentVal: %0.4f, UpErr: %0.4f, DownErr: %0.4f", centVal, 1 + (upError/centVal), 1 - (downError/centVal));
                     }
                     else {
                         sprintf(buf,"CentVal: %0.4f, UpErr: %0.4f, DownErr: %0.4f", 0.00, 1.00, 1.00);
@@ -243,6 +263,20 @@ typedef struct ValError {
                     cout << "Name: " << inName << ", Syst: " << systName << ", " << buf << endl;
                 }
             }
+        }
+    }
+    void SubtractVE(ValError * inVEToSubtract, int typeSub) {
+        //typeSub = 0 for straight subtraction or 1 for quadrature subtraction
+        centVal -= inVEToSubtract->centVal;
+        if (typeSub == 0) {
+            upError -= inVEToSubtract->upError;
+            downError -= inVEToSubtract->downError;
+        }
+        else if (typeSub == 1) {
+            QuadSub(inVEToSubtract);
+        }
+        else {
+            cout << "typeSub needs to be 0 or 1; it is " << typeSub << endl;
         }
     }
 } ValError;
@@ -275,7 +309,18 @@ ValError MakeFullSyst(ValError * inValCentVal, vector<ValError> * inVecSystUp, v
         currVE.DefaultVals();
         currVE.centVal = outVal.centVal;
         currVE.SetSystError(&inVecSystUp->at(iVE), &inVecSystDown->at(iVE), doVerb);
+        if (doVerb) {
+            cout << "iVE " << iVE << endl;
+            cout << "outVal upError pre-Add " << outVal.upError << endl;
+            cout << "outVal downError pre-Add " << outVal.downError << endl;
+            cout << "currVE upError " << currVE.upError << endl;
+            cout << "currVE downError " << currVE.downError << endl;
+        }
         outVal = outVal + currVE;
+        if (doVerb) {
+            cout << "outVal upError post-Add " << outVal.upError << endl;
+            cout << "outVal downError post-Add " << outVal.downError << endl;
+        }
     }
     return outVal;
 }
@@ -389,15 +434,24 @@ typedef struct SampleSystematicsInfo {
         TH1F * histSystUp, * histSystDown;
         TString baseSearchString;
         
-        const int numSysts = 8;
-        bool isSmearSyst[numSysts] = {false, false, false, false, true, true, false, false};
-        TString namesSysts[numSysts] = {"LepEffSF", "LepES", "JetES", "BTagSF", "UncES", "JetSmear", "genRecoilRW", "EWKXSec"};
+//        const int numSysts = 8;
+        const int numSysts = 11;
+//        bool isSmearSyst[numSysts] = {false, false, false, false, true, true, false, false};
+        bool isSmearSyst[numSysts] = {false, false, false, false, true, true, false, false, false, false, false};
+//        TString namesSysts[numSysts] = {"LepEffSF", "LepES", "JetES", "BTagSF", "UncES", "JetSmear", "genRecoilRW", "EWKXSec"};
+        TString namesSysts[numSysts] = {"LepEffSF", "LepES", "JetES", "BTagSF", "UncES", "JetSmear", "genRecoilRW", "TTBarNorm", "DYNorm", "EWKNorm", "FakeLepSyst"};
         
         TGraphAsymmErrors * currFracRatioGraph;
         TGraphAsymmErrors * errCompStatCentVal = ClonePoints(inputBaseMCHist);
         
         TGraphAsymmErrors * errSystQuadSum, * errSystQuadSum_pStat;
         TGraphAsymmErrors * errCurrSyst, * errCurrSyst_pStat;
+        
+        const int numFakeSysts = 3;
+        TString nameFakeSysts[numFakeSysts] = {"FakeLepStat", "FakeLepFakeRateSyst", "FakeLepPromptRateSyst"};
+        vector<TGraphAsymmErrors *> errFakeComp;
+        TGraphAsymmErrors * errCurrFakeSyst;
+        
         
         const int numBTagSysts = 2;
         TString nameBTagSysts[numBTagSysts] = {"BTagEffSF", "BMisTagSF"};
@@ -427,6 +481,27 @@ typedef struct SampleSystematicsInfo {
                 errCurrSyst = GraphSystErrorSumErrors(errCompStatCentVal, namesSysts[iSyst], &errBTagComp, false, inputBaseMCHist, doVerbosity);
                 if (doVerbosity) {
                     cout << "name of btag combo " << errCurrSyst->GetName() << endl;
+                }
+            }
+            else if (namesSysts[iSyst].Contains("FakeLepSyst")) {
+                for (int iFakeSyst = 0; iFakeSyst < numFakeSysts; ++iFakeSyst) {
+                    baseSearchString = nameFakeSysts[iFakeSyst] + TString("Shift");
+                    indexSystUp = SystHistFinderOneDee(vecInputMC_SystVarUp, baseSearchString + TString("Up"), doVerbosity);
+                    indexSystDown = SystHistFinderOneDee(vecInputMC_SystVarDown, baseSearchString + TString("Down"), doVerbosity);
+                    if (indexSystUp == -1 || indexSystDown == -1) {
+                        cout << "something wiggedy with syst indices " << endl;
+                    }
+                    histSystUp = vecInputMC_SystVarUp->at(indexSystUp);
+                    histSystDown = vecInputMC_SystVarDown->at(indexSystDown);
+                    errCurrFakeSyst = GraphSystErrorSet_SingleSource(inputBaseMCHist, histSystUp, histSystDown, nameFakeSysts[iFakeSyst], doSymErr, doVerbosity);
+                    errFakeComp.push_back(errCurrFakeSyst);
+                }
+                if (doVerbosity) {
+                    cout << "making the combo Fake syst " << endl;
+                }
+                errCurrSyst = GraphSystErrorSumErrors(errCompStatCentVal, namesSysts[iSyst], &errFakeComp, false, inputBaseMCHist, doVerbosity);
+                if (doVerbosity) {
+                    cout << "name of Fake combo " << errCurrSyst->GetName() << endl;
                 }
             }
             else if (namesSysts[iSyst].Contains("EWKXSec")) {
@@ -486,6 +561,129 @@ typedef struct SampleSystematicsInfo {
         
     }
     
+    
+    
+    
+    void SetSystGraphsShapes(TH1F * inputBaseMCHist, vector<TH1F *> * vecInputMC_SystVarUp, vector<TH1F *> * vecInputMC_SystVarDown, Color_t colorErrGraph, bool doAbsRatio, float fracRatioYAxisLB, float fracRatioYAxisUB, bool doSymErr, bool doFracRatio, bool doSmear, bool isEWK = false, bool doStopXSec = true, bool doVerbosity = false) {
+        
+        //would like to do this as a proper setting within the other guy
+        SetVecSizes_SystGraphInfo(0);
+        
+        float normFactor = isEWK ? 0.5 : 0.0;
+        
+        if (doVerbosity) {
+            cout << "normFactor " << normFactor << endl;
+        }
+        
+        int indexSystUp, indexSystDown;
+        TH1F * histSystUp, * histSystDown;
+        TString baseSearchString;
+        
+        //        const int numSysts = 8;
+        const int numSysts = 10;
+        //        bool isSmearSyst[numSysts] = {false, false, false, false, true, true, false, false};
+        bool isSmearSyst[numSysts] = {false, false, false, false, true, true, false, false, false, false};
+        //        TString namesSysts[numSysts] = {"LepEffSF", "LepES", "JetES", "BTagSF", "UncES", "JetSmear", "genRecoilRW", "EWKXSec"};
+        TString namesSysts[numSysts] = {"LepEffSF", "LepES", "JetES", "BTagSF", "UncES", "JetSmear", "genRecoilRW", "TTBarNorm", "DYNorm", "EWKNorm"};
+        
+        TGraphAsymmErrors * currFracRatioGraph;
+        TGraphAsymmErrors * errCompStatCentVal = ClonePoints(inputBaseMCHist);
+        
+        TGraphAsymmErrors * errSystQuadSum, * errSystQuadSum_pStat;
+        TGraphAsymmErrors * errCurrSyst, * errCurrSyst_pStat;
+        
+        const int numBTagSysts = 2;
+        TString nameBTagSysts[numBTagSysts] = {"BTagEffSF", "BMisTagSF"};
+        vector<TGraphAsymmErrors *> errBTagComp;
+        TGraphAsymmErrors * errCurrBTagSyst;
+        
+        int currIndex = -1;
+        
+        for (int iSyst = 0; iSyst < numSysts; ++iSyst) {
+            if (!doSmear && isSmearSyst[iSyst]) continue;
+            if (!doStopXSec && namesSysts[iSyst].Contains("genStopXSec")) continue;
+
+            if (namesSysts[iSyst].Contains("BTagSF")) {
+                for (int iBTagSysts = 0; iBTagSysts < numBTagSysts; ++iBTagSysts) {
+                    baseSearchString = nameBTagSysts[iBTagSysts];
+                    indexSystUp = SystHistFinderOneDee(vecInputMC_SystVarUp, baseSearchString + TString("Up"), doVerbosity);
+                    indexSystDown = SystHistFinderOneDee(vecInputMC_SystVarDown, baseSearchString + TString("Down"), doVerbosity);
+                    if (indexSystUp == -1 || indexSystDown == -1) {
+                        cout << "something wiggedy with syst indices " << endl;
+                    }
+                    histSystUp = vecInputMC_SystVarUp->at(indexSystUp);
+                    histSystDown = vecInputMC_SystVarDown->at(indexSystDown);
+                    errCurrBTagSyst = GraphSystErrorSet_SingleSource(inputBaseMCHist, histSystUp, histSystDown, nameBTagSysts[iBTagSysts], doSymErr, doVerbosity);
+                    //                    cout << "curr Btag up err at point 1 " << errCurrBTagSyst->GetErrorYhigh(1) << endl;
+                    errBTagComp.push_back(errCurrBTagSyst);
+                }
+                if (doVerbosity) {
+                    cout << "making the combo BTag syst " << endl;
+                }
+                errCurrSyst = GraphSystErrorSumErrors(errCompStatCentVal, namesSysts[iSyst], &errBTagComp, false, inputBaseMCHist, doVerbosity);
+                if (doVerbosity) {
+                    cout << "name of btag combo " << errCurrSyst->GetName() << endl;
+                }
+            }
+            else if (namesSysts[iSyst].Contains("EWKXSec")) {
+                errCurrSyst = NormalizationSystGraph(inputBaseMCHist, normFactor);
+            }
+            else {
+                baseSearchString = namesSysts[iSyst];
+                indexSystUp = SystHistFinderOneDee(vecInputMC_SystVarUp, baseSearchString + TString("Up"), doVerbosity);
+                indexSystDown = SystHistFinderOneDee(vecInputMC_SystVarDown, baseSearchString + TString("Down"), doVerbosity);
+                if (indexSystUp == -1 || indexSystDown == -1) {
+                    cout << "something wiggedy with syst indices " << endl;
+                }
+                histSystUp = vecInputMC_SystVarUp->at(indexSystUp);
+                histSystDown = vecInputMC_SystVarDown->at(indexSystDown);
+                errCurrSyst = GraphSystErrorSet_SingleSource(inputBaseMCHist, histSystUp, histSystDown, namesSysts[iSyst], doSymErr, doVerbosity);
+                if (doVerbosity) {
+                    cout << "name for iSyst = " << iSyst << endl;
+                    cout << errCurrSyst->GetName() << endl;
+                }
+            }
+            
+            errCurrSyst_pStat = GraphSystErrorSumErrors(errCompStatCentVal, namesSysts[iSyst], errCurrSyst, inputBaseMCHist);
+            GraphMainAttSet(errCurrSyst, colorErrGraph, 3001, colorErrGraph, 2, kWhite, 0, 0);
+            GraphMainAttSet(errCurrSyst_pStat, colorErrGraph, 3001, colorErrGraph, 2, kWhite, 0, 0);
+            SystErrorGraph.push_back(errCurrSyst);
+            SystPlusStatErrorGraph.push_back(errCurrSyst_pStat);
+            SystName.push_back(namesSysts[iSyst]);
+            if (doFracRatio) {
+                currFracRatioGraph = FracGraph(inputBaseMCHist, errCurrSyst, doAbsRatio, fracRatioYAxisLB, fracRatioYAxisUB);
+                fracRatioSystVec.push_back(currFracRatioGraph);
+            }
+            
+            currIndex++;
+            
+            if (doVerbosity) {
+                cout << "not so quick sanity check " << endl;
+                PrintVec(currIndex, doFracRatio);
+            }
+        }
+        /*
+         if (doVerbosity) {
+         for (unsigned int iSyst = 0; iSyst < SystErrorGraph.size(); ++iSyst) {
+         cout << "name?" << endl;
+         cout << SystErrorGraph[iSyst].GetName() << endl;
+         }
+         }
+         */
+        errSystQuadSum = GraphSystErrorSumErrors(errCompStatCentVal, TString("FullSyst"), &SystErrorGraph, false, inputBaseMCHist, doVerbosity);
+        errSystQuadSum_pStat = GraphSystErrorSumErrors(errCompStatCentVal, TString("FullSyst"), &SystErrorGraph, true, inputBaseMCHist, doVerbosity);
+        GraphMainAttSet(errSystQuadSum, colorErrGraph, 3001, colorErrGraph, 2, kWhite, 0, 0);
+        GraphMainAttSet(errSystQuadSum_pStat, colorErrGraph, 3001, colorErrGraph, 2, kWhite, 0, 0);
+        SystErrorGraph.push_back(errSystQuadSum);
+        SystPlusStatErrorGraph.push_back(errSystQuadSum_pStat);
+        SystName.push_back("FullSyst");
+        if (doFracRatio) {
+            currFracRatioGraph = FracGraph(inputBaseMCHist, errSystQuadSum, doAbsRatio, fracRatioYAxisLB, fracRatioYAxisUB);
+            fracRatioSystVec.push_back(currFracRatioGraph);
+        }
+        
+    }
+    
     void PrepValErrVecSizes() {
         SystError.resize(SystErrorGraph.size());
         SystPlusStatError.resize(SystPlusStatErrorGraph.size());
@@ -509,4 +707,29 @@ typedef struct SampleSystematicsInfo {
             }
         }
     }
+    
+
 } SampleSystematicsInfo;
+
+
+SampleSystematicsInfo SSISubtraction(SampleSystematicsInfo * inSSIToSubtractFrom, SampleSystematicsInfo * inSSIToSubtract, TString subName) {
+    //Function take a "composite" SSI, inSSIToSubtractFrom, that contains a sub-sample SSI, "inSSIToSubtract"
+    //and subtract the sub-sample SSI from the "composite" SSI for the Stat Error and Systematic Errors
+    
+    unsigned int numSystsInSSIToSubtractFrom = inSSIToSubtractFrom->SystError.size();
+    unsigned int numSystsInSSIToSubtract = inSSIToSubtract->SystError.size();
+    
+    if (numSystsInSSIToSubtractFrom != numSystsInSSIToSubtract) {
+        cout << "the two SSIs don't have same number of systematics...first one " << numSystsInSSIToSubtractFrom << " while second has " << numSystsInSSIToSubtract << endl;
+    }
+    
+    SampleSystematicsInfo outSSI = *inSSIToSubtractFrom;
+    outSSI.Name += "Minus";
+    outSSI.Name += subName;
+    
+    outSSI.StatError.SubtractVE(&inSSIToSubtract->StatError, 1);
+    for (unsigned int iSyst = 0; iSyst < numSystsInSSIToSubtract; ++iSyst) {
+        outSSI.SystError[iSyst].SubtractVE(&inSSIToSubtract->SystError[iSyst], 0);
+    }
+    return outSSI;
+}

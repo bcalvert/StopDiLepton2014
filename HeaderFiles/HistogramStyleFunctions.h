@@ -89,3 +89,16 @@ inline TH1D * HistZeroOutRange(TH1D * inputHist, int XLB, int XUB, TString name)
     }
     return OutHist;
 }
+void SetCanvasColor(TCanvas * inCanv) {
+    inCanv->SetFillColor(kBlack);
+}
+void SetAxisColor(TAxis * inAxis) {
+    inAxis->SetLabelColor(kWhite);
+    inAxis->SetAxisColor(kWhite);
+    inAxis->SetTitleColor(kWhite);
+}
+void SetBlackPlot(TCanvas * inCanv, TH1 * inputHist) {
+    SetCanvasColor(inCanv);
+    SetAxisColor(inputHist->GetXaxis());
+    SetAxisColor(inputHist->GetYaxis());
+}
