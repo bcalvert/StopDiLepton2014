@@ -5,6 +5,38 @@
 
 using namespace std;
 
+inline void SetMapIntBoolFakeLep(mIB &inMapIntBool, int typeMapIntBool) {
+    int numSysts = 3;
+    int systFakeStat = 1;
+    int systFakeSystFakeRate = 2;
+    int systFakeSystPromptRate = 3;
+    inMapIntBool[0] = false; //central value should never grab syst
+    mIB::iterator x;
+    for (int iSyst = 1; iSyst <= numSysts; ++iSyst) {
+        switch (typeMapIntBool) {
+            case 0:
+                inMapIntBool[iSyst] = true;
+                break;
+            default:
+                inMapIntBool[iSyst] = false;
+                break;
+        }
+    }
+}
+
+inline void SetMapIntBoolPDF(mIB &inMapIntBool) {
+    int numNormSysts = 1;
+    int numSysts_CT10 = 23;
+    int numSysts_MSTW = 25;
+    int numSysts_NNPDF = 50;
+    int numSystsTotal = numNormSysts + numSysts_CT10 + numSysts_MSTW + numSysts_NNPDF;
+
+    inMapIntBool[0] = false; //central value should never grab syst
+    for (int iSyst = 1; iSyst <= numSystsTotal; ++iSyst) {
+        inMapIntBool[iSyst] = true;
+    }
+}
+
 inline void SetMapIntBool(mIB &inMapIntBool, int typeMapIntBool, bool isSmear = false) {
     // Set up the map of systematic integers to booleans
     
@@ -104,6 +136,36 @@ inline void SetMapIntBool(mIB &inMapIntBool, int typeMapIntBool, bool isSmear = 
 /************************************************************************************/
 // Set the mapping of systematic designating integer to the appropriate struct pointer
 /************************************************************************************/
+
+inline void SetBEIMapPDF(mapIntBEI &inMapIntBEI, BasicEventInfo * inBEICentVal, vector<BasicEventInfo> * inBEISystVecShiftUp, vector<BasicEventInfo> * inBEISystVecShiftDown, int numSysts, mIB * useSystMapThisBEI) {
+    bool useSyst = false;
+    mIB::iterator xIter;
+    for (int iSyst = 0; iSyst <= numSysts; ++iSyst) {
+        //        cout << "iSyst " << iSyst << endl;
+        //        cout << "test " << useSystMapThisBEI->size() << endl;
+        xIter = useSystMapThisBEI->find(iSyst);
+        //        cout << "test 2 " << endl;
+        if (xIter != useSystMapThisBEI->end()) {
+            useSyst = xIter->second;
+            //            cout << "found it! " << iSyst << endl;
+            //            cout << "useSyst value is " << useSyst << endl;
+        }
+        else {
+            // not in the map so assume central value
+            useSyst = false;
+        }
+        if (useSyst) {
+            inMapIntBEI[iSyst] = &inBEISystVecShiftUp->at(iSyst);
+            inMapIntBEI[-1 * iSyst] = &inBEISystVecShiftDown->at(iSyst);
+        }
+        else {
+            inMapIntBEI[iSyst] = inBEICentVal;
+            if (iSyst != 0) {
+                inMapIntBEI[-1 * iSyst] = inBEICentVal;
+            }
+        }
+    }
+}
 
 inline void SetBEIMap(mapIntBEI &inMapIntBEI, BasicEventInfo * inBEICentVal, vector<BasicEventInfo> * inBEISystVecShiftUp, vector<BasicEventInfo> * inBEISystVecShiftDown, int numSysts, mIB * useSystMapThisBEI) {
     bool useSyst = false;   

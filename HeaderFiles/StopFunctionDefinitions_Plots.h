@@ -175,7 +175,7 @@ inline void SetHistTVec_Inclusive_Smeared(vector<HistogramT> * inHistTVec, StopH
             break;
     }
 }
-inline void AddSystHists(vector<HistogramT> * outputHistTVec, vector<HistogramT> * inputHistTVec, vector<SystT> * inputSystTVec, bool isSignal, bool doVerbosity = false) {
+inline void AddSystHists(vector<HistogramT> * outputHistTVec, vector<HistogramT> * inputHistTVec, vector<SystT> * inputSystTVec, bool isData, bool isSignal, bool doVerbosity = false) {
     TString currSystName, currHistName;
     HistogramT currHistT;
     for (unsigned int iHist = 0; iHist < inputHistTVec->size(); ++iHist) {        
@@ -187,6 +187,12 @@ inline void AddSystHists(vector<HistogramT> * outputHistTVec, vector<HistogramT>
                 //11/10/14 -- decommented this because it doesn't work
                 if ((currSystName.Contains("Smear") || currSystName.Contains("UncES")) && !(currHistName.Contains("Smear"))) continue;
                 if (currSystName.Contains("genStop") && !isSignal) continue;
+                if (currSystName.Contains("Fake") && !isData) {
+                    continue;
+                }
+                else if (!currSystName.Contains("Fake") && isData) {
+                    continue;
+                }
                 currHistT = inputHistTVec->at(iHist);
                 if (doVerbosity) {
                     cout << "in adding systematics, currHistT name is " << currHistT.name << endl;
@@ -252,15 +258,30 @@ inline void SetSubSampVec(vector<SampleT> * subSampVec, int whichSubSampType = -
             }
         }
     }            
-    SampleT events_ZCR; events_ZCR.histNameSuffix = "_ZCR"; events_ZCR.histXaxisSuffix = ""; 
-    events_ZCR.histYaxisSuffix = ""; events_ZCR.histZaxisSuffix = "";
-    events_ZCR.whichdiLepType = -1; events_ZCR.doZVeto = 0; events_ZCR.cutNJets = 2; events_ZCR.cutNBJets = -1; events_ZCR.cutMET = 40.;
-    events_ZCR.blindDataChannel = 1;
+    SampleT events_outZ_ZCR; events_outZ_ZCR.histNameSuffix = "_outZ_ZCR"; events_outZ_ZCR.histXaxisSuffix = "";
+    events_outZ_ZCR.histYaxisSuffix = ""; events_outZ_ZCR.histZaxisSuffix = "";
+    events_outZ_ZCR.whichdiLepType = -1; events_outZ_ZCR.doZVeto = 1; events_outZ_ZCR.cutNJets = 2; events_outZ_ZCR.cutNBJets = -1; events_outZ_ZCR.cutMET = 40.;
+    events_outZ_ZCR.blindDataChannel = 1;
+    
+    SampleT events_inZ_ZCR; events_inZ_ZCR.histNameSuffix = "_inZ_ZCR"; events_inZ_ZCR.histXaxisSuffix = "";
+    events_inZ_ZCR.histYaxisSuffix = ""; events_inZ_ZCR.histZaxisSuffix = "";
+    events_inZ_ZCR.whichdiLepType = -1; events_inZ_ZCR.doZVeto = 0; events_inZ_ZCR.cutNJets = 2; events_inZ_ZCR.cutNBJets = -1; events_inZ_ZCR.cutMET = 40.;
+    events_inZ_ZCR.blindDataChannel = 1;
+    
+    SampleT events_inZ_ZCR_LowBLepMass; events_inZ_ZCR_LowBLepMass.histNameSuffix = "_inZ_ZCR_LowBLepMass"; events_inZ_ZCR_LowBLepMass.histXaxisSuffix = "";
+    events_inZ_ZCR_LowBLepMass.histYaxisSuffix = ""; events_inZ_ZCR_LowBLepMass.histZaxisSuffix = "";
+    events_inZ_ZCR_LowBLepMass.whichdiLepType = -1; events_inZ_ZCR_LowBLepMass.doZVeto = 0; events_inZ_ZCR_LowBLepMass.cutNJets = 2; events_inZ_ZCR_LowBLepMass.cutNBJets = -1; events_inZ_ZCR_LowBLepMass.cutMET = 40.;
+    events_inZ_ZCR_LowBLepMass.blindDataChannel = 1;
     
     SampleT events_FullCut; events_FullCut.histNameSuffix = "_FullCut"; events_FullCut.histXaxisSuffix = ""; 
     events_FullCut.histYaxisSuffix = ""; events_FullCut.histZaxisSuffix = "";
     events_FullCut.whichdiLepType = -1; events_FullCut.doZVeto = 1; events_FullCut.cutNJets = 2; events_FullCut.cutNBJets = 1; events_FullCut.cutMET = 40.;
     events_FullCut.blindDataChannel = 1;
+    
+    SampleT events_FullCut_LowBLepMass; events_FullCut_LowBLepMass.histNameSuffix = "_FullCut_LowBLepMass"; events_FullCut_LowBLepMass.histXaxisSuffix = "";
+    events_FullCut_LowBLepMass.histYaxisSuffix = ""; events_FullCut_LowBLepMass.histZaxisSuffix = "";
+    events_FullCut_LowBLepMass.whichdiLepType = -1; events_FullCut_LowBLepMass.doZVeto = 1; events_FullCut_LowBLepMass.cutNJets = 2; events_FullCut_LowBLepMass.cutNBJets = 1; events_FullCut_LowBLepMass.cutMET = 40.;
+    events_FullCut_LowBLepMass.blindDataChannel = 1;
     
     SampleT events_FullCutTTBarControl; events_FullCutTTBarControl.histNameSuffix = "_FullCutTTBarControl"; events_FullCutTTBarControl.histXaxisSuffix = "";
     events_FullCutTTBarControl.histYaxisSuffix = ""; events_FullCutTTBarControl.histZaxisSuffix = "";
@@ -272,20 +293,20 @@ inline void SetSubSampVec(vector<SampleT> * subSampVec, int whichSubSampType = -
     events_FullCutSignal.whichdiLepType = -1; events_FullCutSignal.doZVeto = 1; events_FullCutSignal.cutNJets = 2; events_FullCutSignal.cutNBJets = 1; events_FullCutSignal.cutMET = 40.;
     events_FullCutSignal.blindDataChannel = 1;
     
-    SampleT events_FullCutMET0; events_FullCutMET0.histNameSuffix = "_FullCutMET0"; events_FullCutMET0.histXaxisSuffix = ""; 
-    events_FullCutMET0.histYaxisSuffix = ""; events_FullCutMET0.histZaxisSuffix = "";
-    events_FullCutMET0.whichdiLepType = -1; events_FullCutMET0.doZVeto = 1; events_FullCutMET0.cutNJets = 2; events_FullCutMET0.cutNBJets = 1; events_FullCutMET0.cutMET = 00.;
-    events_FullCutMET0.blindDataChannel = 1;
+    SampleT events_FullCutMETSig1D; events_FullCutMETSig1D.histNameSuffix = "_FullCutMETSig1D"; events_FullCutMETSig1D.histXaxisSuffix = "";
+    events_FullCutMETSig1D.histYaxisSuffix = ""; events_FullCutMETSig1D.histZaxisSuffix = "";
+    events_FullCutMETSig1D.whichdiLepType = -1; events_FullCutMETSig1D.doZVeto = 1; events_FullCutMETSig1D.cutNJets = 2; events_FullCutMETSig1D.cutNBJets = 1; events_FullCutMETSig1D.cutMET = 0.;
+    events_FullCutMETSig1D.blindDataChannel = 1;
     
-    SampleT events_FullCutMET20; events_FullCutMET20.histNameSuffix = "_FullCutMET20"; events_FullCutMET20.histXaxisSuffix = ""; 
-    events_FullCutMET20.histYaxisSuffix = ""; events_FullCutMET20.histZaxisSuffix = "";
-    events_FullCutMET20.whichdiLepType = -1; events_FullCutMET20.doZVeto = 1; events_FullCutMET20.cutNJets = 2; events_FullCutMET20.cutNBJets = 1; events_FullCutMET20.cutMET = 20.;
-    events_FullCutMET20.blindDataChannel = 1;
+    SampleT events_FullCutMETSig2D; events_FullCutMETSig2D.histNameSuffix = "_FullCutMETSig2D"; events_FullCutMETSig2D.histXaxisSuffix = ""; 
+    events_FullCutMETSig2D.histYaxisSuffix = ""; events_FullCutMETSig2D.histZaxisSuffix = "";
+    events_FullCutMETSig2D.whichdiLepType = -1; events_FullCutMETSig2D.doZVeto = 1; events_FullCutMETSig2D.cutNJets = 2; events_FullCutMETSig2D.cutNBJets = 1; events_FullCutMETSig2D.cutMET = 0.;
+    events_FullCutMETSig2D.blindDataChannel = 1;
     
-    SampleT events_FullCutMET60; events_FullCutMET60.histNameSuffix = "_FullCutMET60"; events_FullCutMET60.histXaxisSuffix = ""; 
-    events_FullCutMET60.histYaxisSuffix = ""; events_FullCutMET60.histZaxisSuffix = "";
-    events_FullCutMET60.whichdiLepType = -1; events_FullCutMET60.doZVeto = 1; events_FullCutMET60.cutNJets = 2; events_FullCutMET60.cutNBJets = 1; events_FullCutMET60.cutMET = 60.;
-    events_FullCutMET60.blindDataChannel = 1;
+    SampleT events_FullCutMETSigTrue; events_FullCutMETSigTrue.histNameSuffix = "_FullCutMETSigTrue"; events_FullCutMETSigTrue.histXaxisSuffix = ""; 
+    events_FullCutMETSigTrue.histYaxisSuffix = ""; events_FullCutMETSigTrue.histZaxisSuffix = "";
+    events_FullCutMETSigTrue.whichdiLepType = -1; events_FullCutMETSigTrue.doZVeto = 1; events_FullCutMETSigTrue.cutNJets = 2; events_FullCutMETSigTrue.cutNBJets = 1; events_FullCutMETSigTrue.cutMET = 0.;
+    events_FullCutMETSigTrue.blindDataChannel = 1;
     
     SampleT events_FullCutOnly2Leps; events_FullCutOnly2Leps.histNameSuffix = "_FullCutOnly2Leps"; events_FullCutOnly2Leps.histXaxisSuffix = ""; 
     events_FullCutOnly2Leps.histYaxisSuffix = ""; events_FullCutOnly2Leps.histZaxisSuffix = "";
@@ -317,15 +338,19 @@ inline void SetSubSampVec(vector<SampleT> * subSampVec, int whichSubSampType = -
     events_FullCutISR_200Only2Leps.blindDataChannel = 1;
     
     if (whichSubSampType < 2) {
-        subSampVec->push_back(events_ZCR);
+        subSampVec->push_back(events_outZ_ZCR);
+        subSampVec->push_back(events_inZ_ZCR);
+        
+        subSampVec->push_back(events_inZ_ZCR_LowBLepMass);
     }
     subSampVec->push_back(events_FullCut);
+    subSampVec->push_back(events_FullCut_LowBLepMass);
     subSampVec->push_back(events_FullCutTTBarControl);
     subSampVec->push_back(events_FullCutSignal);
     if (whichSubSampType < 2) {
-        subSampVec->push_back(events_FullCutMET0);
-        subSampVec->push_back(events_FullCutMET20);
-        subSampVec->push_back(events_FullCutMET60);
+        subSampVec->push_back(events_FullCutMETSig1D);
+        subSampVec->push_back(events_FullCutMETSig2D);
+        subSampVec->push_back(events_FullCutMETSigTrue);
         subSampVec->push_back(events_FullCutOnly2Leps);
         subSampVec->push_back(events_FullCutISR_100); subSampVec->push_back(events_FullCutISR_200);
         subSampVec->push_back(events_FullCutISR_100Only2Leps); subSampVec->push_back(events_FullCutISR_200Only2Leps);
@@ -375,8 +400,12 @@ inline void SetSystVec(vector<SystT> * inVecSystT, bool includeJetSmear, bool do
         vecSystType.push_back(8);
     }
     else {
-        vecSystNames.push_back("FakeEst");
+        vecSystNames.push_back("FakeLepStat");
         vecSystType.push_back(1);
+        vecSystNames.push_back("FakeLepFakeRateSyst");
+        vecSystType.push_back(2);
+        vecSystNames.push_back("FakeLepPromptRateSyst");
+        vecSystType.push_back(3);
     }
     /*
     vecSystNames.push_back("genStopXSec");
@@ -395,6 +424,119 @@ inline void SetSystVec(vector<SystT> * inVecSystT, bool includeJetSmear, bool do
     }
     //cout << "done " << endl;
 }
+
+inline void SetSystVec_PDF(vector<SystT> * inVecSystT) {
+    // Sets the input hist vector to have the associated PDF uncertainties
+    // for the three PDF sets
+    // CT10 -- 25 respective shift up and shift down weights
+    // MSTW -- 23 respective shift up and shift down weights
+    // NNPDF -- 50 respective shift up and shift down weights
+    // Note all CT10 systs will have SystType 101##
+    // Note all systs will have SystType 102##
+    // Note all systs will have SystType 103##
+    
+    int baseSystTypeCT10 = 10100;
+    int baseSystTypeMSTW = 10200;
+    int baseSystTypeNNPDF = 10300;
+    
+    
+    int numCT10 = 25;
+    int numMSTW = 23;
+    int numNNPDF = 50;
+    
+    vector<TString> vecSystNames_CT10;
+    vector<TString> vecSystNames_MSTW;
+    vector<TString> vecSystNames_NNPDF;
+    
+    vector<int> vecSystType_CT10;
+    vector<int> vecSystType_MSTW;
+    vector<int> vecSystType_NNPDF;
+    
+    TString baseNameCT10 = "CT10EV";
+    TString baseNameMSTW = "MSTWEV";
+    TString baseNameNNPDF = "NNPDFEV";
+    
+    vecSystNames_CT10.push_back("");
+    vecSystType_CT10.push_back(0);
+    
+    vecSystNames_MSTW.push_back("");
+    vecSystType_MSTW.push_back(0);
+
+    vecSystNames_NNPDF.push_back("");
+    vecSystType_NNPDF.push_back(0);
+
+    
+    TString currSystName;
+    
+    for (int iSystPDF_CT10 = 1; iSystPDF_CT10 <= numCT10; ++iSystPDF_CT10) {
+        currSystName = baseNameCT10;
+        currSystName += iSystPDF_CT10;
+        vecSystNames_CT10.push_back(currSystName);
+        vecSystType_CT10.push_back(baseSystTypeCT10 + iSystPDF_CT10);
+    }
+    
+    for (int iSystPDF_MSTW = 1; iSystPDF_MSTW <= numMSTW; ++iSystPDF_MSTW) {
+        currSystName = baseNameMSTW;
+        currSystName += iSystPDF_MSTW;
+        vecSystNames_MSTW.push_back(currSystName);
+        vecSystType_MSTW.push_back(baseSystTypeMSTW + iSystPDF_MSTW);
+    }
+    
+    for (int iSystPDF_NNPDF = 1; iSystPDF_NNPDF <= numNNPDF; ++iSystPDF_NNPDF) {
+        currSystName = baseNameNNPDF;
+        currSystName += iSystPDF_NNPDF;
+        vecSystNames_NNPDF.push_back(currSystName);
+        vecSystType_NNPDF.push_back(baseSystTypeNNPDF + iSystPDF_NNPDF);
+    }
+    
+    
+    inVecSystT->resize(0);
+    SystT currSystT;
+    
+    
+    vector<TString> vecSystNames_MainSysts;
+    vector<int> vecSystType_MainSysts;
+    
+    vecSystNames_MainSysts.push_back("");
+    vecSystType_MainSysts.push_back(0);
+    vecSystNames_MainSysts.push_back("genRecoilRW");
+    vecSystType_MainSysts.push_back(8);
+    
+    for (unsigned int iSystMain = 0; iSystMain < vecSystNames_MainSysts.size() - 1; ++iSystMain) {
+        //cout << "iSyst " << iSyst << endl;
+        currSystT.SetParams(&vecSystNames_MainSysts, &vecSystType_MainSysts, iSystMain + 1);
+        inVecSystT->push_back(currSystT);
+        currSystT.SetParams(&vecSystNames_MainSysts, &vecSystType_MainSysts, -1 * (iSystMain + 1));
+        inVecSystT->push_back(currSystT);
+    }
+    
+    
+    for (unsigned int iSystPDF_CT10 = 0; iSystPDF_CT10 < vecSystNames_CT10.size() - 1; ++iSystPDF_CT10) {
+        //cout << "iSyst " << iSyst << endl;
+        currSystT.SetParams(&vecSystNames_CT10, &vecSystType_CT10, iSystPDF_CT10 + 1);
+        inVecSystT->push_back(currSystT);
+        currSystT.SetParams(&vecSystNames_CT10, &vecSystType_CT10, -1 * (iSystPDF_CT10 + 1));
+        inVecSystT->push_back(currSystT);
+    }
+    
+    for (unsigned int iSystPDF_MSTW = 0; iSystPDF_MSTW < vecSystNames_MSTW.size() - 1; ++iSystPDF_MSTW) {
+        //cout << "iSyst " << iSyst << endl;
+        currSystT.SetParams(&vecSystNames_MSTW, &vecSystType_MSTW, iSystPDF_MSTW + 1);
+        inVecSystT->push_back(currSystT);
+        currSystT.SetParams(&vecSystNames_MSTW, &vecSystType_MSTW, -1 * (iSystPDF_MSTW + 1));
+        inVecSystT->push_back(currSystT);
+    }
+    
+    for (unsigned int iSystPDF_NNPDF = 0; iSystPDF_NNPDF < vecSystNames_NNPDF.size() - 1; ++iSystPDF_NNPDF) {
+        //cout << "iSyst " << iSyst << endl;
+        currSystT.SetParams(&vecSystNames_NNPDF, &vecSystType_NNPDF, iSystPDF_NNPDF + 1);
+        inVecSystT->push_back(currSystT);
+        currSystT.SetParams(&vecSystNames_NNPDF, &vecSystType_NNPDF, -1 * (iSystPDF_NNPDF + 1));
+        inVecSystT->push_back(currSystT);
+    }
+}
+
+
 inline TString DescriptorString(SampleT inputSubSamp) {
     //descriptor strings
     TString baseDescString[4] = {"All three flavors of lepton events, inclusive other than being/requiring ",  "All mumu events, inclusive other than being/requiring", "All ee events, inclusive other than being/requiring", "All emu events, inclusive other than being/requiring"};
