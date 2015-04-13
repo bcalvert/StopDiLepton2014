@@ -1,0 +1,337 @@
+using namespace std;
+#include <map>
+#include "TString.h"
+typedef pair<int, int> massCombo;
+typedef pair<massCombo, int> massPoint;
+typedef map<TString, TString> labelMap;
+
+
+typedef map<massCombo, TString> massMap;
+#include <iostream>
+using namespace std;
+
+#define numT2tt 12
+#define numT2bw 6
+
+//Functions that are used for mapping input mStop, mLSP combinations onto the approriate names for signal files that contain the results
+
+struct SUSYDataset {
+    massCombo boundsStop;
+    massCombo boundsLSP;
+    int indexPol;
+    int charFrac;
+    TString nameDataSet;
+    
+    TString StringMassCombo(massCombo * inCombo) {
+        TString outString = "";
+        outString += inCombo->first;
+        outString += "to";
+        outString += inCombo->second;
+        return outString;
+    }
+    void SetDatasetName(bool isT2tt, bool specLSP, bool isLeptFilt) {
+        nameDataSet = isT2tt ? "T2tt_" : "T2bw_";
+        nameDataSet += StringMassCombo(&boundsStop);
+        nameDataSet += "LSP";
+	//cout << "nameDataSet " << nameDataSet << endl;
+        if (specLSP) {
+            nameDataSet += "1_LSP";
+        }
+        if (boundsLSP.first == boundsLSP.second && boundsLSP.first == 0) {
+            nameDataSet += 1;
+        }
+        else {
+            nameDataSet += StringMassCombo(&boundsLSP);
+        }
+        if (!isT2tt) {
+            nameDataSet += "x0.";
+            nameDataSet += charFrac;
+            //cout << "paramSMS " << paramSMS << endl;
+            if (boundsLSP.first == boundsLSP.second && boundsLSP.first == 0 && charFrac == 50) {
+                nameDataSet += 0;
+            }
+        }
+        if (isLeptFilt) {
+            nameDataSet += "_LeptonFilter";
+        }
+    }
+    
+    void SetValuesT2tt(int whichOne) {
+        bool isT2tt = true;
+        bool specLSP = whichOne >= 10;
+        bool isLeptFilt = whichOne <= 1;
+        int stopLB[numT2tt] = {100, 225, 150, 150, 375, 500, 500, 500, 675, 675, 825,  925};
+        int stopUB[numT2tt] = {200, 350, 475, 350, 475, 800, 650, 650, 800, 800, 900, 1000};
+        
+        int LSPLB[numT2tt] = {  1,  25, 0,   0,   0, 0,   0, 250,   0, 300,  25,  25};
+        int LSPUB[numT2tt] = {100, 250, 0, 250, 375, 0, 225, 550, 275, 700, 800, 900};
+        
+        boundsStop.first = stopLB[whichOne];
+        boundsStop.second = stopUB[whichOne];
+        
+        boundsLSP.first = LSPLB[whichOne];
+        boundsLSP.second = LSPUB[whichOne];
+        
+        SetDatasetName(isT2tt, specLSP, isLeptFilt);
+        
+        /*
+         Output_Tree_T2tt_100to200LSP1to100_LeptonFilter/
+         Output_Tree_T2tt_225to350LSP25to250_LeptonFilter/
+        Output_Tree_T2tt_150to475LSP1/
+        Output_Tree_T2tt_150to350LSP0to250/
+        Output_Tree_T2tt_375to475LSP0to375/
+        Output_Tree_T2tt_500to800LSP1/
+        Output_Tree_T2tt_500to650LSP0to225/
+        Output_Tree_T2tt_500to650LSP250to550/
+        Output_Tree_T2tt_675to800LSP0to275/
+        Output_Tree_T2tt_675to800LSP300to700/
+        Output_Tree_T2tt_825to900LSP1_LSP25to800/
+        Output_Tree_T2tt_925to1000LSP1_LSP25to900/
+        */
+    }
+    void SetValuesT2bw(int whichOne, int inCharFrac) {
+        bool isT2tt = false;
+        bool specLSP = false;
+        bool isLeptFilt = whichOne <= 1;
+        
+        int stopLB[numT2bw] = {100, 500, 100, 100, 500, 500};
+        int stopUB[numT2bw] = {475, 650, 475, 475, 800, 800};
+        int LSPLB[numT2bw] = {  0, 150, 0,   0, 0,   0};
+        int LSPUB[numT2bw] = {300, 300, 0, 375, 0, 700};
+        
+        boundsStop.first = stopLB[whichOne];
+        boundsStop.second = stopUB[whichOne];
+        
+        boundsLSP.first = LSPLB[whichOne];
+        boundsLSP.second = LSPUB[whichOne];
+        
+        charFrac = inCharFrac;
+        
+        SetDatasetName(isT2tt, specLSP, isLeptFilt);
+        
+        /*
+         Output_Tree_T2bw_100to475LSP0to300x0.25_LeptonFilter/
+         Output_Tree_T2bw_500to650LSP150to300x0.25_LeptonFilter/
+         Output_Tree_T2bw_100to475LSP0to375x0.25/
+         Output_Tree_T2bw_100to475LSP1x0.25/
+         Output_Tree_T2bw_500to800LSP0to700x0.25/
+         Output_Tree_T2bw_500to800LSP1x0.25/
+         */
+    }
+    bool InBounds(massCombo * inMassCombo) {
+        int massStop = inMassCombo->first;
+        int massLSP = inMassCombo->second;
+        
+        bool inStop = massStop >= boundsStop.first && massStop <= boundsStop.second;
+        
+        bool inLSP = false;
+        if (massLSP == 0 && boundsLSP.first == 1) {
+            //to handle the
+            //T2tt_100to200LSP1to100_LeptonFilter dataset
+            inLSP = true;
+        }
+        else if (massLSP == 0 && boundsStop.first >= 825) {
+            inLSP = true;
+            //to handle the
+            //T2tt_825to900LSP1_LSP25to800/
+            //T2tt_925to1000LSP1_LSP25to900/
+        }
+        else {
+            inLSP = massLSP >= boundsLSP.first && massLSP <= boundsLSP.second;
+        }
+        
+        return inStop && inLSP;
+        return (massStop >= boundsStop.first && inMassCombo->second);
+    }
+    void SetMassMap(massCombo inMassCombo, massMap &inMap) {
+      //cout << "first " << inMassCombo.first << endl;
+      //cout << "second " << inMassCombo.second << endl;
+      //cout << "nameDataSet " << nameDataSet << endl;
+        inMap[inMassCombo] = nameDataSet;
+    }
+};
+/********************************************************************************/
+//functions for mapping the a mass point onto a dataset
+/********************************************************************************/
+void SetMassMapT2tt(massMap &inMap, int whichVer) {
+    int stopLB = 100;
+    int stopUB = 1000;
+    int LSPLB = 0;
+    int LSPUB = 900;
+    
+    int stepSizeStop = 25;
+    int stepSizeLSP = 25;
+    
+    massCombo currCombo;
+    
+    vector<SUSYDataset> vecSD(numT2tt);
+    for (unsigned int iT2tt = 0; iT2tt < vecSD.size(); ++iT2tt) {
+        vecSD[iT2tt].SetValuesT2tt(iT2tt);
+    }
+    
+    for (int massStop = stopLB; massStop <= stopUB; massStop += stepSizeStop) {
+        for (int massLSP = LSPLB; massLSP <= TMath::Min(LSPUB, massStop - 100); massLSP += stepSizeLSP) {
+            currCombo.first = massStop;
+            currCombo.second = massLSP;
+            for (unsigned int iT2tt = 0; iT2tt < vecSD.size(); ++iT2tt) {
+                if (vecSD[iT2tt].InBounds(&currCombo)) {
+                    vecSD[iT2tt].SetMassMap(currCombo, inMap);
+                    break;
+                }
+            }
+        }
+    }
+}
+
+void SetMassMapT2bw(massMap &inMap, int inCharFrac) {
+    int stopLB = 100;
+    int stopUB = 800;
+    int LSPLB = 0;
+    int LSPUB = 700;
+    
+    int stepSizeStop = 25;
+    int stepSizeLSP = 25;
+    
+    massCombo currCombo;
+    
+    vector<SUSYDataset> vecSD(numT2bw);
+    for (unsigned int iT2bw = 0; iT2bw < vecSD.size(); ++iT2bw) {
+        vecSD[iT2bw].SetValuesT2bw(iT2bw, inCharFrac);
+    }
+    
+    for (int massStop = stopLB; massStop <= stopUB; massStop += stepSizeStop) {
+        for (int massLSP = LSPLB; massLSP <= TMath::Min(LSPUB, massStop - 100); massLSP += stepSizeLSP) {
+            currCombo.first = massStop;
+            currCombo.second = massLSP;
+            for (unsigned int iT2bw = 0; iT2bw < vecSD.size(); ++iT2bw) {
+                if (vecSD[iT2bw].InBounds(&currCombo)) {
+                    vecSD[iT2bw].SetMassMap(currCombo, inMap);
+                    break;
+                }
+            }
+        }
+    }
+}
+
+/********************************************************************************/
+//functions for mapping the Lepton Filtered datasets onto non-lept filtered ones//
+/********************************************************************************/
+void SetLeptFiltSFMapT2bw(labelMap &inMap, bool isLSP0) {
+    if (isLSP0) {
+        inMap["T2bw_100to475LSP0to300x0.25_LeptonFilter"] = "T2bw_100to475LSP1x0.25";
+        inMap["T2bw_100to475LSP0to300x0.50_LeptonFilter"] = "T2bw_100to475LSP1x0.50";
+        inMap["T2bw_100to475LSP0to300x0.75_LeptonFilter"] = "T2bw_100to475LSP1x0.75";
+        
+//        inMap["T2bw_500to650LSP150to300x0.25_LeptonFilter"] = "T2bw_500to800LSP1x0.25";
+//        inMap["T2bw_500to650LSP150to300x0.50_LeptonFilter"] = "T2bw_500to800LSP1x0.50";
+//        inMap["T2bw_500to650LSP150to300x0.75_LeptonFilter"] = "T2bw_500to800LSP1x0.75";
+    }
+    else {
+        inMap["T2bw_100to475LSP0to300x0.25_LeptonFilter"] = "T2bw_100to475LSP0to375x0.25";
+        inMap["T2bw_100to475LSP0to300x0.50_LeptonFilter"] = "T2bw_100to475LSP0to375x0.5";
+        inMap["T2bw_100to475LSP0to300x0.75_LeptonFilter"] = "T2bw_100to475LSP0to375x0.75";
+        
+        inMap["T2bw_500to650LSP150to300x0.25_LeptonFilter"] = "T2bw_500to800LSP0to700x0.25";
+        inMap["T2bw_500to650LSP150to300x0.50_LeptonFilter"] = "T2bw_500to800LSP0to700x0.5";
+        inMap["T2bw_500to650LSP150to300x0.75_LeptonFilter"] = "T2bw_500to800LSP0to700x0.75";
+    }
+}
+
+void SetLeptFiltSFMapT2tt_ver2(labelMap &inMap, bool isLSP0, bool isStop350) {
+    if (isLSP0) {
+        inMap["T2tt_2J_mStop-150to250_mLSP-1to100_LeptonFilter_TuneZ2star_8TeV-madgraph-tauola"] = "T2tt_150to475LSP1";
+//        inMap["T2tt_2J_mStop-265p5to337p5_mLSP-62p5to187p5_LeptonFilter_TuneZ2star_8TeV-madgraph-tauola"] = "T2tt_150to475LSP1";
+//        inMap["T2tt_2J_mStop-350to450_mLSP-150to300_LeptonFilter_TuneZ2star_8TeV-madgraph-tauola"] = "T2tt_150to475LSP1";
+    }
+    else {
+        inMap["T2tt_2J_mStop-150to250_mLSP-1to100_LeptonFilter_TuneZ2star_8TeV-madgraph-tauola"] = "T2tt_150to350LSP0to250";
+        inMap["T2tt_2J_mStop-265p5to337p5_mLSP-62p5to187p5_LeptonFilter_TuneZ2star_8TeV-madgraph-tauola"] = "T2tt_150to350LSP0to250";
+        if (isStop350) {
+            inMap["T2tt_2J_mStop-350to450_mLSP-150to300_LeptonFilter_TuneZ2star_8TeV-madgraph-tauola"] = "T2tt_150to350LSP0to250";
+        }
+        else {
+            inMap["T2tt_2J_mStop-350to450_mLSP-150to300_LeptonFilter_TuneZ2star_8TeV-madgraph-tauola"] = "T2tt_375to475LSP0to375";
+        }
+    }
+}
+void SetLeptFiltSFMapT2tt(labelMap &inMap, bool isLSP0) {
+    if (isLSP0) {
+        inMap["T2tt_100to200LSP1to100_LeptonFilter"] = "T2tt_150to475LSP1";
+//        inMap["T2tt_225to350LSP25to250_LeptonFilter"] = "T2tt_150to475LSP1";
+    }
+    else {
+        inMap["T2tt_100to200LSP1to100_LeptonFilter"] = "T2tt_150to350LSP0to250";
+        inMap["T2tt_225to350LSP25to250_LeptonFilter"] = "T2tt_150to350LSP0to250";
+    }
+}
+
+TString LeptFiltDataSetT2bw(int massStop, int massLSP, int inCharFrac, bool doVerb = 0) {
+    int numT2bwLeptFilt = 2;
+    
+    massCombo currCombo(massStop, massLSP);
+    
+    vector<SUSYDataset> vecSD(numT2bwLeptFilt);
+    for (unsigned int iT2bw = 0; iT2bw < vecSD.size(); ++iT2bw) {
+        vecSD[iT2bw].SetValuesT2bw(iT2bw, inCharFrac);
+        if (vecSD[iT2bw].InBounds(&currCombo)) {
+            return vecSD[iT2bw].nameDataSet;
+        }
+    }
+    TString outStringFail = "FAIL";
+    return outStringFail;
+}
+
+TString LeptFiltDataSetT2tt(int massStop, int massLSP, bool doVerb = 0) {
+    int numT2ttLeptFilt = 2;
+    massCombo currCombo(massStop, massLSP);
+    
+    vector<SUSYDataset> vecSD(numT2ttLeptFilt);
+    
+    for (unsigned int iT2tt = 0; iT2tt < vecSD.size(); ++iT2tt) {
+        vecSD[iT2tt].SetValuesT2tt(iT2tt);
+        if (doVerb) {
+            cout << "iT2tt " << iT2tt << " is in bounds? " << vecSD[iT2tt].InBounds(&currCombo) << endl;
+        }
+        if (vecSD[iT2tt].InBounds(&currCombo)) {
+            return vecSD[iT2tt].nameDataSet;
+        }
+    }
+    TString outStringFail = "FAIL";
+    return outStringFail;
+}
+
+TString LeptFiltDataSetT2tt_ver2(int massStop, int massLSP) {
+    int stopBound1 = 150;
+    int stopBound2 = 250;
+    int stopBound3 = 338;
+    int stopBound4 = 450;
+    
+    int LSPBound1_LowStop = 0;
+    int LSPBound2_LowStop = 100;
+    int LSPBound1_MidStop = 62;
+    int LSPBound2_MidStop = 188;
+    int LSPBound1_HighStop = 150;
+    int LSPBound2_HighStop = 300;
+    
+    TString outStringFail = "FAIL";
+    if (massStop >= stopBound1 && massStop <= stopBound2) {
+        if (massLSP >= LSPBound1_LowStop && massLSP <= LSPBound2_LowStop) {
+            return TString("T2tt_2J_mStop-150to250_mLSP-1to100_LeptonFilter_TuneZ2star_8TeV-madgraph-tauola");
+        }
+    }
+    else if (massStop > stopBound2 && massStop <= stopBound3) {
+        if (massLSP >= LSPBound1_MidStop && massLSP <= LSPBound2_MidStop) {
+            return TString("T2tt_2J_mStop-265p5to337p5_mLSP-62p5to187p5_LeptonFilter_TuneZ2star_8TeV-madgraph-tauola");
+        }
+    }
+    else if (massStop > stopBound3 && massStop <= stopBound4) {
+        if (massLSP >= LSPBound1_HighStop && massLSP <= LSPBound2_HighStop) {
+            return TString("T2tt_2J_mStop-350to450_mLSP-150to300_LeptonFilter_TuneZ2star_8TeV-madgraph-tauola");
+        }
+    }
+    return outStringFail;
+}
+
+/********************************************************************************/
+//functions for mapping the Lepton Filtered datasets onto non-lept filtered ones//
+/********************************************************************************/

@@ -1,0 +1,91 @@
+New files added in this update
+
+Each new file has comments input in to explain the purposes
+######################################
+HeaderFiles/StopSignalYieldFunctions_Efficiency.h
+######################################
+File designed to contain the functions used when calculating efficiencies of the signal points
+
+######################################
+HeaderFiles/StopSignalYieldStructs.h
+######################################
+File designed to contain the structures (along with some associated functions) used when calculating efficiencies of the signal points
+
+######################################
+HeaderFiles/TTBarEstimator.h
+######################################
+Contains the TTBarEstimator structure that handles calculating the data-driven TTBar normalization
+
+######################################
+HeaderFiles/BasicFunctions_HistogramMaking.h
+######################################
+Contains a few, universal functions used for making various histograms
+
+######################################
+HeaderFiles/BasicFunctions_Math.h
+######################################
+Contains a few,	universal functions used for various mathematical needs
+
+######################################
+HeaderFiles/BasicFunctions_SystemCommands.h
+######################################
+Contains functions used to call system commands, both specific ones that have basic syntax, and a more complicated option
+for any arbitrary system command with arbitrary number of command line arguments
+
+######################################
+HeaderFiles/StopFunctions_HadronicResolution.h
+######################################
+Functions used for calculating Jet pT and phi resolutions
+
+######################################
+HeaderFiles/StopFunctions_ROCCurves.h
+######################################
+Functions used for plotting/setting-up ROC and/or Punzi curves -- need to work on this
+
+######################################
+HeaderFiles/StopSignalYieldStructs_2.h
+######################################
+Additional structures used as part of signal limit stuff, in particular with things for the MT2 shape analysis
+
+######################################
+HeaderFiles/StopFunctions_ROCCurves.h
+######################################
+Functions used for plotting/setting-up ROC and/or Punzi curves -- need to work on this documentation
+
+######################################
+HeaderFiles/StopLimitMakingStructs.h
+######################################
+Structures used when showing/making exclusion limit plots -- need to work on documentation
+
+######################################
+HeaderFiles/StopLimitMakingFunctions.h
+######################################
+Functions used when making the limit plots -- need to work on this documentation
+
+######################################
+HeaderFiles/StopPlotShapeSetup.h
+######################################
+Similar to the functions used in StopPlotSetup, except for running using the shape nTuples (i.e. for backup plots related to the MT2 shape analysis)
+
+######################################
+HeaderFiles/StopSignalYieldFunctions_Maps.h
+######################################
+Functions that are used for mapping input mStop, mLSP combinations onto the approriate names for signal files that contain the results
+
+######################################
+HeaderFiles/interpolate.h
+######################################
+interpolate() implements a two step smearing. Its arguments are the histogram that should be interpolated
+and the direction in which to interpolate first (normally the direction in which the histogram changes
+most slowly)
+Allowed types are SW (equivalently NE), SE (equivalently NW), NS, EW
+The second interpolation uses a "Swiss Cross" average (non-zero N, S, E, W neighbors)
+
+######################################
+PlotMakingCode/NewOviStopPlotFillerRunOnSkim_wSyst_PDF.C
+######################################
+
+A slight rewrite of the NewOviStopPlotFillerRunOnSkim_wSyst.C macro -- this macro has the same goal (fill histograms with both central value and systematic shifts) except the only systematic (*only*, ha!, there's 98 systematic shifts each direction in total!) it handles is the PDF uncertainties, using the PDF weights saved in the nTuples as an additional weight
+
+
+
