@@ -1,6 +1,7 @@
 #include "TH2.h"
 #include <string>
 #include <iostream>
+#include <vector>
 
 // interpolate() implements a two step smearing. Its arguments are the histogram that should be interpolated
 // and the direction in which to interpolate first (normally the direction in which the histogram changes
@@ -68,10 +69,18 @@ TH2F* interpolate(const TH2F* hist, std::string firstInterpolationDirection)
         for(int j=1; j<=nBinsY; j++) {
             // do not extrapolate outside the scan
             if(i<xMin || i>xMax || j<yMin || j>yMax) continue;
+            double binContent, binContentPlusStep, binContentMinusStep;
+            double binError, binErrorPlusStep, binErrorMinusStep;
             if(!alongDiagonal(histCopy, i,j)) { //point is not along the diagonal
-                double binContent = histCopy->GetBinContent(i, j);
-                double binContentPlusStep = histCopy->GetBinContent(i+xStepPlus, j+yStepPlus);
-                double binContentMinusStep = histCopy->GetBinContent(i+xStepMinus, j+yStepMinus);
+                binContent = histCopy->GetBinContent(i, j);
+                binContentPlusStep = histCopy->GetBinContent(i+xStepPlus, j+yStepPlus);
+                binContentMinusStep = histCopy->GetBinContent(i+xStepMinus, j+yStepMinus);
+                
+                //Personal addition -- also deal with errors
+                binError = histCopy->GetBinError(i, j);
+                binErrorPlusStep = histCopy->GetBinError(i+xStepPlus, j+yStepPlus);
+                binErrorMinusStep = histCopy->GetBinError(i+xStepMinus, j+yStepMinus);
+                
                 int nFilled = 0;
                 if(binContentPlusStep>0) nFilled++;
                 if(binContentMinusStep>0) nFilled++;
@@ -80,13 +89,21 @@ TH2F* interpolate(const TH2F* hist, std::string firstInterpolationDirection)
                 if(binContent==0 && nFilled>0) {
                     // average over non-zero entries
                     binContent = (binContentPlusStep+binContentMinusStep)/nFilled;
-                    hist_step1->SetBinContent(i,j,binContent);
+                    binError = TMath::Sqrt(1./nFilled * (TMath::Power(binErrorPlusStep, 2) + TMath::Power(binErrorMinusStep, 2)));
+                    hist_step1->SetBinContent(i, j, binContent);
+                    hist_step1->SetBinError(i, j, binError);
                 }
             }
             else { //point is along the diagonal; average SW-NE direction
-                double binContent = histCopy->GetBinContent(i, j);
-                double binContentPlusStep = histCopy->GetBinContent(i+1, j+1);
-                double binContentMinusStep = histCopy->GetBinContent(i-1, j-1);
+                binContent = histCopy->GetBinContent(i, j);
+                binContentPlusStep = histCopy->GetBinContent(i+1, j+1);
+                binContentMinusStep = histCopy->GetBinContent(i-1, j-1);
+                
+                //Personal addition -- also deal with errors
+                binError = histCopy->GetBinError(i, j);
+                binErrorPlusStep = histCopy->GetBinError(i+1, j+1);
+                binErrorMinusStep = histCopy->GetBinError(i-1, j-1);
+                
                 int nFilled = 0;
                 if(binContentPlusStep>0) nFilled++;
                 if(binContentMinusStep>0) nFilled++;
@@ -95,7 +112,9 @@ TH2F* interpolate(const TH2F* hist, std::string firstInterpolationDirection)
                 if(binContent==0 && nFilled==2) {
                     // average over non-zero entries
                     binContent = (binContentPlusStep+binContentMinusStep)/nFilled;
-                    hist_step1->SetBinContent(i,j,binContent);
+                    binError = TMath::Sqrt(1./nFilled * (TMath::Power(binErrorPlusStep, 2) + TMath::Power(binErrorMinusStep, 2)));
+                    hist_step1->SetBinContent(i, j, binContent);
+                    hist_step1->SetBinError(i, j, binError);
                 }
             }
         }
@@ -113,6 +132,13 @@ TH2F* interpolate(const TH2F* hist, std::string firstInterpolationDirection)
             double binContentDown = histCopy->GetBinContent(i, j-1);
             double binContentLeft = histCopy->GetBinContent(i-1, j);
             double binContentRight = histCopy->GetBinContent(i+1, j);
+            
+            double binError = histCopy->GetBinError(i, j);
+            double binErrorUp = histCopy->GetBinError(i, j+1);
+            double binErrorDown = histCopy->GetBinError(i, j-1);
+            double binErrorLeft = histCopy->GetBinError(i-1, j);
+            double binErrorRight = histCopy->GetBinError(i+1, j);
+            
             int nFilled=0;
             if(binContentUp>0) nFilled++;
             if(binContentDown>0) nFilled++;
@@ -121,7 +147,9 @@ TH2F* interpolate(const TH2F* hist, std::string firstInterpolationDirection)
             if(binContent==0 && nFilled>0) {
                 // only average over non-zero entries
                 binContent = (binContentUp+binContentDown+binContentRight+binContentLeft)/nFilled;
-                hist_step2->SetBinContent(i,j,binContent);
+                binError = TMath::Sqrt(1./nFilled * (TMath::Power(binErrorUp, 2) + TMath::Power(binErrorDown, 2) + TMath::Power(binErrorLeft, 2) + TMath::Power(binErrorRight, 2)));
+                hist_step2->SetBinContent(i, j, binContent);
+                hist_step2->SetBinError(i, j, binError);
             }
         }
     }
@@ -225,4 +253,38 @@ TH2F* rebin(TH2F* hist, std::string firstInterpolationDirection)
     TH2F* histRebinnedInterpolated = interpolate(histRebinned, firstInterpolationDirection);
     
     return histRebinnedInterpolated;
+}
+
+
+
+void SetInterpolatedHistVec(TH2F * baseHistToInterpolate, vector<TH2F *> * inVecInterpHist, string dirToRW, int numInterpolate) {
+    DeleteVector(inVecInterpHist);
+    for (int iInterp = 0; iInterp < numInterpolate; ++iInterp) {
+        if (iInterp == 0) {
+            inVecInterpHist->push_back(rebin(baseHistToInterpolate, dirToRW));
+        }
+        else {
+            inVecInterpHist->push_back(rebin(inVecInterpHist->at(iInterp -1), dirToRW));
+        }
+    }
+}
+
+void SetInterpolatedHistVec_InputVec(vector<TH2F *> * inVecHistsToInterpolate, string dirToRW, int numInterpolate) {
+    vector<TH2F *> vecCurrInterpHist;
+    
+    TString currHistName;
+    TH2F * currHistToInterpolate;
+    
+    unsigned int numHistsToInterpolate = inVecHistsToInterpolate->size();
+    
+    for (unsigned int iHist = 0; iHist < numHistsToInterpolate; ++iHist) {
+        currHistToInterpolate = inVecHistsToInterpolate->at(iHist);
+        currHistName = currHistToInterpolate->GetName();
+        
+        SetInterpolatedHistVec(currHistToInterpolate, &vecCurrInterpHist, dirToRW, numInterpolate);
+        if (numInterpolate > 0) {
+            inVecHistsToInterpolate->at(iHist)->Delete();
+            inVecHistsToInterpolate->at(iHist) = (TH2F *) vecCurrInterpHist[numInterpolate -1]->Clone(currHistName);
+        }
+    }
 }
