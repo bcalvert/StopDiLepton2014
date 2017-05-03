@@ -1,3 +1,4 @@
+#include "Math/QuantFuncMathCore.h"
 //Collection of functions used for basic mathematical calculations
 //that are used in many stages of the analysis
 
@@ -6,6 +7,71 @@
 using namespace std;
 
 typedef pair<float, float> valPlusError;
+
+void CorrectSignificance(TH2F * inputHist, TF1 * inputTF1, float fudgeFactorEuler = 0.25) {
+    TString histName;
+    vector<int> vecInputHistAxisNBins;
+    vector<TAxis *> vecInputHistAxes;
+    vector<float> vecInputHistAxisBinWidths;
+    SetHistogramData(inputHist, histName, &vecInputHistAxisNBins, &vecInputHistAxes, &vecInputHistAxisBinWidths);
+    
+    float currSignif;
+    float currGlobPValue;
+    float currEstSignif;
+    for (int iBinX = 1; iBinX <= vecInputHistAxisNBins[0]; ++iBinX) {
+        for (int iBinY = 1; iBinY <= vecInputHistAxisNBins[0]; ++iBinY) {
+            currSignif = inputHist->GetBinContent(iBinX, iBinY);
+            currGlobPValue = inputTF1->Eval(currSignif);
+            currGlobPValue *= fudgeFactorEuler;
+            if (currGlobPValue > 0.5) currGlobPValue = 0.5;
+            currEstSignif = ROOT::Math::normal_quantile_c(currGlobPValue,1);
+            inputHist->SetBinContent(iBinX, iBinY, currEstSignif);
+        }
+    }
+}
+
+valPlusError VarianceWeightedMean(vector<valPlusError> * inVecVPE, bool doVerb = false) {
+    //Formula for combining measurements x_{i} \pm \sigma_{i}
+    //http://en.wikipedia.org/wiki/Weighted_arithmetic_mean#Dealing_with_variance
+    
+    float numSum = 0.0, denomSum = 0.0;
+    float currX, currSig, currWeight;
+    
+    for (unsigned int iX = 0; iX < inVecVPE->size(); ++iX) {
+        currX = inVecVPE->at(iX).first;
+        currSig = inVecVPE->at(iX).second;
+        if (currSig < 1E-12) {
+            if (currX > 1E-12) {
+                cout << "something weird with inputs!" << endl;
+                cout << "iX " << iX << endl;
+                cout << "currX " << currX << endl;
+                cout << "currSig " << currSig << endl;
+
+            }
+            currSig = 1.;
+            currX = 0.;
+        }
+        currWeight = 1./TMath::Power(currSig, 2);
+        
+        if (doVerb) {
+            cout << "iX " << iX << endl;
+            cout << "currX " << currX << endl;
+            cout << "currSig " << currSig << endl;
+            cout << "currWeight " << currWeight << endl;
+        }
+        
+        numSum += currX * currWeight;
+        denomSum += currWeight;
+    }
+    
+    if (doVerb) {
+        cout << "numSum " << numSum << endl;
+        cout << "denomSum " << denomSum << endl;
+    }
+    
+    valPlusError outVal(numSum/denomSum, 1./TMath::Sqrt(denomSum));
+    return outVal;
+}
 
 float GetError(vector<float> * inVecVarTerms, vector<float> * inVecCovarTerms) {
   //function to calculate a total approximate error for a function of random variables, assuming you have an input vector, inVecVarTerms,
