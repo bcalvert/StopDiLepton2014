@@ -94,7 +94,8 @@ inline void AddInKT2_TopBounds3DShape(vector< vector<Double_t> > * inVecVecBinEd
 inline void AddInMT2bb_ZMETBounds2DShape(vector< vector<Double_t> > * inVecVecBinEdges, vector<int> * vecNumBins) {
     /*
      100 GeV bin from 70 to 170 -- 1 bin
-     40 GeV bins from 170 to 250 -- 2 bins
+     30 GeV bin from 170 to 200 -- 1 bin
+     50 GeV bins from 200 to 250 -- 1 bins
      200 GeV bins from 250 to 450 -- 1 bin
      */
     const int numBinsTotal = 4;
@@ -102,9 +103,9 @@ inline void AddInMT2bb_ZMETBounds2DShape(vector< vector<Double_t> > * inVecVecBi
     vector<Double_t> vecMT2bb_ZMET(numBinsTotal + 1);
     vecMT2bb_ZMET[0] = 70.0;
     
-    const int numRanges = 3;
-    int binRangeIndexEPs[numRanges] = {2, 4, 5};
-    int stepSize[numRanges] = {100, 40, 200};
+    const int numRanges = 4;
+    int binRangeIndexEPs[numRanges] = {2, 3, 4, 5};
+    int stepSize[numRanges] = {100, 30, 50, 200};
     
     int stepSizeToUse = -1;
     
@@ -127,17 +128,18 @@ inline void AddInMT2bb_ZMETBounds2DShape(vector< vector<Double_t> > * inVecVecBi
 inline void AddInMT2bb_ZMETBounds3DShape(vector< vector<Double_t> > * inVecVecBinEdges, vector<int> * vecNumBins) {
     /*
      100 GeV bin from 70 to 170 -- 1 bin
-     80 GeV bins from 170 to 250 -- 1 bins
+     30 GeV bin from 170 to 200 -- 1 bin
+     50 GeV bins from 200 to 250 -- 1 bins
      200 GeV bins from 250 to 450 -- 1 bin
      */
-    const int numBinsTotal = 3;
+    const int numBinsTotal = 4;
     
     vector<Double_t> vecMT2bb_ZMET(numBinsTotal + 1);
     vecMT2bb_ZMET[0] = 70.0;
     
-    const int numRanges = 3;
-    int binRangeIndexEPs[numRanges] = {2, 3, 4};
-    int stepSize[numRanges] = {100, 80, 200};
+    const int numRanges = 4;
+    int binRangeIndexEPs[numRanges] = {2, 3, 4, 5};
+    int stepSize[numRanges] = {100, 30, 50, 200};
     
     int stepSizeToUse = -1;
     
@@ -262,48 +264,22 @@ inline void AddInMT2lblbBounds_NonControl(vector< vector<Double_t> > * inVecVecB
 }
 inline void AddInMT2lblbBounds3DShape(vector< vector<Double_t> > * inVecVecBinEdges, vector<int> * vecNumBins) {
     /*
-     150 GeV bin from 0 to 150 -- 1 bin
-     50 GeV bin from 150 to 200 -- 1 bins
-     200 GeV bin from 200 to 400 -- 1 bin
-     */
-    const int numBinsTotal = 3;
-    
-    vector<Double_t> vecMT2lblb(numBinsTotal + 1);
-    vecMT2lblb[0] = 0.0;
-    const int numRanges = 3;
-    int binRangeIndexEPs[numRanges] = {2, 3, 4};
-    int stepSize[numRanges] = {150, 50, 200};
-    
-    int stepSizeToUse = -1;
-    
-    for (int binIndex = 1; binIndex < numBinsTotal + 1; ++binIndex) {
-        for (int iBRIndex = 0; iBRIndex < numRanges; ++iBRIndex) {
-            if (binIndex < binRangeIndexEPs[iBRIndex]) {
-                stepSizeToUse = stepSize[iBRIndex];
-                break;
-            }
-        }
-        vecMT2lblb[binIndex] = vecMT2lblb[binIndex - 1] + stepSizeToUse;
-        //cout << "vecMT2lblb at binIndex " << binIndex << " is " << vecMT2lblb[binIndex] << endl;
-    }
-    inVecVecBinEdges->push_back(vecMT2lblb);
-    vecNumBins->push_back(numBinsTotal);
-}
-inline void AddInMT2lblbBounds2DShape(vector< vector<Double_t> > * inVecVecBinEdges, vector<int> * vecNumBins) {
-    /*
-     150 GeV bin from 0 to 150 -- 1 bin
-     25 GeV bins from 150 to 200 -- 2 bins
-     200 GeV bin from 200 to 400 -- 1 bin
+     170 GeV bin from 0 to 170 -- 1 bin
+     30 GeV bin from 170 to 200 -- 1 bin
+     50 GeV bins from 200 to 250 -- 1 bins
+     200 GeV bins from 250 to 450 -- 1 bin
      */
     const int numBinsTotal = 4;
     
     vector<Double_t> vecMT2lblb(numBinsTotal + 1);
     vecMT2lblb[0] = 0.0;
-    const int numRanges = 3;
-    int binRangeIndexEPs[numRanges] = {2, 4, 5};
-    int stepSize[numRanges] = {150, 25, 200};
+    
+    const int numRanges = 4;
+    int binRangeIndexEPs[numRanges] = {2, 3, 4, 5};
+    int stepSize[numRanges] = {170, 30, 50, 200};
     
     int stepSizeToUse = -1;
+    
     
     for (int binIndex = 1; binIndex < numBinsTotal + 1; ++binIndex) {
         for (int iBRIndex = 0; iBRIndex < numRanges; ++iBRIndex) {
@@ -315,6 +291,40 @@ inline void AddInMT2lblbBounds2DShape(vector< vector<Double_t> > * inVecVecBinEd
         vecMT2lblb[binIndex] = vecMT2lblb[binIndex - 1] + stepSizeToUse;
         //cout << "vecMT2lblb at binIndex " << binIndex << " is " << vecMT2lblb[binIndex] << endl;
     }
+    
+    inVecVecBinEdges->push_back(vecMT2lblb);
+    vecNumBins->push_back(numBinsTotal);
+}
+inline void AddInMT2lblbBounds2DShape(vector< vector<Double_t> > * inVecVecBinEdges, vector<int> * vecNumBins) {
+    /*
+     170 GeV bin from 0 to 170 -- 1 bin
+     30 GeV bin from 170 to 200 -- 1 bin
+     50 GeV bins from 200 to 250 -- 1 bins
+     200 GeV bins from 250 to 450 -- 1 bin
+     */
+    const int numBinsTotal = 4;
+    
+    vector<Double_t> vecMT2lblb(numBinsTotal + 1);
+    vecMT2lblb[0] = 0.0;
+    
+    const int numRanges = 4;
+    int binRangeIndexEPs[numRanges] = {2, 3, 4, 5};
+    int stepSize[numRanges] = {170, 30, 50, 200};
+    
+    int stepSizeToUse = -1;
+    
+    
+    for (int binIndex = 1; binIndex < numBinsTotal + 1; ++binIndex) {
+        for (int iBRIndex = 0; iBRIndex < numRanges; ++iBRIndex) {
+            if (binIndex < binRangeIndexEPs[iBRIndex]) {
+                stepSizeToUse = stepSize[iBRIndex];
+                break;
+            }
+        }
+        vecMT2lblb[binIndex] = vecMT2lblb[binIndex - 1] + stepSizeToUse;
+        //cout << "vecMT2lblb at binIndex " << binIndex << " is " << vecMT2lblb[binIndex] << endl;
+    }
+    
     inVecVecBinEdges->push_back(vecMT2lblb);
     vecNumBins->push_back(numBinsTotal);
 }
@@ -412,14 +422,15 @@ inline void AddInMT2llBounds2DShape(vector< vector<Double_t> > * inVecVecBinEdge
 inline void AddInMT2llBounds3DShape(vector< vector<Double_t> > * inVecVecBinEdges, vector<int> * vecNumBins) {
     /*
      80 GeV bin from 0 to 80 -- 1 bin
-     20 GeV bins 80 to 100 -- 1 bins
-     50 GeV Signal bin after 100 -- 1 bin
+     20 GeV bins 80 to 120 -- 2 bins
+     
+     50 GeV Signal bin after 120 -- 1 bin
      */
-    const int numBinsTotal = 3;
+    const int numBinsTotal = 4;
     vector<Double_t> vecMT2ll(numBinsTotal + 1);
     vecMT2ll[0] = 0.0;
-    const int numRanges = 3;
-    int binRangeIndexEPs[numRanges] = {2, 3, 4};
+    const int numRanges = 4;
+    int binRangeIndexEPs[numRanges] = {2, 4, 5};
     int stepSize[numRanges] = {80, 20, 50};
     
     int stepSizeToUse = -1;
@@ -474,7 +485,7 @@ inline void AddInDilepPtBounds(vector< vector<Double_t> > * inVecVecBinEdges, ve
      100 GeV bin from 150 to 250 -- 1 bin
      150 GeV signal bin from 250 to 400 -- 1 bin
      */
-    const int numBinsTotal = 16;
+    const int numBinsTotal = 18;
     vector<Double_t> vecDiLepPt(numBinsTotal + 1);
     vecDiLepPt[0] = 0.0;
     const int numRanges = 4;

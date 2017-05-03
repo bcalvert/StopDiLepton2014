@@ -50,10 +50,13 @@ typedef struct StopHistBinBounds {
         float EtaBinUB =  5.;
         IHBB_Eta.SetVals(EtaBinN, EtaBinLB, EtaBinUB);
             
-        int EnergyPtMassBinN    = 40;
-        int MassBinN            = 100;
+//        int EnergyPtMassBinN    = 40;
+        int EnergyPtMassBinN    = 80;
+//        int MassBinN            = 100;
+        int MassBinN            = 200;
         float EnergyPtMassBinLB = 0;
-        float EnergyPtMassBinUB = 400;
+//        float EnergyPtMassBinUB = 400;
+        float EnergyPtMassBinUB = 800;
         
         IHBB_EnergyPtMET.SetVals(EnergyPtMassBinN, EnergyPtMassBinLB, EnergyPtMassBinUB);
         IHBB_Mass.SetVals(MassBinN, EnergyPtMassBinLB, EnergyPtMassBinUB);
@@ -85,8 +88,8 @@ typedef struct StopHistBinBounds {
         IHBB_PxPy_SR.SetVals(METXYBinN_SR, METXYBinLB_SR, METXYBinUB_SR);
         
         int RootMETXYBinN       = 50;
-        float RootMETXYBinLB    = -sqrt(200);
-        float RootMETXYBinUB    = sqrt(200);
+        float RootMETXYBinLB    = -sqrt(400);
+        float RootMETXYBinUB    = sqrt(400);
         IHBB_RootPxPy.SetVals(RootMETXYBinN, RootMETXYBinLB, RootMETXYBinUB);
         
         int NJetsBinN    = 11;
@@ -105,8 +108,8 @@ typedef struct StopHistBinBounds {
         IHBB_NVtx_SR.SetVals(nVtxBinN_SR, nVtxBinLB_SR, nVtxBinUB_SR);
         
         int KT2BinN = 40;
-        float KT2BinLB = -100;
-        float KT2BinUB = 300;
+        float KT2BinLB = -200;
+        float KT2BinUB = 200;
         IHBB_KT2.SetVals(KT2BinN, KT2BinLB, KT2BinUB);
     }
 } StopHistBinBounds;

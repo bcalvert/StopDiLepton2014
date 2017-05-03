@@ -98,6 +98,11 @@ struct SpecialAxisBounds {
         
         AddInKT2_TopBounds2DShape(&vecVecBinEdges, &vecNumBins); //15
         AddInKT2_TopBounds3DShape(&vecVecBinEdges, &vecNumBins); //16
+        
+        AddInQtBounds(&vecVecBinEdges, &vecNumBins); //17
+        AddInUperpUparBounds(&vecVecBinEdges, &vecNumBins); //18
+        AddInUparDivQtBounds(&vecVecBinEdges, &vecNumBins); //19
+        AddInNVtxBounds(&vecVecBinEdges, &vecNumBins); //20
     }
     
     void PrintVals() {
