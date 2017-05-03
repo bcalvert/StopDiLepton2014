@@ -54,7 +54,7 @@ int main( int argc, char* argv[]) {
     if (BasicLP.typeDilepChannel > -1) {
         nameDilep += BasicLP.strDilepChannel;
     }
-    TString arrWhichFullSel[9] = {"_BaseFullSel_LowBLepMass", "_2BJetsFullSel_LowBLepMass", "_METSig1DFullSel_LowBLepMass", "_METSigTrueFullSel_LowBLepMass", "_ZCR_LowBLepMass",  "_0BJetsFullSel_LowBLepMass", "", "", "_2BJetsFullSel"};
+    TString arrWhichFullSel[4] = {"_BaseFullSel_LowBLepMass", "_2BJetsFullSel_LowBLepMass", "_METSig1DFullSel_LowBLepMass", "_METSigTrueFullSel_LowBLepMass"};
     TString nameTTBarFile = "../LimitSetting/ShapeAnalysis/Backgrounds/TTBar";
     TString nameTTBarDims[3] = {"_One", "_Two", "_Three"};
     
@@ -78,28 +78,22 @@ int main( int argc, char* argv[]) {
         cout << "going to open " << nameTTBarFile << " for use in signal contamination calculations" << endl;
         fileTTBar = TFile::Open(nameTTBarFile);
     }
+    massCombo stop(SUSYMLP.massStop, SUSYMLP.massLSP);
     
     SignalYieldMaker_IndivPoint SYM_IP;
     SYM_IP.DefaultVals(BasicLP.numDims);
     SYM_IP.InitializeVecs();
-    
-    for (SUSYMLP.massStop = SUSYMLP.minStopMass; SUSYMLP.massStop <= SUSYMLP.maxStopMass; SUSYMLP.massStop += SUSYMLP.binSize) {
-        for (SUSYMLP.massLSP = SUSYMLP.minLSPMass; SUSYMLP.massLSP <= TMath::Min(SUSYMLP.maxLSPMass, SUSYMLP.massStop - 100); SUSYMLP.massLSP += SUSYMLP.binSize) {
-            SUSYMLP.PrintCurrMass();
-            SUSYMLP.SetMassStrings();
-            SYM_IP.SetStringSignal(&SUSYT2LP, &SUSYMLP, &BasicLP, BasicLP.useSigContam);
-            SYM_IP.InitializeHistsandOutfile(doVerb);
-            massCombo stop(SUSYMLP.massStop, SUSYMLP.massLSP);
-            SYM_IP.IterateOverCuts(&stop, doVerb);
-            if (BasicLP.useSigContam) {
-                if (doVerb) {
-                    cout << "about to do signal contamination " << endl;
-                }
-                SYM_IP.DoSignalContamination(fileTTBar, doVerb);
-            }
-            SYM_IP.WriteFile(BasicLP.useSigContam);
+    SYM_IP.SetStringSignal(&SUSYT2LP, &SUSYMLP, &BasicLP, BasicLP.useSigContam);
+    SYM_IP.InitializeHistsandOutfile(doVerb);
+    SYM_IP.IterateOverCuts(&stop, doVerb);
+    if (BasicLP.useSigContam) {
+        if (doVerb) {
+            cout << "about to do signal contamination " << endl;
         }
-    }        
+        SYM_IP.DoSignalContamination(fileTTBar, doVerb);
+    }
+    SYM_IP.WriteFile(BasicLP.useSigContam);
+    
     theApp.Run(retVal);
     //    theApp.Terminate(0);
 }

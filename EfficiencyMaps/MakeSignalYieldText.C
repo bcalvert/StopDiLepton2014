@@ -2,11 +2,7 @@
  #include "HeaderFiles/Hasher.h"
  #include "HeaderFiles/Typedefs.h"
  */
-#include "../HeaderFiles/BasicFunctions.h"
-#include "../HeaderFiles/StopSignalYieldFunctions_Maps.h"
-#include "../HeaderFiles/StopSignalYieldFunctions_Efficiency.h"
-#include "../HeaderFiles/StopSignalYieldStructs.h"
-#include "../HeaderFiles/LimitScriptHeaderFiles/LimitScripts_ParametersStruct.h"
+#include "../HeaderFiles/StopEfficiencyMapHeaderFiles.h"
 #include "../HeaderFiles/LimitScriptHeaderFiles/LimitFunctions_Saving.h"
 #include "../HeaderFiles/LimitScriptHeaderFiles/YieldCalculationFunctions.h"
 
@@ -85,19 +81,20 @@ int main( int argc, char* argv[]) {
     
     CMM.DefaultVals(&LFSC);
     CMM.InitializeVecs();
-    CMM.InitializeHistsandOutfile(&SUSYT2LPs, true);
+    CMM.InitializeHistsandOutfile(&SUSYT2LPs, &BasicLPs, true);
     
-    SMM.InitializeHistsandOutfile(&SUSYT2LPs, &CMM, true);
+    SMM.InitializeHistsandOutfile(&SUSYT2LPs, &CMM, &BasicLPs, true);
     SMM.SetFile(&CMM);
     if (doVerb) {
         cout << "going to initialize Hists for SYM Signal " << endl;
     }
-    SYM.InitializeHistsandOutfile(&SUSYT2LPs, &CMM, true, false, doVerb);
+    SYM.InitializeHistsandOutfile(&SUSYT2LPs, &CMM, &BasicLPs, true, false, doVerb);
     
     MT2LimitParams MT2LPs;
     MT2LPs.DefaultVals();
     
-    TString pathYieldText = "EfficiencyMaps/" + SUSYT2LPs.SavingName(true) + SetSMSStringAppend(4);
+//    TString pathYieldText = "EfficiencyMaps/" + SUSYT2LPs.SavingName(true) + SetSMSStringAppend(4);
+    TString pathYieldText = SUSYT2LPs.SavingName(true) + SetSMSStringAppend(4);
     
     System_MakeDir(pathYieldText);
     
@@ -152,7 +149,7 @@ int main( int argc, char* argv[]) {
 
                     MT2LPs.SetMT2AppendString(false);
                     
-                    nameYieldFile = NameYield_Signal(BasicLPs.useSigContam, CMM.doControl, &MT2LPs, &SUSYT2LPs);
+                    nameYieldFile = NameYield_Signal(BasicLPs.useSigContam, CMM.doControl, &BasicLPs, &MT2LPs, &SUSYT2LPs);
                     vecComArgs[vecComArgs.size() - 1] = pathYieldText + nameYieldFile;
                     System_RemoveFile(pathYieldText + nameYieldFile);
                     //cout << "going to save to " << pathYieldText + nameYieldFile << endl;

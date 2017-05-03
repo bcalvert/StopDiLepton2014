@@ -46,42 +46,9 @@ fi
 ################################
 ##Set up which MT2 cuts to use##
 ################################
-arrMT2ll0D=(0 80 90 100 110 120)
-arrMT2lblb0D=(0)
-arrMT2bb_ZMET0D=(-1)
-
-arrMT2ll1D=(0 80 85 90 95 100 105 110 115 120)
-arrMT2lblb1D=(0)
-arrMT2bb_ZMET1D=(-1)
-
-arrMT2ll2D=(0 80 100 150)
-arrMT2lblb3D=(0 170 200 250)
-arrMT2bb_ZMET2D=(-1)
-
-arrMT2ll3D=(0 80 100 120)
-arrMT2lblb3D=(0 170 200 250)
-arrMT2bb_ZMET3D=(70 170 200 250)
-
-arrToUseMT2ll=(${arrMT2ll0D[@]})
-arrToUseMT2lblb=(${arrMT2lblb0D[@]})
-arrToUseMT2bb_ZMET=(${arrMT2bb_ZMET0D[@]})
-
-if [ ${numDims} -eq 1 ]
-    then
-    arrToUseMT2ll=(${arrMT2ll1D[@]})
-    arrToUseMT2lblb=(${arrMT2lblb1D[@]})
-    arrToUseMT2bb_ZMET=(${arrMT2bb_ZMET1D[@]})
-elif [ ${numDims} -eq 2 ]
-    then
-    arrToUseMT2ll=(${arrMT2ll2D[@]})
-    arrToUseMT2lblb=(${arrMT2lblb2D[@]})
-    arrToUseMT2bb_ZMET=(${arrMT2bb_ZMET2D[@]})
-elif [ ${numDims} -eq 3 ]
-    then
-    arrToUseMT2ll=(${arrMT2ll3D[@]})
-    arrToUseMT2lblb=(${arrMT2lblb3D[@]})
-    arrToUseMT2bb_ZMET=(${arrMT2bb_ZMET3D[@]})
-fi
+MT2llCut=80
+MT2lblbCut=170
+MT2bb_ZMETCut=170
 ################################
 ##Set up which MT2 cuts to use##
 ################################
@@ -91,9 +58,8 @@ fi
 ############################################
 
 arrDilepFull=(-1 0 1 2)
-#arrDilepJustInd=(0 1 2)
-#arrDilepJustInd=(-1)
-arrDilepJustInd=(-1 0 1 2)
+arrDilepJustInd=(0 1 2)
+arrDilepJustInd=(-1)
 
 #arrDilepToUse=(${arrDilepFull[@]})
 if [ ${whichFullSel} -gt 0 ]
@@ -177,7 +143,7 @@ do
 
 
 
-      T2String="T2SMS ${whichT2} indexPol ${indexPol} charFrac ${charFrac} -b -q -wDilep ${chanDilep} -tDilep ${typeDilep} -tSel ${whichFullSel}"
+      T2String="T2SMS ${whichT2} indexPol ${indexPol} charFrac ${charFrac} -b -q -wDilep ${chanDilep} -tDilep ${typeDilep} -tSel ${whichFullSel} wInTy 1"
       if [ ${whichMacro} -gt 3 ]
 	  then
 	  if [ ${doVerbosity} -gt 0 ]
@@ -221,38 +187,30 @@ do
       else
 	  if [ ${whichMacro} -gt 0 ]
 	      then
-	      for MT2llCut in "${arrToUseMT2ll[@]}"
-		do
-		for MT2lblbCut in "${arrToUseMT2lblb[@]}"
-		  do
-		  for MT2bb_ZMETCut in "${arrToUseMT2bb_ZMET[@]}"
-		    do
-		    if [ ${whichT2} -lt 1 ]
-			then
-			echo T2bw charFrac ${charFrac}
-		    elif [ ${whichT2} -lt 3 ]
-			then
-			echo T2tt
-		    else
-			echo T2tb
-		    fi
-		    echo chanDilep ${chanDilep}
-		    echo indexPol ${indexPol}
-		    echo MT2llCut ${MT2llCut}
-		    echo MT2lblbCut ${MT2lblbCut}
-		    echo MT2bb_ZMETCut ${MT2bb_ZMETCut}
-		    if [ ${whichMacro} -lt 4 ]
-			then
-			if [ ${doVerbosity} -gt 0 ]
-			    then
-			    echo "${strMacroCommand} ${T2String} cuts ${MT2llCut} ${MT2lblbCut} ${MT2bb_ZMETCut}"
-			else
-			    ${strMacroCommand} ${T2String} cuts ${MT2llCut} ${MT2lblbCut} ${MT2bb_ZMETCut}
-			fi
-		    fi
-		  done
-		done
-	      done
+
+	      if [ ${whichT2} -lt 1 ]
+		  then
+		  echo T2bw charFrac ${charFrac}
+	      elif [ ${whichT2} -lt 3 ]
+		  then
+		  echo T2tt
+	      else
+		  echo T2tb
+	      fi
+	      echo chanDilep ${chanDilep}
+	      echo indexPol ${indexPol}
+	      echo MT2llCut ${MT2llCut}
+	      echo MT2lblbCut ${MT2lblbCut}
+	      echo MT2bb_ZMETCut ${MT2bb_ZMETCut}
+	      if [ ${whichMacro} -lt 4 ]
+		  then
+		  if [ ${doVerbosity} -gt 0 ]
+		      then
+		      echo "${strMacroCommand} ${T2String} cuts ${MT2llCut} ${MT2lblbCut} ${MT2bb_ZMETCut}"
+		  else
+		      ${strMacroCommand} ${T2String} cuts ${MT2llCut} ${MT2lblbCut} ${MT2bb_ZMETCut}
+		  fi
+	      fi
 	  fi
       fi
     done

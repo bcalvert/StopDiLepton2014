@@ -2,10 +2,7 @@
 #include "HeaderFiles/Hasher.h"
 #include "HeaderFiles/Typedefs.h"
 */
-#include "../HeaderFiles/BasicFunctions.h"
-#include "../HeaderFiles/StopSignalYieldFunctions_Maps.h"
-#include "../HeaderFiles/StopSignalYieldFunctions_Efficiency.h"
-#include "../HeaderFiles/StopSignalYieldStructs.h"
+#include "../HeaderFiles/StopEfficiencyMapHeaderFiles.h"
 #include <iostream>
 #include "TTree.h"
 #include "TMath.h"
@@ -32,7 +29,6 @@ int main( int argc, char* argv[]) {
     TRint theApp("App", &argc, argv);
     Bool_t retVal = kTRUE;
     
-    int paramSMS = 0;
     float paramSMST2bw = 0;
     LeptFiltSignalAssociator LFSC;
     
@@ -43,20 +39,26 @@ int main( int argc, char* argv[]) {
     SUSYT2LPs.SetParamsFromCommandLine(argc, argv);
     SUSYT2LPs.SetStrings();
     
+    LimitParametersContainer BasicLPs;
+    BasicLPs.DefaultVals();
+    BasicLPs.SetParamsFromCommandLine(argc, argv);
+    BasicLPs.SetStrings();
+    BasicLPs.PrintStrings();
+    
     for (int k = 0; k < argc; ++k) {
         if (strncmp (argv[k],"doVerb", 6) == 0) {
             doVerb = 1;
         }
     }
     
-    LFSC.DefaultVals(SUSYT2LPs.typeT2);
+    LFSC.DefaultVals(SUSYT2LPs.typeT2, &BasicLPs);
     //LFSC.SetHistAndOutFile(SUSYT2LPs.typeT2, paramSMS, false);
-    LFSC.SetHistAndOutFile(&SUSYT2LPs, false);
+    LFSC.SetHistAndOutFile(&SUSYT2LPs, false, doVerb);
     
     
     
     //LFSC.PrintBasic(SUSYT2LPs.typeT2, paramSMS);
-    SUSYT2LPs.PrintSignalModel();
+//    SUSYT2LPs.PrintSignalModel();
     
     labelMap mapT2bw, mapT2bwLSP0;
     labelMap mapT2tt, mapT2ttLSP0;
@@ -98,9 +100,11 @@ int main( int argc, char* argv[]) {
             break;
         case 2:
             stopLB = 150;
-            stopUB = 450;
+            //stopUB = 450;
+            stopUB = 400;
             LSPLB = 0;
-            LSPUB = 300;
+            //LSPUB = 300;
+            LSPUB = 250;
             break;
         default:
             break;
@@ -114,31 +118,40 @@ int main( int argc, char* argv[]) {
         for (int massLSP = TMath::Max(LSPLB, massStop - maxDiffLSP); massLSP <= TMath::Min(LSPUB, massStop - 100); massLSP += stepSize) {
             cout << endl;
             cout << "massStop:massLSP " << massStop << ":" << massLSP << endl;
-            if (SUSYT2LPs.typeT2 == 0) {
-                mapToUse = massLSP == 0 ? &mapT2bwLSP0 : &mapT2bw;
-            }
-            else if (SUSYT2LPs.typeT2 == 1) {
-                mapToUse = massLSP == 0 ? &mapT2ttLSP0 : &mapT2tt;
-            }
-            else {
-                if (massStop == 350) {
-                    mapToUse = massLSP == 0 ? &mapT2ttStop350LSP0_v2 : &mapT2ttStop350_v2;
+            if (SUSYT2LPs.typeT2 != 3) {
+                if (SUSYT2LPs.typeT2 == 0) {
+                    mapToUse = massLSP == 0 ? &mapT2bwLSP0 : &mapT2bw;
+                }
+                else if (SUSYT2LPs.typeT2 == 1) {
+                    mapToUse = massLSP == 0 ? &mapT2ttLSP0 : &mapT2tt;
                 }
                 else {
-                    mapToUse = massLSP == 0 ? &mapT2ttLSP0_v2 : &mapT2tt_v2;
+                    if (massStop == 350) {
+                        mapToUse = massLSP == 0 ? &mapT2ttStop350LSP0_v2 : &mapT2ttStop350_v2;
+                    }
+                    else {
+                        mapToUse = massLSP == 0 ? &mapT2ttLSP0_v2 : &mapT2tt_v2;
+                    }
                 }
-            }
-            LFSC.SetFiles(massStop, massLSP, &SUSYT2LPs, mapToUse, doVerb);
-            
-            if (!SUSYT2LPs.typeT2) {
-                paramSMST2bw = SUSYT2LPs.charFrac * (1.0 / 100);
-                LFSC.SetBin(massStop, massLSP, paramSMST2bw, SUSYT2LPs.typeT2, doVerb);
+                LFSC.SetFiles(massStop, massLSP, &SUSYT2LPs, mapToUse, doVerb);
+                
+                if (!SUSYT2LPs.typeT2) {
+                    paramSMST2bw = SUSYT2LPs.charFrac * (1.0 / 100);
+                    LFSC.SetBin(massStop, massLSP, paramSMST2bw, SUSYT2LPs.typeT2, doVerb);
+                }
+                else {
+                    LFSC.SetBin(massStop, massLSP, SUSYT2LPs.indexPol, SUSYT2LPs.typeT2, doVerb);
+                }
+                LFSC.CloseFiles();
             }
             else {
-                LFSC.SetBin(massStop, massLSP, SUSYT2LPs.indexPol, SUSYT2LPs.typeT2, doVerb);
+                LFSC.SetBinT2tb(massStop, massLSP, doVerb);
             }
-            LFSC.CloseFiles();
         }
+    }
+    
+    if (SUSYT2LPs.typeT2 == 2) {
+        LFSC.FillInGapsTightBin();
     }
     
     LFSC.WriteFile();

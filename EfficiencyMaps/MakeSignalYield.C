@@ -2,10 +2,7 @@
  #include "HeaderFiles/Hasher.h"
  #include "HeaderFiles/Typedefs.h"
  */
-#include "../HeaderFiles/BasicFunctions.h"
-#include "../HeaderFiles/StopSignalYieldFunctions_Maps.h"
-#include "../HeaderFiles/StopSignalYieldFunctions_Efficiency.h"
-#include "../HeaderFiles/StopSignalYieldStructs.h"
+#include "../HeaderFiles/StopEfficiencyMapHeaderFiles.h"
 #include <iostream>
 #include "TTree.h"
 #include "TMath.h"
@@ -42,11 +39,26 @@ int main( int argc, char* argv[]) {
     SignalYieldMaker SYM;
     SYM.DefaultVals();
     
-    SUSYT2LimitParams SUSYT2LPs;
+    CoarseMapMaker CMM_T2ttHack;
+    SmoothMapMaker SMM_T2ttHack;
+    
+    SUSYT2LimitParams SUSYT2LPs, SUSYT2LPs_T2ttHack;
     SUSYT2LPs.DefaultVals();
     SUSYT2LPs.SetParamsFromCommandLine(argc, argv);
     SUSYT2LPs.SetStrings();
     SUSYT2LPs.PrintStrings();
+    
+    if (SUSYT2LPs.typeT2 == 3) {
+        SUSYT2LPs_T2ttHack = SUSYT2LPs;
+        SUSYT2LPs_T2ttHack.typeT2 = 1;
+        SUSYT2LPs_T2ttHack.SetStrings();
+    }
+    
+    LimitParametersContainer BasicLPs;
+    BasicLPs.DefaultVals();
+    BasicLPs.SetParamsFromCommandLine(argc, argv);
+    BasicLPs.SetStrings();
+    BasicLPs.PrintStrings();
     
     bool doVerb = 0;
     
@@ -54,15 +66,23 @@ int main( int argc, char* argv[]) {
     SMM.SetParamsFromCommandLine(argc, argv);
     SYM.SetParamsFromCommandLine(argc, argv);
     
-    LFSC.DefaultVals(SUSYT2LPs.typeT2);
+    LFSC.DefaultVals(SUSYT2LPs.typeT2, &BasicLPs);
     LFSC.SetHistAndOutFile(&SUSYT2LPs, true);
     
-    CMM.DefaultVals(&LFSC);
+    CMM.DefaultVals(&LFSC, &BasicLPs);
     CMM.InitializeVecs();
-    CMM.InitializeHistsandOutfile(&SUSYT2LPs, true);
+    CMM.InitializeHistsandOutfile(&SUSYT2LPs, true, SUSYT2LPs.typeT2 < 2);
+
     
     SMM.InitializeHistsandOutfile(&SUSYT2LPs, &CMM, true);
     SMM.SetFile(&CMM);
+    
+    if (SUSYT2LPs.typeT2 == 3) {
+        CMM_T2ttHack = CMM;
+        CMM_T2ttHack.InitializeHistsandOutfile(&SUSYT2LPs_T2ttHack, true);
+        SMM_T2ttHack = SMM;
+        SMM_T2ttHack.InitializeHistsandOutfile(&SUSYT2LPs_T2ttHack, &CMM_T2ttHack, true);
+    }
     
     for (int k = 0; k < argc; ++k) {
         if (strncmp (argv[k],"doVerb", 6) == 0) {
@@ -77,7 +97,12 @@ int main( int argc, char* argv[]) {
     if (doVerb) {
         cout << "going to read smooth maps " << endl;
     }
-    SYM.ReadSmoothMaps(&SMM);
+    if (SUSYT2LPs.typeT2 == 3) {
+        SYM.ReadSmoothMaps(&SMM, &SMM_T2ttHack, doVerb);
+    }
+    else {
+        SYM.ReadSmoothMaps(&SMM, NULL, doVerb);
+    }
     if (doVerb) {
         cout << "going to load XSec " << endl;
     }

@@ -2,10 +2,7 @@
 #include "HeaderFiles/Hasher.h"
 #include "HeaderFiles/Typedefs.h"
 */
-#include "../HeaderFiles/BasicFunctions.h"
-#include "../HeaderFiles/StopSignalYieldFunctions_Maps.h"
-#include "../HeaderFiles/StopSignalYieldFunctions_Efficiency.h"
-#include "../HeaderFiles/StopSignalYieldStructs.h"
+#include "../HeaderFiles/StopEfficiencyMapHeaderFiles.h"
 #include <iostream>
 #include "TTree.h"
 #include "TMath.h"
@@ -43,34 +40,68 @@ int main( int argc, char* argv[]) {
     SUSYT2LPs.SetStrings();
     SUSYT2LPs.PrintStrings();
     
+    LimitParametersContainer BasicLPs;
+    BasicLPs.DefaultVals();
+    BasicLPs.SetParamsFromCommandLine(argc, argv);
+    BasicLPs.SetStrings();
+    BasicLPs.PrintStrings();
+    
     float paramSMST2bw = 0;
     
-    bool doVerb = 0;
+    int doVerb = 0;
     
     for (int k = 0; k < argc; ++k) {
         if (strncmp (argv[k],"doVerb", 6) == 0) {
             doVerb = 1;
         }
+        else if (strncmp (argv[k],"levelVerb", 9) == 0) {
+            doVerb = strtol(argv[k + 1], NULL, 10);
+        }
     }
     CMM.SetParamsFromCommandLine(argc, argv);
     
-    
-    LFSC.DefaultVals(SUSYT2LPs.typeT2);
+    LFSC.DefaultVals(SUSYT2LPs.typeT2, &BasicLPs);
     LFSC.SetHistAndOutFile(&SUSYT2LPs, true);
     
-    CMM.DefaultVals(&LFSC);
-    CMM.InitializeVecs();
+    CMM.DefaultVals(&LFSC, &BasicLPs);
+//    CMM.InitializeVecs(SUSYT2LPs.typeT2 != 3 || (BasicLPs.typeFullSel > 3 && BasicLPs.typeFullSel < 6));
+//    CMM.InitializeVecs(SUSYT2LPs.typeT2 != 3);
+    CMM.InitializeVecs(true);
+    
+    CoarseMapMaker CMM_NonLeptFilter = CMM;
 //    CMM.InitializeHistsandOutfile(SUSYT2LPs.typeT2, paramSMS, false);
-    CMM.InitializeHistsandOutfile(&SUSYT2LPs, false);
+//    CMM.InitializeHistsandOutfile(&SUSYT2LPs, false, SUSYT2LPs.typeT2 != 3 || (BasicLPs.typeFullSel > 3 && BasicLPs.typeFullSel < 6));
+//    CMM.InitializeHistsandOutfile(&SUSYT2LPs, false, SUSYT2LPs.typeT2 != 3);
+    CMM.InitializeHistsandOutfile(&SUSYT2LPs, false, true);
+
+    bool doLeptFiltAverage = 1;
     
-    massMap mapMassT2bw;
-    massMap mapMassT2tt;
+    if (SUSYT2LPs.typeT2 == 3) doLeptFiltAverage = 0;
+    if (doLeptFiltAverage) {
+//        CMM_NonLeptFilter.InitializeHistsandOutfile(&SUSYT2LPs, -1, SUSYT2LPs.typeT2 != 3 || (BasicLPs.typeFullSel > 3 && BasicLPs.typeFullSel < 6));
+//        CMM_NonLeptFilter.InitializeHistsandOutfile(&SUSYT2LPs, -1, SUSYT2LPs.typeT2 != 3);
+        CMM_NonLeptFilter.InitializeHistsandOutfile(&SUSYT2LPs, -1, true);
+    }
     
-    massMap * massMapToUse;
+    massMap mapMassT2tt, mapMassT2ttNoLeptFilter;
+    massMap mapMassT2bw, mapMassT2bwNoLeptFilter;
+    massMap mapMassT2tb;
     
-    SetMassMapT2tt(mapMassT2tt, 1);
+    massMap * massMapToUse, * massMapToUseNoLeptFilter;
     
-    SetMassMapT2bw(mapMassT2bw, SUSYT2LPs.charFrac);
+    if (SUSYT2LPs.typeT2 > 0) {
+        if (SUSYT2LPs.typeT2 == 1) {
+            SetMassMapT2tt(mapMassT2tt, true);
+            SetMassMapT2tt(mapMassT2ttNoLeptFilter, false);
+        }
+        else if (SUSYT2LPs.typeT2 == 3) {
+            SetMassMapT2tb(mapMassT2tb);
+        }
+    }
+    else {
+        SetMassMapT2bw(mapMassT2bw, SUSYT2LPs.charFrac, true);
+        SetMassMapT2bw(mapMassT2bwNoLeptFilter, SUSYT2LPs.charFrac, false);
+    }
     
     massCombo currCombo;
     
@@ -105,6 +136,7 @@ int main( int argc, char* argv[]) {
     
     //CMM.PrintBasic(SUSYT2LPs.typeT2, paramSMS);
     CMM.LoadXSec();
+    CMM_NonLeptFilter.LoadXSec();
     
     for (int massStop = stopLB; massStop <= stopUB; massStop += stepSize) {
         for (int massLSP = LSPLB; massLSP <= TMath::Min(LSPUB, massStop - 100); massLSP += stepSize) {
@@ -113,21 +145,29 @@ int main( int argc, char* argv[]) {
             if (SUSYT2LPs.typeT2 == 0) {
                 mapToUse = massLSP == 0 ? &mapT2bwLSP0 : &mapT2bw;
                 massMapToUse = &mapMassT2bw;
+                massMapToUseNoLeptFilter = &mapMassT2bwNoLeptFilter;
             }
             else if (SUSYT2LPs.typeT2 == 1) {
                 mapToUse = massLSP == 0 ? &mapT2ttLSP0 : &mapT2tt;
                 massMapToUse = &mapMassT2tt;
+                massMapToUseNoLeptFilter = &mapMassT2ttNoLeptFilter;
             }
-            else {
+            else if (SUSYT2LPs.typeT2 == 2) {
                 if (massStop == 350) {
                     mapToUse = massLSP == 0 ? &mapT2ttStop350LSP0_v2 : &mapT2ttStop350_v2;
                 }
                 else {
                     mapToUse = massLSP == 0 ? &mapT2ttLSP0_v2 : &mapT2tt_v2;
                 }
+                massMapToUse = &mapMassT2tt;
+            }
+            else if (SUSYT2LPs.typeT2 == 3) {
+                massMapToUse = &mapMassT2tb;
             }
             
-             LFSC.SetFiles(massStop, massLSP, &SUSYT2LPs, mapToUse, doVerb);
+            if (SUSYT2LPs.typeT2 != 3) {
+                LFSC.SetFiles(massStop, massLSP, &SUSYT2LPs, mapToUse, doVerb);
+            }
             
             
             if (!SUSYT2LPs.typeT2) {
@@ -137,18 +177,41 @@ int main( int argc, char* argv[]) {
                 paramSMST2bw = -1;
             }
 	    //cout << "about to set files " << endl;
+            if (doVerb) {
+                cout << "about to set efficiency for (possibly) lept-filter" << endl;
+            }
             CMM.SetFiles(massStop, massLSP, &SUSYT2LPs, massMapToUse, doVerb);
-            CMM.SetEff(&LFSC, massStop, massLSP, paramSMST2bw, SUSYT2LPs.typeT2, doVerb);
+            if (doVerb) {
+                cout << "about to set efficiency for non lept-filter" << endl;
+            }
+            CMM.SetEff(&LFSC, massStop, massLSP, paramSMST2bw, SUSYT2LPs.typeT2, SUSYT2LPs.typeT2 == 3 || (BasicLPs.typeFullSel > 3 && BasicLPs.typeFullSel < 6), doVerb);
             CMM.SetBin(massStop, massLSP);
-            
-	    //            LFSC.CloseFiles();
+            //            LFSC.CloseFiles();
             CMM.CloseFiles();
-            cout << "CMM eff " << CMM.effCV << endl;
+            cout << "Pre-addition of non-lept Filter, CMM eff " << CMM.effCV << " +- " << CMM.errEffCV << endl;
+            if (doLeptFiltAverage) {
+                if (CMM.isLeptFilt && SUSYT2LPs.typeT2 != 2) {
+                    if (SUSYT2LPs.typeT2 == 1 && massStop < 150) continue; //c.f. similar thing in header file
+                    CMM_NonLeptFilter.SetFiles(massStop, massLSP, &SUSYT2LPs, massMapToUseNoLeptFilter, doVerb);
+                    CMM_NonLeptFilter.SetEff(&LFSC, massStop, massLSP, paramSMST2bw, SUSYT2LPs.typeT2, SUSYT2LPs.typeT2 == 3 || (BasicLPs.typeFullSel > 3 && BasicLPs.typeFullSel < 6), doVerb);
+                    CMM_NonLeptFilter.SetBin(massStop, massLSP);
+                    CMM_NonLeptFilter.CloseFiles();
+                    CMM.CombineCoarseEffs(massStop, massLSP, &CMM_NonLeptFilter, doVerb);
+                    cout << "Post-addition of non-lept Filter, CMM eff " << CMM.effCV << " +- " << CMM.errEffCV << endl;
+                }
+            }
+            if (SUSYT2LPs.typeT2 != 3) {
+                LFSC.CloseFiles();
+            }
+            //Deal with efficiency calculation when CV is 0 but Syst Var is not (specifically error of calculations)
         }
     }
-    
+    CMM.SetMCStatEff(doVerb > 1);
     CMM.DoOverflow();
     
+    if (doLeptFiltAverage) {
+        CMM_NonLeptFilter.DeleteHists();
+    }
     CMM.WriteFile();
     theApp.Run(retVal);
     //    theApp.Terminate(0);

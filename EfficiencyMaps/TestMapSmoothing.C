@@ -53,76 +53,55 @@ int main( int argc, char* argv[]) {
     BasicLPs.PrintStrings();
     
     bool doVerb = 0;
-    bool doDraw = 0;
+    
     for (int k = 0; k < argc; ++k) {
         if (strncmp (argv[k],"doVerb", 6) == 0) {
             doVerb = 1;
-        }
-        if (strncmp (argv[k],"doDraw", 6) == 0) {
-            doDraw = 1;
         }
     }
     
     CMM.SetParamsFromCommandLine(argc, argv);
     SMM.SetParamsFromCommandLine(argc, argv);
     
-    LFSC.DefaultVals(SUSYT2LPs.typeT2, &BasicLPs);
+    LFSC.DefaultVals(SUSYT2LPs.typeT2);
     LFSC.SetHistAndOutFile(&SUSYT2LPs, true);
     
-    CMM.DefaultVals(&LFSC, &BasicLPs);
+    CMM.DefaultVals(&LFSC);
     CMM.InitializeVecs();
-    CMM.InitializeHistsandOutfile(&SUSYT2LPs, true, SUSYT2LPs.typeT2 != 2);
+    CMM.InitializeHistsandOutfile(&SUSYT2LPs, false);
 
 
 
     
 //    if (doVerb) {
 //    }
-    if (SUSYT2LPs.typeT2 == 2) {
-        SMM.numRebins--;
-    }
+    SMM.InitializeHistsandOutfile(&SUSYT2LPs, &CMM, &BasicLPs, false);
     SMM.SetFile(&CMM);
     SMM.PrintBasic();
-    SMM.DoSmoothing(&CMM, doVerb);
     SMM.DoInterpolation(doVerb);
     
-    bool doCombo_T2SMS = true;
-    if (SUSYT2LPs.typeT2 == 1 && doCombo_T2SMS) {
-        cout << "now adding in Tight Bin guys' information " << endl;
+    if (SUSYT2LPs.typeT2 == 1) {
         //Hack to add in Tight bin guys into the information
         SUSYT2LPs_TightBin = SUSYT2LPs;
         SUSYT2LPs_TightBin.typeT2 = 2;
-        
-//        CMM_TightBin.SetParamsFromCommandLine(argc, argv);
-        //        CMM_TightBin.DefaultVals(&LFSC, &BasicLPs);
-        //        CMM_TightBin.InitializeVecs();
-
+        SMM_TightBin = SMM;
         CMM_TightBin = CMM;
-        CMM_TightBin.InitializeHistsandOutfile(&SUSYT2LPs_TightBin, true, false);
+        
+        CMM_TightBin.InitializeHistsandOutfile(&SUSYT2LPs_TightBin, &BasicLPs, true, false);
         
         //SMM_TightBin.InitializeHistsandOutfile(&SUSYT2LPs_TightBin, &CMM_TightBin, &BasicLPs, false);
-        
-        SMM_TightBin.DefaultVals();
-        SMM_TightBin.SetParamsFromCommandLine(argc, argv);
         SMM_TightBin.numRebins = SMM.numRebins - 1;
         SMM_TightBin.SetFile(&CMM_TightBin);
         SMM_TightBin.PrintBasic();
-        cout << "about to do smoothing of tight bin stuff " << endl;
-        //doVerb = true;
-        SMM_TightBin.DoSmoothing(&CMM_TightBin, doVerb);
-        cout << "about to do interpolation of tight bin stuff " << endl;
-        //doVerb = false;
         SMM_TightBin.DoInterpolation(doVerb);
         //SMM_TightBin.WriteFile(false);
-        cout << "about to combine tight bin stuff with main stuff " << endl;
-        SMM.CombineSmoothEffs(&SMM_TightBin, doVerb);
+        CombineSmoothEffs(&SMM, &SMM_TightBin, doVerb);
     }
     /*
     for (int iVec = 0; iVec < SMM.vecInterpHist.size(); ++iVec) {
         cout << "iVec: " << iVec << " is " << SMM.vecInterpHist[iVec]->GetName() << endl;
     }
-     */
-    SMM.InitializeHistsandOutfile(&SUSYT2LPs, &CMM, false);
+    */
     SMM.WriteFile();
     theApp.Run(retVal);
     //    theApp.Terminate(0);
