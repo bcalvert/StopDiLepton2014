@@ -206,62 +206,54 @@ typedef struct ValError {
     }
     
     
-    void PrintOut(TString inName, bool isStat = true, TString systName = "", bool printRelErr= false, bool printSymSyst = false) {
+    void PrintOut(TString inName, bool isStat = true, TString systName = "", int printRelErr = 0, bool printSymSyst = false) {
         char buf[300];
+        float printCV = centVal > 0 ? centVal : 0.00;;
+        float printErrValUp, printErrValDown;
         if (isStat) {
             if (printRelErr) {
-                //sprintf(buf,"CentVal: %0.4f, StatErr: %0.4f", centVal, 1 + (upError/centVal));
-                
-                if (centVal > 0) {
-                    sprintf(buf,"CentVal: %0.4f, StatErr: %0.4f", centVal, 1 + (upError/centVal));
+                printErrValUp = centVal > 0 ? 1 + (upError/centVal) : 1.00;
+                if (printRelErr > 1) {
+                    printErrValUp = centVal > 0 ? 100 * (upError / centVal) : 0.00;
                 }
-                else {
-                    sprintf(buf,"CentVal: %0.4f, StatErr: %0.4f", 0.00, 1.00);
-                }
-                
-                cout << "Name: " << inName << ", " << buf << endl;
             }
             else {
-                sprintf(buf,"CentVal: %0.4f, StatErr: %0.4f", centVal, upError);
-                cout << "Name: " << inName << ", " << buf << endl;
+                printErrValUp = upError;
             }
+            sprintf(buf,"CentVal: %0.4f, StatErr: %0.4f", printCV, printErrValUp);
+            cout << "Name: " << inName << ", " << buf << endl;
         }
         else {
             if (printSymSyst) {
                 if (printRelErr) {
                     //                    sprintf(buf,"CentVal: %0.4f, AverageErr: %0.4f", centVal, 1 + ((0.5/centVal) * (upError + downError)));
-                    
-                    if (centVal > 0) {
-                        sprintf(buf,"CentVal: %0.4f, AverageErr: %0.4f", centVal, 1 + ((0.5/centVal) * (upError + downError)));
+                    printErrValUp = centVal > 0 ? 1 + ((0.5/centVal) * (upError + downError)) : 1.00;
+                    if (printRelErr > 1) {
+                        printErrValUp = centVal > 0 ? 100 * ((0.5/centVal) * (upError + downError)) : 0.00;
                     }
-                    else {
-                        sprintf(buf,"CentVal: %0.4f, AverageErr: %0.4f", 0.00, 1.00);
-                    }
-                    
-                    cout << "Name: " << inName << ", Syst: " << systName << ", " << buf << endl;
                 }
                 else {
-                    sprintf(buf,"CentVal: %0.4f, AverageErr: %0.4f", centVal, 0.5 * (upError + downError));
-                    cout << "Name: " << inName << ", Syst: " << systName << ", " << buf << endl;
+                    printErrValUp = 0.5 * (upError + downError);
                 }
+                sprintf(buf,"CentVal: %0.4f, AverageErr: %0.4f", printCV, printErrValUp);
+                cout << "Name: " << inName << ", Syst: " << systName << ", " << buf << endl;
             }
             else {
                 if (printRelErr) {
                     //sprintf(buf,"CentVal: %0.4f, UpErr: %0.4f, DownErr: %0.4f", centVal, 1 + (upError/centVal), 1 + (downError/centVal));
-                    
-                    if  (centVal > 0) {
-                        sprintf(buf,"CentVal: %0.4f, UpErr: %0.4f, DownErr: %0.4f", centVal, 1 + (upError/centVal), 1 - (downError/centVal));
+                    printErrValUp = centVal > 0 ? 1 + (upError / centVal) : 1.00;
+                    printErrValDown = centVal > 0 ? 1 - (downError / centVal) : 1.00;
+                    if (printRelErr > 1) {
+                        printErrValUp = centVal > 0 ? 100 * upError / centVal : 0.00;
+                        printErrValDown = centVal > 0 ? 100 * downError / centVal : 0.00;
                     }
-                    else {
-                        sprintf(buf,"CentVal: %0.4f, UpErr: %0.4f, DownErr: %0.4f", 0.00, 1.00, 1.00);
-                    }
-                    
-                    cout << "Name: " << inName << ", Syst: " << systName << ", " << buf << endl;
                 }
                 else {
-                    sprintf(buf,"CentVal: %0.4f, UpErr: %0.4f, DownErr: %0.4f", centVal, upError, downError);
-                    cout << "Name: " << inName << ", Syst: " << systName << ", " << buf << endl;
+                    printErrValUp = upError;
+                    printErrValDown = downError;
                 }
+                sprintf(buf,"CentVal: %0.4f, UpErr: %0.4f, DownErr: %0.4f", printCV, printErrValUp, printErrValDown);
+                cout << "Name: " << inName << ", Syst: " << systName << ", " << buf << endl;
             }
         }
     }
@@ -364,7 +356,7 @@ typedef struct SampleSystematicsInfo {
             }
         }
     }
-    void PrintOut(bool justStat = true, bool noSystPlusStat = true, bool printRelErr = false, bool printSymSyst = false) {
+    void PrintOut(bool justStat = true, bool noSystPlusStat = true, int printRelErr = 0, bool printSymSyst = false) {
         StatError.PrintOut(Name, true, "", printRelErr);
         if (!justStat) {
             for (unsigned int iSyst = 0; iSyst < SystError.size(); ++iSyst) {
@@ -434,12 +426,13 @@ typedef struct SampleSystematicsInfo {
         TH1F * histSystUp, * histSystDown;
         TString baseSearchString;
         
-//        const int numSysts = 8;
+        //        const int numSysts = 8;
         const int numSysts = 11;
-//        bool isSmearSyst[numSysts] = {false, false, false, false, true, true, false, false};
-        bool isSmearSyst[numSysts] = {false, false, false, false, true, true, false, false, false, false, false};
-//        TString namesSysts[numSysts] = {"LepEffSF", "LepES", "JetES", "BTagSF", "UncES", "JetSmear", "genRecoilRW", "EWKXSec"};
-        TString namesSysts[numSysts] = {"LepEffSF", "LepES", "JetES", "BTagSF", "UncES", "JetSmear", "genRecoilRW", "TTBarNorm", "DYNorm", "EWKNorm", "FakeLepSyst"};
+        //        bool isSmearSyst[numSysts] = {false, false, false, false, true, true, false, false};
+        vector<bool> isSmearSyst = VecSmearSysts();
+        vector<TString> namesSysts = VecNameSysts();
+        //        TString namesSysts[numSysts] = {"LepEffSF", "LepES", "JetES", "BTagSF", "UncES", "JetSmear", "genRecoilRW", "EWKXSec"};
+        //        TString namesSysts[numSysts] = {"LepEffSF", "LepES", "JetES", "BTagSF", "UncES", "JetSmear", "genRecoilRW", "TTBarNorm", "DYNorm", "EWKNorm", "FakeLepSyst"};
         
         TGraphAsymmErrors * currFracRatioGraph;
         TGraphAsymmErrors * errCompStatCentVal = ClonePoints(inputBaseMCHist);
@@ -447,16 +440,15 @@ typedef struct SampleSystematicsInfo {
         TGraphAsymmErrors * errSystQuadSum, * errSystQuadSum_pStat;
         TGraphAsymmErrors * errCurrSyst, * errCurrSyst_pStat;
         
-        const int numFakeSysts = 3;
-        TString nameFakeSysts[numFakeSysts] = {"FakeLepStat", "FakeLepFakeRateSyst", "FakeLepPromptRateSyst"};
-        vector<TGraphAsymmErrors *> errFakeComp;
-        TGraphAsymmErrors * errCurrFakeSyst;
-        
-        
         const int numBTagSysts = 2;
         TString nameBTagSysts[numBTagSysts] = {"BTagEffSF", "BMisTagSF"};
         vector<TGraphAsymmErrors *> errBTagComp;
         TGraphAsymmErrors * errCurrBTagSyst;
+        
+        const int numFakeSysts = 3;
+        TString nameFakeSysts[numFakeSysts] = {"FakeLepStat", "FakeLepFakeRateSyst", "FakeLepPromptRateSyst"};
+        vector<TGraphAsymmErrors *> errFakeComp;
+        TGraphAsymmErrors * errCurrFakeSyst;
         
         for (int iSyst = 0; iSyst < numSysts; ++iSyst) {
             if (!doSmear && isSmearSyst[iSyst]) continue;
@@ -531,13 +523,16 @@ typedef struct SampleSystematicsInfo {
             SystName.push_back(namesSysts[iSyst]);
             if (doFracRatio) {
                 currFracRatioGraph = FracGraph(inputBaseMCHist, errCurrSyst, doAbsRatio, fracRatioYAxisLB, fracRatioYAxisUB);
+                currFracRatioGraph->SetName("RatioGraph_" + SystName[SystName.size() - 1]);
                 fracRatioSystVec.push_back(currFracRatioGraph);
             }
             
-            if (doVerbosity) {
-                cout << "not so quick sanity check " << endl;
-                PrintVec(iSyst, doFracRatio);
-            }
+            /*
+             if (doVerbosity) {
+             cout << "not so quick sanity check " << endl;
+             PrintVec(iSyst, doFracRatio);
+             }
+             */
         }
         /*
          if (doVerbosity) {
@@ -556,13 +551,10 @@ typedef struct SampleSystematicsInfo {
         SystName.push_back("FullSyst");
         if (doFracRatio) {
             currFracRatioGraph = FracGraph(inputBaseMCHist, errSystQuadSum, doAbsRatio, fracRatioYAxisLB, fracRatioYAxisUB);
+            currFracRatioGraph->SetName("RatioGraph_FullSyst");
             fracRatioSystVec.push_back(currFracRatioGraph);
         }
-        
     }
-    
-    
-    
     
     void SetSystGraphsShapes(TH1F * inputBaseMCHist, vector<TH1F *> * vecInputMC_SystVarUp, vector<TH1F *> * vecInputMC_SystVarDown, Color_t colorErrGraph, bool doAbsRatio, float fracRatioYAxisLB, float fracRatioYAxisUB, bool doSymErr, bool doFracRatio, bool doSmear, bool isEWK = false, bool doStopXSec = true, bool doVerbosity = false) {
         
@@ -579,12 +571,15 @@ typedef struct SampleSystematicsInfo {
         TH1F * histSystUp, * histSystDown;
         TString baseSearchString;
         
-        //        const int numSysts = 8;
-        const int numSysts = 10;
-        //        bool isSmearSyst[numSysts] = {false, false, false, false, true, true, false, false};
-        bool isSmearSyst[numSysts] = {false, false, false, false, true, true, false, false, false, false};
-        //        TString namesSysts[numSysts] = {"LepEffSF", "LepES", "JetES", "BTagSF", "UncES", "JetSmear", "genRecoilRW", "EWKXSec"};
-        TString namesSysts[numSysts] = {"LepEffSF", "LepES", "JetES", "BTagSF", "UncES", "JetSmear", "genRecoilRW", "TTBarNorm", "DYNorm", "EWKNorm"};
+        const int numSysts = 11;
+        vector<bool> isSmearSyst = VecSmearSysts();
+        vector<TString> namesSysts = VecNameSysts();
+        
+        /*
+         const int numSysts = 10;
+         bool isSmearSyst[numSysts] = {false, false, false, false, true, true, false, false, false, false};
+         TString namesSysts[numSysts] = {"LepEffSF", "LepES", "JetES", "BTagSF", "UncES", "JetSmear", "genRecoilRW", "TTBarNorm", "DYNorm", "EWKNorm"};
+         */
         
         TGraphAsymmErrors * currFracRatioGraph;
         TGraphAsymmErrors * errCompStatCentVal = ClonePoints(inputBaseMCHist);
@@ -597,12 +592,17 @@ typedef struct SampleSystematicsInfo {
         vector<TGraphAsymmErrors *> errBTagComp;
         TGraphAsymmErrors * errCurrBTagSyst;
         
+        const int numFakeSysts = 3;
+        TString nameFakeSysts[numFakeSysts] = {"FakeLepStat", "FakeLepFakeRateSyst", "FakeLepPromptRateSyst"};
+        vector<TGraphAsymmErrors *> errFakeComp;
+        TGraphAsymmErrors * errCurrFakeSyst;
+        
         int currIndex = -1;
         
         for (int iSyst = 0; iSyst < numSysts; ++iSyst) {
             if (!doSmear && isSmearSyst[iSyst]) continue;
             if (!doStopXSec && namesSysts[iSyst].Contains("genStopXSec")) continue;
-
+            /*
             if (namesSysts[iSyst].Contains("BTagSF")) {
                 for (int iBTagSysts = 0; iBTagSysts < numBTagSysts; ++iBTagSysts) {
                     baseSearchString = nameBTagSysts[iBTagSysts];
@@ -623,6 +623,28 @@ typedef struct SampleSystematicsInfo {
                 errCurrSyst = GraphSystErrorSumErrors(errCompStatCentVal, namesSysts[iSyst], &errBTagComp, false, inputBaseMCHist, doVerbosity);
                 if (doVerbosity) {
                     cout << "name of btag combo " << errCurrSyst->GetName() << endl;
+                }
+            }
+            else */
+            if (namesSysts[iSyst].Contains("FakeLepSyst")) {
+                for (int iFakeSyst = 0; iFakeSyst < numFakeSysts; ++iFakeSyst) {
+                    baseSearchString = nameFakeSysts[iFakeSyst];
+                    indexSystUp = SystHistFinderOneDee(vecInputMC_SystVarUp, baseSearchString + TString("Up"), doVerbosity);
+                    indexSystDown = SystHistFinderOneDee(vecInputMC_SystVarDown, baseSearchString + TString("Down"), doVerbosity);
+                    if (indexSystUp == -1 || indexSystDown == -1) {
+                        cout << "something wiggedy with syst indices " << endl;
+                    }
+                    histSystUp = vecInputMC_SystVarUp->at(indexSystUp);
+                    histSystDown = vecInputMC_SystVarDown->at(indexSystDown);
+                    errCurrFakeSyst = GraphSystErrorSet_SingleSource(inputBaseMCHist, histSystUp, histSystDown, nameFakeSysts[iFakeSyst], doSymErr, doVerbosity);
+                    errFakeComp.push_back(errCurrFakeSyst);
+                }
+                if (doVerbosity) {
+                    cout << "making the combo Fake syst " << endl;
+                }
+                errCurrSyst = GraphSystErrorSumErrors(errCompStatCentVal, namesSysts[iSyst], &errFakeComp, false, inputBaseMCHist, doVerbosity);
+                if (doVerbosity) {
+                    cout << "name of Fake combo " << errCurrSyst->GetName() << endl;
                 }
             }
             else if (namesSysts[iSyst].Contains("EWKXSec")) {
@@ -652,15 +674,18 @@ typedef struct SampleSystematicsInfo {
             SystName.push_back(namesSysts[iSyst]);
             if (doFracRatio) {
                 currFracRatioGraph = FracGraph(inputBaseMCHist, errCurrSyst, doAbsRatio, fracRatioYAxisLB, fracRatioYAxisUB);
+//                currFracRatioGraph->SetName("RatioGraph_" + SystName[iSyst]);
+                currFracRatioGraph->SetName("RatioGraph_" + SystName[SystName.size() - 1]);
                 fracRatioSystVec.push_back(currFracRatioGraph);
             }
             
             currIndex++;
-            
+            /*
             if (doVerbosity) {
                 cout << "not so quick sanity check " << endl;
                 PrintVec(currIndex, doFracRatio);
             }
+             */
         }
         /*
          if (doVerbosity) {
@@ -670,6 +695,7 @@ typedef struct SampleSystematicsInfo {
          }
          }
          */
+        
         errSystQuadSum = GraphSystErrorSumErrors(errCompStatCentVal, TString("FullSyst"), &SystErrorGraph, false, inputBaseMCHist, doVerbosity);
         errSystQuadSum_pStat = GraphSystErrorSumErrors(errCompStatCentVal, TString("FullSyst"), &SystErrorGraph, true, inputBaseMCHist, doVerbosity);
         GraphMainAttSet(errSystQuadSum, colorErrGraph, 3001, colorErrGraph, 2, kWhite, 0, 0);
@@ -679,6 +705,7 @@ typedef struct SampleSystematicsInfo {
         SystName.push_back("FullSyst");
         if (doFracRatio) {
             currFracRatioGraph = FracGraph(inputBaseMCHist, errSystQuadSum, doAbsRatio, fracRatioYAxisLB, fracRatioYAxisUB);
+            currFracRatioGraph->SetName("RatioGraph_FullSyst");
             fracRatioSystVec.push_back(currFracRatioGraph);
         }
         
@@ -708,7 +735,7 @@ typedef struct SampleSystematicsInfo {
         }
     }
     
-
+    
 } SampleSystematicsInfo;
 
 

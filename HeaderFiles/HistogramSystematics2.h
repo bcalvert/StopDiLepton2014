@@ -5,6 +5,10 @@
 #include "TString.h"
 #include "TMath.h"
 #include "TGraphAsymmErrors.h"
+#include "TPolyLine.h"
+#include "Math/Math.h"
+#include "Math/ProbFuncMathCore.h"
+#include "Math/SpecFuncMathCore.h"
 using namespace std;
 
 int SystHistFinderOneDee(vector<TH1F *> * vecSystHists, TString searchString, bool doVerbosity = false) {
@@ -23,7 +27,7 @@ int SystHistFinderOneDee(vector<TH1F *> * vecSystHists, TString searchString, bo
             if (doVerbosity) {
                 cout << "found it! " << whichIndex << endl;
             }
-        }        
+        }
     }
     return whichIndex;
 }
@@ -38,20 +42,20 @@ int SystHistFinderOneDee(vector<TH1 *> * vecSystHists, TString searchString) {
     return whichIndex;
 }
 /*
-TH1F * SystHistFinderOneDee(vector<TH1 *> * vecSystHists, TString searchString) {
-    TString name;
-    int whichIndex = -1;
-    for (unsigned int iSyst = 0; iSyst < vecSystHists->size(); ++iSyst) {
-        name = vecSystHists->at(iSyst)->GetName();
-        if (name.Contains(searchString)) whichIndex = iSyst;
-    }
-    return (TH1F *) vecSystHists->at(whichIndex);
-}
-*/
+ TH1F * SystHistFinderOneDee(vector<TH1 *> * vecSystHists, TString searchString) {
+ TString name;
+ int whichIndex = -1;
+ for (unsigned int iSyst = 0; iSyst < vecSystHists->size(); ++iSyst) {
+ name = vecSystHists->at(iSyst)->GetName();
+ if (name.Contains(searchString)) whichIndex = iSyst;
+ }
+ return (TH1F *) vecSystHists->at(whichIndex);
+ }
+ */
 inline void pointSystErr(Double_t centVal, Double_t shiftUp, Double_t shiftDown, Double_t &errUp, Double_t &errDown, bool doSymError = false, bool doVerbosity = false) {
     Double_t diffShiftUp, diffShiftDown;
     Double_t errSum;
-    int whichErrCase = 0; 
+    int whichErrCase = 0;
     // +(-) 3 for if shift up is greater (smaller) than cent Val; likewise for shift down but with +(-) 1 instead;
     // +4 (-4): both more (less) than cent val
     // +2 (-2): upErr more, downErr less (upErr less, downErr more)
@@ -65,8 +69,8 @@ inline void pointSystErr(Double_t centVal, Double_t shiftUp, Double_t shiftDown,
     whichErrCase += (shiftDown < centVal) ? -1 : 0;
     diffShiftUp = centVal - shiftUp;
     diffShiftDown = centVal - shiftDown;
-//    cout << "justOneSideErr " << justOneSideErr << endl;
-//    cout << "whichErrCase " << whichErrCase << endl;
+    //    cout << "justOneSideErr " << justOneSideErr << endl;
+    //    cout << "whichErrCase " << whichErrCase << endl;
     errSum = TMath::Sqrt(0.5*(diffShiftDown*diffShiftDown + diffShiftUp*diffShiftUp));
     if (doSymError) {
         errUp = errSum;
@@ -81,7 +85,7 @@ inline void pointSystErr(Double_t centVal, Double_t shiftUp, Double_t shiftDown,
             case -3:
                 errUp = 0;
                 errDown = abs(diffShiftUp);
-                break;                
+                break;
             case -2:
                 errUp = abs(diffShiftDown);
                 errDown = abs(diffShiftUp);
@@ -119,6 +123,268 @@ inline void pointSystErr(Double_t centVal, Double_t shiftUp, Double_t shiftDown,
     }
 }
 
+TPolyLine * GetSystBand(vector<float> xs, vector<float> yl, vector<float> yh, float xmin, float xmax) {
+    
+    
+    int nbin = xs.size()-1;
+    
+    vector< float > vecx_(8*nbin,-100000);
+    vector< float > vecyl_(8*nbin,-100000);
+    vector< float > vecy_(8*nbin,-100000);
+    //float lsyst;
+    
+    bool findM=false,findm=false;
+    
+    for( int ibin=0; ibin<nbin; ibin++ )
+    {
+        vecx_[4*ibin]   = (xs[ibin]*3+xs[ibin+1])/4.;
+        vecx_[4*ibin+1]   = (xs[ibin]+xs[ibin+1])/2.;
+        vecx_[4*ibin+2]   = (xs[ibin]+xs[ibin+1]*3)/4.;
+        vecx_[4*ibin+3]   = xs[ibin+1];
+        
+        if(findM) {
+            vecx_[ibin] = vecx_[ibin-1];
+            findM=false;
+        }
+        if(findm && ibin!=0) {
+            vecx_[ibin] = vecx_[0];
+            findm=false;
+        }
+        
+        vecy_[4*ibin]   = yh[ibin];
+        vecy_[4*ibin+1]  = (yh[ibin]+yh[ibin+1])/2.;
+        vecy_[4*ibin+2]  = yh[ibin+1];
+        vecy_[4*ibin+3]  = yh[ibin+1];
+        vecyl_[4*ibin]  = yl[ibin];
+        vecyl_[4*ibin+1]  = (yl[ibin]+yl[ibin+1])/2.;
+        vecyl_[4*ibin+2]  = yl[ibin+1];
+        vecyl_[4*ibin+3]  = yl[ibin+1];
+        
+        vecx_[8*nbin-4*ibin-1] = vecx_[4*ibin];
+        vecx_[8*nbin-4*ibin-2] = vecx_[4*ibin+1];
+        vecx_[8*nbin-4*ibin-3] = vecx_[4*ibin+2];
+        vecx_[8*nbin-4*ibin-4] = vecx_[4*ibin+3];
+        vecy_[8*nbin-4*ibin-1] = -vecyl_[4*ibin];
+        vecy_[8*nbin-4*ibin-2] = -vecyl_[4*ibin+1];
+        vecy_[8*nbin-4*ibin-3] = -vecyl_[4*ibin+2];
+        vecy_[8*nbin-4*ibin-4] = -vecyl_[4*ibin+3];
+    }
+    
+    int n=0;
+    for( size_t ipt=0; ipt<vecx_.size(); ipt++ )
+    {
+        if(vecx_[ipt]>=xmin && vecx_[ipt]<=xmax)
+            n++;
+    }
+    TPolyLine* band = new TPolyLine(n);
+    int cnt=0;
+    
+    for( size_t ipt=0; ipt<vecx_.size(); ipt++ )
+    {
+        if(vecx_[ipt]>=xmin && vecx_[ipt]<=xmax) {
+            band->SetPoint(cnt, vecx_[ipt], (1+vecy_[ipt])>1.6?1.6:((1+vecy_[ipt])<0.4?0.4:1+vecy_[ipt]) );
+            cnt++;
+        }
+    }
+    
+    band->SetLineColor(kGray+1);
+    band->SetFillColor(kGray+1);
+    band->SetFillStyle(3002);
+    
+    return band;
+}
+/*
+ inline TPolyLine * SystBand(TH1F * inputHist, TGraphAsymmErrors * inputSystBand) {
+ //Function to take an input systematics band and create a "smoothed" systematics band
+ //where there's linear interpolation between points.
+ 
+ double currX, currY;
+ double currErrYHigh, currErrYLow;
+ 
+ vector<float> vecXPos, vecYUpErr, vecYDownErr;
+ 
+ int nPoints = inputSystBand->GetN();
+ 
+ int nBinsX = inputHist->GetNbinsX();
+ TAxis * xAxis = inputHist->GetXaxis();
+ double xMin = xAxis->GetBinLowEdge(1);
+ double xMax = xAxis->GetBinUpEdge(nBinsX);
+ 
+ for (int iPoint = 0; iPoint < nPoints; ++iPoint) {
+ inputSystBand->GetPoint(iPoint, currX, currY);
+ if (currX < xMin || currX > xMax) continue;
+ currErrYHigh = inputSystBand->GetErrorYhigh(iPoint);
+ currErrYLow = inputSystBand->GetErrorYlow(iPoint);
+ 
+ cout << "currX " << currX << endl;
+ cout << "currY + currErrYHigh " << currY + currErrYHigh << endl;
+ cout << "currY - currErrYLow " << currY - currErrYLow << endl;
+ 
+ vecXPos.push_back(currX);
+ vecYUpErr.push_back(currY + currErrYHigh);
+ vecYDownErr.push_back(currY - currErrYLow);
+ }
+ 
+ TPolyLine * outPolyLine = GetSystBand(vecXPos, vecYDownErr, vecYUpErr, xMin, xMax);
+ 
+ outPolyLine->SetLineColor(inputSystBand->GetLineColor());
+ outPolyLine->SetLineStyle(inputSystBand->GetLineStyle());
+ outPolyLine->SetFillColor(inputSystBand->GetFillColor());
+ outPolyLine->SetFillStyle(inputSystBand->GetFillStyle());
+ 
+ return outPolyLine;
+ }
+ */
+
+inline TPolyLine * SystBand(TH1F * inputHist, TGraphAsymmErrors * inputSystBand) {
+    //Function to take an input systematics band and create a "smoothed" systematics band
+    //where there's linear interpolation between points.
+    
+    int nBinsX = inputHist->GetNbinsX();
+    
+    TAxis * xAxis = inputHist->GetXaxis();
+    double xMin = xAxis->GetBinLowEdge(1);
+    double xMax = xAxis->GetBinUpEdge(nBinsX);
+    
+    /*
+    double yMin = 0.5;
+    double yMax = 1.5;
+    */
+    double yMin = inputHist->GetMinimum();
+    double yMax = inputHist->GetMaximum();
+    
+    double currX, currY;
+    double currBinXWidth;
+    inputSystBand->GetPoint(1, currX, currY);
+    
+    double currXLow, currXHigh;
+    double currYLow, currYHigh;
+    
+    int numPolyPoints = (4 * nBinsX) + 2;
+    int subtract = 0;
+    TPolyLine * outPolyLine = new TPolyLine(numPolyPoints);
+    outPolyLine->SetPoint(0, xMin, currY);
+    outPolyLine->SetPoint(numPolyPoints / 2, xMax, currY);
+    //outPolyLine->SetPoint(numPolyPoints - subtract, xMin, currY);
+    
+    for (int iPoint = 1; iPoint <= nBinsX; ++iPoint) {
+        inputSystBand->GetPoint(iPoint, currX, currY);
+        currBinXWidth = xAxis->GetBinWidth(iPoint);
+        
+        currXLow = currX - currBinXWidth / 4;
+        currXHigh = currX + currBinXWidth / 4;
+        
+        currYHigh = currY + inputSystBand->GetErrorYhigh(iPoint);
+        currYLow = currY - inputSystBand->GetErrorYlow(iPoint);
+        
+        if (currYHigh > yMax) currYHigh = yMax;
+        if (currYLow < yMin) currYLow = yMin;
+        /*
+        cout << "iPoint " << iPoint << endl;
+        cout << "currX " << currX << endl;
+        cout << "currY " << currY << endl;
+        cout << "currXLow " << currXLow << endl;
+        cout << "currXHigh " << currXHigh << endl;
+        cout << "currYHigh " << currYHigh << endl;
+        cout << "currYLow " << currYLow << endl;
+        */
+        outPolyLine->SetPoint((2 * iPoint) - 1, currXLow, currYHigh);
+        outPolyLine->SetPoint((2 * iPoint), currXHigh, currYHigh);
+        
+        outPolyLine->SetPoint(numPolyPoints - subtract - ((2 * iPoint) - 1), currXLow, currYLow);
+        outPolyLine->SetPoint(numPolyPoints - subtract - (2 * iPoint), currXHigh, currYLow);
+    }
+    outPolyLine->SetLineColor(inputSystBand->GetLineColor());
+    outPolyLine->SetLineStyle(inputSystBand->GetLineStyle());
+    outPolyLine->SetFillColor(inputSystBand->GetFillColor());
+    outPolyLine->SetFillStyle(inputSystBand->GetFillStyle());
+    
+    return outPolyLine;
+}
+
+/*
+inline TPolyLine * SystBand(TH1F * inputHist, TGraphAsymmErrors * inputSystBand) {
+    //Function to take an input systematics band and create a "smoothed" systematics band
+    //where there's linear interpolation between points.
+    vector<double> vecXPos, vecYPos;
+    
+    int nPoints = inputSystBand->GetN();
+    int nBinsX = inputHist->GetNbinsX();
+    
+    TAxis * xAxis = inputHist->GetXaxis();
+    double xMin = xAxis->GetBinLowEdge(1);
+    double xMax = xAxis->GetBinUpEdge(nPoints);
+    
+    double currX, currY;
+    double currErrY;
+    double currBinXWidth;
+    inputSystBand->GetPoint(0, currX, currY);
+    
+    double currXLow, currXHigh;
+    double currYLow, currYHigh;
+    
+    int numPolyPoints = (4 * nBinsX) + 3;
+    TPolyLine * outPolyLine = new TPolyLine(numPolyPoints);
+    outPolyLine->SetPoint(0, xMin, currY);
+    outPolyLine->SetPoint(numPolyPoints - 1, xMin, currY);
+    
+    for (int iPoint = 1; iPoint <= nBinsX; ++iPoint) {
+        inputSystBand->GetPoint(iPoint, currX, currY);
+        currBinXWidth = xAxis->GetBinWidth(iPoint);
+        currErrY = inputSystBand->GetErrorYhigh(iPoint);
+        currXLow = currX - currBinXWidth / 2;
+        currXHigh = currX + currBinXWidth / 2;
+    }
+    
+    vecXPos.push_back(xMin);
+    vecYPos.push_back(currY);
+    //Iterate through up errors
+    for (int iPoint = 1; iPoint <= nPoints; ++iPoint) {
+
+
+        
+
+        vecXPos.push_back(currXLow);
+        vecYPos.push_back(currY + currErrY);
+        vecXPos.push_back(currXHigh);
+        vecYPos.push_back(currY + currErrY);
+    }
+    vecXPos.push_back(xMax);
+    vecYPos.push_back(currY);
+    
+    //Iterate through down errors
+    for (int iPoint = nPoints - 2; iPoint > 0; --iPoint) {
+        inputSystBand->GetPoint(iPoint, currX, currY);
+        
+        cout << "iPoint " << iPoint << endl;
+        cout << "currX " << currX << endl;
+        cout << "currY " << currY << endl;
+        cout << "currBin Center " << xAxis->GetBinCenter(iPoint) << endl;
+        currBinXWidth = xAxis->GetBinWidth(iPoint);
+        currErrY = inputSystBand->GetErrorYlow(iPoint);
+        
+        currXLow = currX - currBinXWidth / 2;
+        currXHigh = currX + currBinXWidth / 2;
+        vecXPos.push_back(currXHigh);
+        vecYPos.push_back(currY - currErrY);
+        vecXPos.push_back(currXLow);
+        vecYPos.push_back(currY - currErrY);
+    }
+    vecXPos.push_back(xMin);
+    vecYPos.push_back(currY);
+    
+    TPolyLine * outPolyLine = new TPolyLine(vecXPos.size(), &vecXPos[0], &vecYPos[0]);
+    TString name = inputSystBand->GetName();
+    
+    outPolyLine->SetLineColor(inputSystBand->GetLineColor());
+    outPolyLine->SetLineStyle(inputSystBand->GetLineStyle());
+    outPolyLine->SetFillColor(inputSystBand->GetFillColor());
+    outPolyLine->SetFillStyle(inputSystBand->GetFillStyle());
+    
+    return outPolyLine;
+}
+*/
+
 TGraphAsymmErrors * GraphSystErrorSet_SingleSource(TH1 * HistCentralVal, TH1 * HistShiftUp, TH1 * HistShiftDown, TString systString, bool doSymError = false, int doVerbosity = -1) {
     // overloaded version of the graph error set used for grabbing specific systematic
     int nBinsX = HistCentralVal->GetNbinsX();
@@ -126,15 +392,17 @@ TGraphAsymmErrors * GraphSystErrorSet_SingleSource(TH1 * HistCentralVal, TH1 * H
     Double_t centVal, shiftUp, shiftDown;
     Double_t binWidth;
     Double_t x;
-    bool     filledSystUpHist, filledSystDownHist;
+    //bool filledSystUpHist, filledSystDownHist;
     TString name = HistCentralVal->GetName();
-    TGraphAsymmErrors * outGraph = new TGraphAsymmErrors(nBinsX+2); 
+    TGraphAsymmErrors * outGraph = new TGraphAsymmErrors(nBinsX+2);
     outGraph->SetName(name + systString);// "_ErrSingleSource");
     TString systHistName;
     //    cout << "HACK JOB " << endl;
-    filledSystUpHist = (HistShiftUp->Integral() > 0) ? true : false;
-    filledSystDownHist = (HistShiftDown->Integral() > 0) ? true : false;
-    for (int iPoint = 0; iPoint < nBinsX + 2; ++iPoint) { 
+    /*
+     filledSystUpHist = (HistShiftUp->Integral() > 0) ? true : false;
+     filledSystDownHist = (HistShiftDown->Integral() > 0) ? true : false;
+     */
+    for (int iPoint = 0; iPoint < nBinsX + 2; ++iPoint) {
         
         //coordinate prep
         x = (Double_t) HistCentralVal->GetBinCenter(iPoint);
@@ -161,7 +429,7 @@ TGraphAsymmErrors * GraphSystErrorSet_SingleSource(TH1 * HistCentralVal, TH1 * H
         if (iPoint > 0 && iPoint < nBinsX + 1 && doVerbosity > 0) {
             cout << " for i = " << iPoint << " in syst " << systString << " errors " << endl;
             cout << "upErr: " << errUp << endl;
-            cout << "downErr: " << errDown << endl;            
+            cout << "downErr: " << errDown << endl;
             cout << endl;
         }
         outGraph->SetPointEYhigh(iPoint, errUp);
@@ -177,31 +445,32 @@ TGraphAsymmErrors * GraphSystErrorSet_SingleSource(TH1 * HistCentralVal, vector<
     Double_t centVal, shiftUp, shiftDown;
     Double_t binWidth;
     Double_t x;
-    bool     filledSystUpHist, filledSystDownHist;
+    bool filledSystUpHist;
+    //bool filledSystDownHist;
     TString name = HistCentralVal->GetName();
-    TGraphAsymmErrors * outGraph = new TGraphAsymmErrors(nBinsX+2); 
+    TGraphAsymmErrors * outGraph = new TGraphAsymmErrors(nBinsX+2);
     outGraph->SetName(name + systString);// "_ErrSingleSource");
     TH1F * HistShiftUp, * HistShiftDown;
     TString systHistName;
     //picking out correct histogram
-//    cout << "systVec size " << systHistVec->size() << endl;
+    //    cout << "systVec size " << systHistVec->size() << endl;
     bool foundUp = 0;
     bool foundDown = 0;
     int singleShiftIndex = -99;
     for (unsigned int k = 0; k < systHistVec->size(); ++k) {
         systHistName = systHistVec->at(k)->GetName();
-//        cout << "histName " << systHistName << endl;
-//        cout << "systHistName.Contains(systString) for systString " << systString << " is " <<systHistName.Contains(systString) << endl;
+        //        cout << "histName " << systHistName << endl;
+        //        cout << "systHistName.Contains(systString) for systString " << systString << " is " <<systHistName.Contains(systString) << endl;
         if (!systHistName.Contains(systString)) {
-            continue;   
+            continue;
         }
         else {
             singleShiftIndex = k;
         }
-//        cout << "systHistName.Contains(up) " << systHistName.Contains("Up") << endl;
-//        cout << "systHistName.Contains(down) " << systHistName.Contains("Down") << endl;
+        //        cout << "systHistName.Contains(up) " << systHistName.Contains("Up") << endl;
+        //        cout << "systHistName.Contains(down) " << systHistName.Contains("Down") << endl;
         if (systHistName.Contains("Up")) {
-            HistShiftUp = systHistVec->at(k);   
+            HistShiftUp = systHistVec->at(k);
             foundUp = 1;
         }
         else if (systHistName.Contains("Down")) {
@@ -209,10 +478,10 @@ TGraphAsymmErrors * GraphSystErrorSet_SingleSource(TH1 * HistCentralVal, vector<
             foundDown = 1;
         }
     }
-//    cout << "singleshift index " << singleShiftIndex << endl;
+    //    cout << "singleshift index " << singleShiftIndex << endl;
     if (!foundUp && !foundDown) {
         if (singleShiftIndex >= 0) {
-        HistShiftUp = systHistVec->at(singleShiftIndex);
+            HistShiftUp = systHistVec->at(singleShiftIndex);
         }
         else {
             HistShiftUp = (TH1F *) HistCentralVal;
@@ -225,15 +494,15 @@ TGraphAsymmErrors * GraphSystErrorSet_SingleSource(TH1 * HistCentralVal, vector<
     else if (!foundDown) {
         HistShiftDown = (TH1F *) HistCentralVal;//->Clone(HistCentralVal->GetName() + systString + TString("Down"));
     }
-//    cout << "HACK JOB " << endl;
+    //    cout << "HACK JOB " << endl;
     filledSystUpHist = (HistShiftUp->Integral() > 0) ? true : false;
-    filledSystDownHist = (HistShiftDown->Integral() > 0) ? true : false;
-    for (int i = 0; i < nBinsX+2; ++i) { 
-
+    //filledSystDownHist = (HistShiftDown->Integral() > 0) ? true : false;
+    for (int i = 0; i < nBinsX+2; ++i) {
+        
         //coordinate prep
         x = (Double_t) HistCentralVal->GetBinCenter(i);
-//        if (i == 1) x = (Double_t) HistCentralVal->GetBinLowEdge(i);
-//        if (i == nBinsX) x = (Double_t) HistCentralVal->GetBinLowEdge(i+1);
+        //        if (i == 1) x = (Double_t) HistCentralVal->GetBinLowEdge(i);
+        //        if (i == nBinsX) x = (Double_t) HistCentralVal->GetBinLowEdge(i+1);
         binWidth = (Double_t) HistCentralVal->GetXaxis()->GetBinWidth(i);
         //initial point sets -- y-axis info will contain relevant uncertainties
         if (i > 0 && i < nBinsX + 1 && doVerbosity > 0) {
@@ -246,18 +515,17 @@ TGraphAsymmErrors * GraphSystErrorSet_SingleSource(TH1 * HistCentralVal, vector<
         outGraph->SetPointEXlow(i, binWidth/2.);
         outGraph->SetPointEXhigh(i, binWidth/2.);
         outGraph->SetPoint(i, x, HistCentralVal->GetBinContent(i));
-        outGraph->SetPointEXlow(i, binWidth/2.);
-
+        
         //get info for setting y-axis
         centVal = (Double_t) HistCentralVal->GetBinContent(i);
         shiftUp = (Double_t) HistShiftUp->GetBinContent(i);
         shiftDown = (Double_t) HistShiftDown->GetBinContent(i);
-//        cout << "within GraphSyst line 150" << endl;
+        //        cout << "within GraphSyst line 150" << endl;
         pointSystErr(centVal, shiftUp, shiftDown, errUp, errDown, doSymError, doVerbosity);
         if (i > 0 && i < nBinsX + 1 && doVerbosity > 0) {
             cout << " for i = " << i << " in syst " << systString << " errors " << endl;
             cout << "upErr: " << errUp << endl;
-            cout << "downErr: " << errDown << endl;            
+            cout << "downErr: " << errDown << endl;
             cout << endl;
         }
         if (filledSystUpHist) {
@@ -268,8 +536,8 @@ TGraphAsymmErrors * GraphSystErrorSet_SingleSource(TH1 * HistCentralVal, vector<
             outGraph->SetPointEYhigh(i, 0);
             outGraph->SetPointEYlow(i, 0);
         }
-//        cout << "chose to fill1? " << outGraph->GetErrorYhigh(i) << endl;        
-//        cout << "chose to fill2? " << outGraph->GetErrorYlow(i) << endl;
+        //        cout << "chose to fill1? " << outGraph->GetErrorYhigh(i) << endl;
+        //        cout << "chose to fill2? " << outGraph->GetErrorYlow(i) << endl;
     }
     return outGraph;
 }
@@ -286,7 +554,7 @@ TGraphAsymmErrors * GraphSystErrorSumErrors(TGraphAsymmErrors * centValGraph, TS
         downErrSum = 0;
         x = (Double_t) inputHist->GetBinCenter(iPoint);
         y = (Double_t) inputHist->GetBinContent(iPoint);
-        if (addStatErr) {            
+        if (addStatErr) {
             upErr = (Double_t) centValGraph->GetErrorYhigh(iPoint);
             downErr = (Double_t) centValGraph->GetErrorYlow(iPoint);
             upErrSum += upErr*upErr;
@@ -330,7 +598,7 @@ TGraphAsymmErrors * GraphSystErrorSumErrors(TGraphAsymmErrors * centValGraph, TS
         upErrSum = 0;
         downErrSum = 0;
         x = (Double_t) inputHist->GetBinCenter(iPoint);
-        y = (Double_t) inputHist->GetBinContent(iPoint);  
+        y = (Double_t) inputHist->GetBinContent(iPoint);
         upErr = (Double_t) centValGraph->GetErrorYhigh(iPoint);
         downErr = (Double_t) centValGraph->GetErrorYlow(iPoint);
         upErrSum += upErr*upErr;
@@ -350,11 +618,12 @@ TGraphAsymmErrors * GraphSystErrorSumErrors(TGraphAsymmErrors * centValGraph, TS
     }
     return outGraph;
 }
-TGraphAsymmErrors * ClonePoints(TH1 * inputHist, bool cloneZero = true) {
+TGraphAsymmErrors * ClonePoints(TH1 * inputHist, bool cloneZero = true, bool zeroErrX = false) {
     int NBinsX = inputHist->GetNbinsX();
     double x, y;
     Double_t binWidth;
     TGraphAsymmErrors * outGraph = new TGraphAsymmErrors(NBinsX + 2);
+    outGraph->SetMarkerStyle(20);
     outGraph->SetName(inputHist->GetName() + TString("_Graph"));
     for (int i = 0; i < NBinsX + 2; ++i) {
         x = (double) inputHist->GetBinCenter(i);
@@ -366,6 +635,10 @@ TGraphAsymmErrors * ClonePoints(TH1 * inputHist, bool cloneZero = true) {
         outGraph->SetPointEYhigh(i, inputHist->GetBinError(i));
         outGraph->SetPointEXlow(i, binWidth/2.);
         outGraph->SetPointEXhigh(i, binWidth/2.);
+        if (zeroErrX) {
+            outGraph->SetPointEXlow(i, 0.);
+            outGraph->SetPointEXhigh(i, 0.);
+        }
     }
     return outGraph;
 }
@@ -375,7 +648,7 @@ TGraphAsymmErrors * NormalizationSystGraph(TH1 * centValMCHist, float normFactor
     Double_t binWidth;
     int nBins = centValMCHist->GetNbinsX();
     TString name = centValMCHist->GetName();
-    TGraphAsymmErrors * outGraph = new TGraphAsymmErrors(nBins+2); 
+    TGraphAsymmErrors * outGraph = new TGraphAsymmErrors(nBins+2);
     outGraph->SetName(name + "_XSecUncert");// "_ErrSingleSource");
     for (int i = 0; i < nBins + 2; ++i) {
         x = centValMCHist->GetBinCenter(i);
@@ -385,23 +658,145 @@ TGraphAsymmErrors * NormalizationSystGraph(TH1 * centValMCHist, float normFactor
         binWidth = (Double_t) centValMCHist->GetXaxis()->GetBinWidth(i);
         outGraph->SetPointEYhigh(i, yErr);
         outGraph->SetPointEYlow(i, yErr);
+        
         outGraph->SetPointEXlow(i, binWidth/2.);
-        outGraph->SetPointEXhigh(i, binWidth/2.);        
+        outGraph->SetPointEXhigh(i, binWidth/2.);
+        /*
+         outGraph->SetPointEXlow(i, 0.0);
+         outGraph->SetPointEXhigh(i, 0.0);
+         */
     }
     return outGraph;
 }
+/*
+inline TGraph * FracGraphOutline(TH1 * centValMCHist, TGraphAsymmErrors * ratioSystGraph) {
+    double x, y;
+    int nBins = centValMCHist->GetNbinsX();
+    TAxis * xAxis = centValMCHist->GetXaxis();
+    
+    TGraph outGraph = new TGraph(2 + (2 * nBins));
+    outGraph->SetPoint(0, xAxis->GetXmin());
+    for (int iPoint = 1; iPoint < outGraph->GetN(); ++iPoint) {
+        
+    }
 
+}
+*/
+
+/*
+inline TGraphAsymmErrors * SignifGraph(TH1F * ratioHist, TGraphAsymmErrors * ratioGraph = NULL) {
+    double x, y;
+    int nBins = ratioHist->GetNbinsX();
+    TGraphAsymmErrors * signifGraph = new TGraphAsymmErrors(nBins + 2);
+}
+ */
+inline TH1F * CorrectedRatioHist(TH1F * ratioHist, TH1F * inputSignifHist, double sigma = 1) {
+    //function to make a "corrected" ratio hist where the input is the original ratio hist,
+    //a significance hist detailing the statistical significance of the differences
+    //between the ratio hist and the expected ratio,
+    //and finally an input value of sigma for the gaussian weighted correction
+    //currently assumes the desired ratio is 1
+    
+    float idealRatio = 1;
+    
+    TString histName;
+    vector<int> vecInputHistAxisNBins;
+    vector<TAxis *> vecInputHistAxes;
+    vector<float> vecInputHistAxisBinWidths;
+    SetHistogramData(ratioHist, histName, &vecInputHistAxisNBins, &vecInputHistAxes, &vecInputHistAxisBinWidths);
+    
+    TH1F * outHist = (TH1F *) ratioHist->Clone(histName + TString("_Corrected"));
+    
+    float currBinRatio, currSignif;
+    float currCorrFactor, currDiffFromIdeal;
+    
+    for (int iBinX = 1; iBinX <= vecInputHistAxisNBins[0]; ++iBinX) {
+        currBinRatio = ratioHist->GetBinContent(iBinX);
+        currSignif = inputSignifHist->GetBinContent(iBinX);
+        if (currBinRatio > 1E-9 && (currBinRatio > 5 || 1./currBinRatio > 5) && TMath::Abs(currSignif) < 1) {
+            outHist->SetBinContent(iBinX, 1);
+            continue;
+        }
+        currCorrFactor = ROOT::Math::normal_cdf(TMath::Abs(currSignif), sigma);
+        currDiffFromIdeal = TMath::Abs(currBinRatio - idealRatio);
+        if (currBinRatio <= 1E-9) {
+            outHist->SetBinContent(iBinX, 0);
+        }
+        else {
+            outHist->SetBinContent(iBinX, currDiffFromIdeal * currCorrFactor);
+        }
+    }
+    return outHist;
+}
+inline TH1F * SignifHist(TH1F * ratioHist, TGraphAsymmErrors * ratioGraph = NULL, TH1F * additionalCorrHist = NULL) {
+    
+    TString histName;
+    vector<int> vecInputHistAxisNBins;
+    vector<TAxis *> vecInputHistAxes;
+    vector<float> vecInputHistAxisBinWidths;
+    SetHistogramData(ratioHist, histName, &vecInputHistAxisNBins, &vecInputHistAxes, &vecInputHistAxisBinWidths);
+    
+    
+    TH1F * outHist = (TH1F *) ratioHist->Clone(histName + TString("_Signif"));
+    outHist->GetYaxis()->SetTitle("Significance");
+    outHist->GetYaxis()->SetRangeUser(-3, 3.4);
+    
+    bool doVerbosity = true;
+    
+    float currBinRatio, currBinRatioErr;
+    float currRatioGraphErrUp, currRatioGraphErrDown, currRatioGraphErrAve;
+    float currRatioTotalErr;
+    float currSignif;
+    float currAddtlCorr;
+    for (int iBinX = 1; iBinX <= vecInputHistAxisNBins[0]; ++iBinX) {
+        currBinRatio = ratioHist->GetBinContent(iBinX);
+        currBinRatioErr = ratioHist->GetBinError(iBinX);
+        
+        currRatioGraphErrUp = ratioGraph->GetErrorYhigh(iBinX);
+        currRatioGraphErrDown = ratioGraph->GetErrorYlow(iBinX);
+        currRatioGraphErrAve = TMath::Sqrt(0.5 * (TMath::Power(currRatioGraphErrUp, 2) + TMath::Power(currRatioGraphErrDown, 2)));
+        
+        currRatioTotalErr = TMath::Power(currBinRatioErr, 2) + TMath::Power(currRatioGraphErrAve, 2);
+        if (additionalCorrHist) {
+            currAddtlCorr = additionalCorrHist->GetBinContent(iBinX);
+            currRatioTotalErr += TMath::Power(currAddtlCorr, 2);
+        }
+        currRatioTotalErr = TMath::Sqrt(currRatioTotalErr);
+        if (currRatioTotalErr < 1E-6 && currBinRatio < 1E-6) {
+            currSignif = 0;
+        }
+        else if (currBinRatio < 1E-6) {
+            currSignif = 0;
+        }
+        else {
+            currSignif = (currBinRatio - 1)/currRatioTotalErr;
+        }
+        
+        if (doVerbosity) {
+            cout << "currX " << ratioHist->GetXaxis()->GetBinCenter(iBinX) << endl;
+            cout << "currBinRatio " << currBinRatio << endl;
+            cout << "currBinRatioErr " << currBinRatioErr << endl;
+            cout << "currRatioGraphErrUp " << currRatioGraphErrUp << endl;
+            cout << "currRatioGraphErrDown " << currRatioGraphErrDown << endl;
+            cout << "currSignif " << currSignif << endl;
+        }
+        
+        outHist->SetBinContent(iBinX, currSignif);
+        outHist->SetBinError(iBinX, 0);
+    }
+    return outHist;
+}
 
 inline TGraphAsymmErrors * FracGraph(TH1 * centValMCHist, TGraphAsymmErrors * errGraphJustSyst, bool doAbsRatio, float yAxisRange) {
     double x, y;
     double rel, relUpErr, relDownErr;
     Double_t binWidth;
     int nBins = centValMCHist->GetNbinsX();
-    TGraphAsymmErrors * ratioGraph = new TGraphAsymmErrors(nBins + 2);    
-    GraphMainAttSet(ratioGraph, kGray+1, 3001, kGray+1, 2, kWhite, 0, 0); 
+    TGraphAsymmErrors * ratioGraph = new TGraphAsymmErrors(nBins + 2);
+    GraphMainAttSet(ratioGraph, kGray+1, 3001, kGray+1, 2, kWhite, 0, 0);
     if (doAbsRatio) {
         rel = 1;
-        HistAxisAttSet(ratioGraph->GetYaxis(), TString("Data/MC"), .15, .54, .14, .011, 1.0 - yAxisRange, 1.0 + yAxisRange); 
+        HistAxisAttSet(ratioGraph->GetYaxis(), TString("Data/MC"), .15, .54, .14, .011, 1.0 - yAxisRange, 1.0 + yAxisRange);
     }
     else {
         rel = 0;
@@ -410,54 +805,7 @@ inline TGraphAsymmErrors * FracGraph(TH1 * centValMCHist, TGraphAsymmErrors * er
     for (int i = 0; i < nBins + 2; ++i) {
         x = centValMCHist->GetBinCenter(i);
         y = centValMCHist->GetBinContent(i);
-        ratioGraph->SetPoint(i, x, rel);        
-        binWidth = (Double_t) centValMCHist->GetXaxis()->GetBinWidth(i);
-        
-        //initial point sets -- y-axis info will contain relevant uncertainties
-        
-        if (!(y > 0.)) {
-            relUpErr = 0;
-            relDownErr = 0;
-        }
-        else {
-//            relUpErr = (doAbsRatio) ? errGraphJustSyst->GetErrorYlow(i) :  errGraphJustSyst->GetErrorYhigh(i);
-            relUpErr = (!doAbsRatio) ? errGraphJustSyst->GetErrorYlow(i) :  errGraphJustSyst->GetErrorYhigh(i);
-            relUpErr /= centValMCHist->GetBinContent(i);
-//            relDownErr = (doAbsRatio) ? errGraphJustSyst->GetErrorYhigh(i) :  errGraphJustSyst->GetErrorYlow(i);
-            relDownErr = (!doAbsRatio) ? errGraphJustSyst->GetErrorYhigh(i) :  errGraphJustSyst->GetErrorYlow(i);
-            relDownErr /= centValMCHist->GetBinContent(i);
-        }
-        ratioGraph->SetPointEYhigh(i, relUpErr);
-        ratioGraph->SetPointEYlow(i, relDownErr);
-        ratioGraph->SetPointEXlow(i, binWidth/2.);
-        ratioGraph->SetPointEXhigh(i, binWidth/2.);
-        
-    }
-    return ratioGraph;
-}
-
-
-inline TGraphAsymmErrors * FracGraph(TH1 * centValMCHist, TGraphAsymmErrors * errGraphJustSyst, bool doAbsRatio, float yAxisLB, float yAxisUB) {
-    double x, y;
-    double rel, relUpErr, relDownErr;
-    Double_t binWidth;
-    int nBins = centValMCHist->GetNbinsX();
-    TGraphAsymmErrors * ratioGraph = new TGraphAsymmErrors(nBins + 2);    
-    GraphMainAttSet(ratioGraph, kGray+1, 3001, kGray+1, 2, kWhite, 0, 0);
-    TString axisTitle;
-    if (doAbsRatio) {
-        rel = 1;
-        axisTitle = "Data/MC";
-    }
-    else {
-        rel = 0;
-        axisTitle = "(MC-Data)/Data";
-    }
-    HistAxisAttSet(ratioGraph->GetYaxis(), axisTitle, .15, .54, .14, .011, yAxisLB, yAxisUB);
-    for (int i = 0; i < nBins + 2; ++i) {
-        x = centValMCHist->GetBinCenter(i);
-        y = centValMCHist->GetBinContent(i);
-        ratioGraph->SetPoint(i, x, rel);        
+        ratioGraph->SetPoint(i, x, rel);
         binWidth = (Double_t) centValMCHist->GetXaxis()->GetBinWidth(i);
         
         //initial point sets -- y-axis info will contain relevant uncertainties
@@ -476,9 +824,64 @@ inline TGraphAsymmErrors * FracGraph(TH1 * centValMCHist, TGraphAsymmErrors * er
         }
         ratioGraph->SetPointEYhigh(i, relUpErr);
         ratioGraph->SetPointEYlow(i, relDownErr);
+        
         ratioGraph->SetPointEXlow(i, binWidth/2.);
         ratioGraph->SetPointEXhigh(i, binWidth/2.);
+        /*
+         ratioGraph->SetPointEXlow(i, 0.0);
+         ratioGraph->SetPointEXhigh(i, 0.0);
+         */
+    }
+    return ratioGraph;
+}
+
+
+inline TGraphAsymmErrors * FracGraph(TH1 * centValMCHist, TGraphAsymmErrors * errGraphJustSyst, bool doAbsRatio, float yAxisLB, float yAxisUB) {
+    double x, y;
+    double rel, relUpErr, relDownErr;
+    Double_t binWidth;
+    int nBins = centValMCHist->GetNbinsX();
+    TGraphAsymmErrors * ratioGraph = new TGraphAsymmErrors(nBins + 2);
+    GraphMainAttSet(ratioGraph, kGray+1, 3001, kGray+1, 2, kWhite, 0, 0);
+    TString axisTitle;
+    if (doAbsRatio) {
+        rel = 1;
+        axisTitle = "Data/MC";
+    }
+    else {
+        rel = 0;
+        axisTitle = "(MC-Data)/Data";
+    }
+    HistAxisAttSet(ratioGraph->GetYaxis(), axisTitle, .15, .54, .14, .011, yAxisLB, yAxisUB);
+    for (int i = 0; i < nBins + 2; ++i) {
+        x = centValMCHist->GetBinCenter(i);
+        y = centValMCHist->GetBinContent(i);
+        ratioGraph->SetPoint(i, x, rel);
+        binWidth = (Double_t) centValMCHist->GetXaxis()->GetBinWidth(i);
         
+        //initial point sets -- y-axis info will contain relevant uncertainties
+        
+        if (!(y > 0.)) {
+            relUpErr = 0;
+            relDownErr = 0;
+        }
+        else {
+            //            relUpErr = (doAbsRatio) ? errGraphJustSyst->GetErrorYlow(i) :  errGraphJustSyst->GetErrorYhigh(i);
+            relUpErr = (!doAbsRatio) ? errGraphJustSyst->GetErrorYlow(i) :  errGraphJustSyst->GetErrorYhigh(i);
+            relUpErr /= centValMCHist->GetBinContent(i);
+            //            relDownErr = (doAbsRatio) ? errGraphJustSyst->GetErrorYhigh(i) :  errGraphJustSyst->GetErrorYlow(i);
+            relDownErr = (!doAbsRatio) ? errGraphJustSyst->GetErrorYhigh(i) :  errGraphJustSyst->GetErrorYlow(i);
+            relDownErr /= centValMCHist->GetBinContent(i);
+        }
+        ratioGraph->SetPointEYhigh(i, relUpErr);
+        ratioGraph->SetPointEYlow(i, relDownErr);
+        
+        ratioGraph->SetPointEXlow(i, binWidth/2.);
+        ratioGraph->SetPointEXhigh(i, binWidth/2.);
+        /*
+         ratioGraph->SetPointEXlow(i, 0.0);
+         ratioGraph->SetPointEXhigh(i, 0.0);
+         */
     }
     return ratioGraph;
 }
@@ -486,17 +889,17 @@ inline TGraphAsymmErrors * FracGraph(TH1 * centValMCHist, TGraphAsymmErrors * er
 
 void SetPointsAsymmGraphfromHists(TGraphAsymmErrors * inputTGraph, TH1F * inputUpErrHist, TH1F * inputDownErrHist) {
     int NGraphPoints = inputTGraph->GetN();
-    for (unsigned int iPoint = 0; iPoint < NGraphPoints; ++iPoint) {
+    for (int iPoint = 0; iPoint < NGraphPoints; ++iPoint) {
         inputTGraph->SetPointEYhigh(iPoint, inputUpErrHist->GetBinContent(iPoint + 1));
         inputTGraph->SetPointEYlow(iPoint, inputDownErrHist->GetBinContent(iPoint + 1));
     }
 }
 void SetPointsHistsfromAsymmGraph(TGraphAsymmErrors * inputTGraph, TH1F * inputUpErrHist, TH1F * inputDownErrHist) {
     int NGraphPoints = inputTGraph->GetN();
-    for (unsigned int iPoint = 0; iPoint < NGraphPoints; ++iPoint) {
+    for (int iPoint = 0; iPoint < NGraphPoints; ++iPoint) {
         inputUpErrHist->SetBinContent(iPoint + 1, inputTGraph->GetErrorYhigh(iPoint));
         inputDownErrHist->SetBinContent(iPoint + 1, inputTGraph->GetErrorYlow(iPoint));
-    }    
+    }
 }
 
 void SmoothedTGraph(TGraphAsymmErrors * inputTGraph) {
@@ -505,8 +908,8 @@ void SmoothedTGraph(TGraphAsymmErrors * inputTGraph) {
     TString GraphName = inputTGraph->GetName();
     Double_t xMin, xMax, yMin, yMax;
     Double_t xCurr, yCurr;
-    inputTGraph->GetPoint(0, xMin, yMin); 
-    inputTGraph->GetPoint(1, xCurr, yCurr); 
+    inputTGraph->GetPoint(0, xMin, yMin);
+    inputTGraph->GetPoint(1, xCurr, yCurr);
     Double_t xBinWidth = xCurr - xMin;
     inputTGraph->GetPoint(NGraphPoints - 1, xMax, yMax);
     TH1F * UpErr = new TH1F(GraphName + TString("UpErrSmooth"), "", NGraphPoints, xMin - (0.5 * xBinWidth), xMax + (0.5 * xBinWidth));
@@ -561,3 +964,101 @@ void CombineSystematics(TH1 * inputHistCV, TH1 * outputHist_SystVarUp, TH1 * out
         }
     }
 }
+
+vector<bool> VecSmearSysts() {
+    const int numSysts = 11;
+    bool isSmearSyst[numSysts] = {false, false, false, false, true, true, false, false, false, false, false};
+    vector<bool> outVec;
+    outVec.assign(&isSmearSyst[0], &isSmearSyst[0] + numSysts);
+    
+    return outVec;
+}
+
+vector<TString> VecNameSysts() {
+    const int numSysts = 11;
+    TString namesSysts[numSysts] = {"LepEffSF", "LepES", "JetES", "BTagSF", "UncES", "JetSmear", "genRecoilRW", "TTBarNorm", "DYNorm", "EWKNorm", "FakeLepSyst"};
+    vector<TString> outVec;
+    outVec.assign(&namesSysts[0], &namesSysts[0] + numSysts);
+    
+    return outVec;
+}
+
+vector<TGraphAsymmErrors *> VecGraphs(vector<TGraphAsymmErrors *> * inVecSearchSysts, vector<TString> * inVecSearchNames) {
+    unsigned int numSystNames = inVecSearchNames->size();
+    unsigned int numSearchSysts = inVecSearchSysts->size();
+    
+    TGraphAsymmErrors * currSystBand = NULL;
+    TString currSystBandName = "";
+    TString currSystSearchName = "";
+    
+    vector<TGraphAsymmErrors *> outVec;
+    
+    bool foundSystName;
+    
+    for (unsigned iSystName = 0; iSystName < numSystNames; ++iSystName) {
+        foundSystName = false;
+        currSystSearchName = inVecSearchNames->at(iSystName);
+        for (unsigned int iSyst = 0; iSyst < numSearchSysts; ++iSyst) {
+            currSystBand = inVecSearchSysts->at(iSyst);
+            currSystBandName = currSystBand->GetName();
+            if (currSystBandName.Contains(currSystSearchName)) {
+                foundSystName = true;
+                /*
+                 cout << "currSystSearchName " << currSystSearchName << endl;
+                 cout << "currSystBandName " << currSystBandName << endl;
+                 cout << "currSystBand " << currSystBand << endl;
+                 */
+                //outVec.push_back((TGraphAsymmErrors *) currSystBand->Clone(TString("SplitRatioGraph_") + currSystSearchName));
+                outVec.push_back(currSystBand);
+            }
+        }
+        if (!foundSystName) {
+            cout << "didn't find " << currSystSearchName << " in any of the syst bands!" << endl;
+        }
+    }
+    return outVec;
+}
+
+void ResetRatioHist(TH1F * inputRatioHist) {
+    int nBinsX = inputRatioHist->GetNbinsX();
+    for (int iBinX = 1; iBinX <= nBinsX; ++iBinX) {
+        inputRatioHist->SetBinContent(iBinX, 1.0);
+    }
+}
+
+
+
+
+void ResetSystHists(TH1 * inputHist_CV, TH1 * inputHistSystVarUp, TH1 * inputHistSystVarDown, bool doMaxRelChange, float maxRelChange, bool doVerbosity = false) {
+    ////Correct the systematic shift histograms when things have changed from initial creation to desired output
+    ///i.e. if non-constant smearing or smoothing is applied to CV, Shift Up, and Shift Down hists separately
+    //Set up histogram data
+    TString histName;
+    vector<int> vecInputHistAxisNBins;
+    vector<TAxis *> vecInputHistAxes;
+    vector<float> vecInputHistAxisBinWidths;
+    SetHistogramData(inputHist_CV, histName, &vecInputHistAxisNBins, &vecInputHistAxes, &vecInputHistAxisBinWidths);
+    
+    double currYieldCV, currYieldSystUp, currYieldSystDown;
+    double currErr_SystUp, currErr_SystDown;
+    for (int iBinX = 1; iBinX <= vecInputHistAxisNBins[0]; ++iBinX) {
+        for (int iBinY = 1; iBinY <= vecInputHistAxisNBins[1]; ++iBinY) {
+            for (int iBinZ = 1; iBinZ <= vecInputHistAxisNBins[2]; ++iBinZ) {
+                currYieldCV = inputHist_CV->GetBinContent(iBinX, iBinY, iBinZ);
+                currYieldSystUp = inputHistSystVarUp->GetBinContent(iBinX, iBinY, iBinZ);
+                currYieldSystDown = inputHistSystVarDown->GetBinContent(iBinX, iBinY, iBinZ);
+                
+                pointSystErr(currYieldCV, currYieldSystUp, currYieldSystDown, currErr_SystUp, currErr_SystDown, false, doVerbosity);
+                if (doMaxRelChange) {
+                    currErr_SystUp = TMath::Min(currYieldCV * (maxRelChange - 1), currErr_SystUp); //based on max relative changes
+                    currErr_SystDown = TMath::Min(currYieldCV * (maxRelChange - 1), currErr_SystDown);
+                }
+                if (currErr_SystDown > currYieldCV) currErr_SystDown = currYieldCV; // minimum error down shift of -100%
+                inputHistSystVarUp->SetBinContent(iBinX, iBinY, iBinZ, currYieldCV + currErr_SystUp);
+                inputHistSystVarDown->SetBinContent(iBinX, iBinY, iBinZ, currYieldCV - currErr_SystDown);
+            }
+        }
+    }
+    
+}
+
