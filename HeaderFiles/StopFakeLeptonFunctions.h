@@ -276,9 +276,9 @@ typedef struct FakeLeptonCalculator {
         vector<float> vecCovarTerms(0);
         vecVarTerms.push_back(errTermEps0);
         vecVarTerms.push_back(errTermEps1);
+        vecCovarTerms.push_back(covarTermEps);
         vecVarTerms.push_back(errTermEta0);
         vecVarTerms.push_back(errTermEta1);
-        vecCovarTerms.push_back(covarTermEps);
         vecCovarTerms.push_back(covarTermEta);
         
         weightFakeVPE.second = GetError(&vecVarTerms, &vecCovarTerms);
@@ -312,8 +312,8 @@ typedef struct FakeLeptonCalculator {
         float errTermEps1 = vecLepEpsilonVPE[0].first * vecLepEtaVPE[1].first * vecLepEpsilonVPE[1].second / (denomTerm0 * TMath::Power(denomTerm1, 2));
         float errTermEta1 = vecLepEpsilonVPE[0].first * vecLepEpsilonVPE[1].first * vecLepEtaVPE[1].second / (denomTerm0 * TMath::Power(denomTerm1, 2));
         
-        float covarTermEps = isSameEpsilon ? 2 * errTermEps0 * errTermEps1  : 0;
-        float covarTermEta = isSameEta ? 2 * errTermEta0 * errTermEta1  : 0;
+        float covarTermEps = isSameEpsilon ? TMath::Sqrt(2 * errTermEps0 * errTermEps1)  : 0;
+        float covarTermEta = isSameEta ? TMath::Sqrt(2 * errTermEta0 * errTermEta1)  : 0;
         
         vector<float> vecVarTerms(0);
         vector<float> vecCovarTerms(0);
