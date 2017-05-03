@@ -263,7 +263,7 @@ struct TTBarEstimator {
         
         return outYield_DD;
     }
-    void CalculateSFs(int iSyst = 0, bool doVerb = 0) {
+    void CalculateSFs(int iSyst = 0, bool doVerb = 0, bool useTheoryXSec = false) {
         valPlusErr dataVPE(0.0, 0.0);
         valPlusErr mcVPE_v1(0.0, 0.0), mcVPE_v2(0.0, 0.0);
         valPlusErr mcVPE_TTBar(0.0, 0.0), mcVPE_NonTTBar(0.0, 0.0);
@@ -291,7 +291,19 @@ struct TTBarEstimator {
         SubtractVPE(&dataVPE, &mcVPE_NonTTBar, doVerb);
         
         valPlusErr vpeSF = GetSF(&dataVPE, &mcVPE_TTBar, doVerb);
-        
+        if (useTheoryXSec) {
+            //http://inspirehep.net/record/1225282
+            //245.8 + 6.2 - 8.4, +- 6.2 +- 4.0
+            //245.8 +- 7.38 +- 6.2 +- 4.0
+            //245.8 +- 10.44
+            //245.8 +- 4.2%
+            if (doVerb) {
+                cout << "setting to be theory xsection " << endl;
+                
+            }
+            vpeSF.first = 1.0;
+            vpeSF.second = 0.0425;
+        }
         valPlusErr vpeTTBarYield = GetDDYield(&vpeSF, &mcVPE_TTBar, doVerb);
 
         if (iSyst == 0) {
@@ -307,7 +319,7 @@ struct TTBarEstimator {
             vecYield_SystVarDown[abs(iSyst) - 1].SetStatError(&vpeTTBarYield);
         }
     }
-    void RunSFCalc_FullSet(HistogramDisplayStructs * inHDS_Data, HistogramDisplayStructs * inHDS_MC, vector<TString> * vecStringsToContain, vector<TString> * vecStringsToNotContain, bool doVerb, int binStatEnd = -1) {
+    void RunSFCalc_FullSet(HistogramDisplayStructs * inHDS_Data, HistogramDisplayStructs * inHDS_MC, vector<TString> * vecStringsToContain, vector<TString> * vecStringsToNotContain, bool useTheoryXSec, bool doVerb, int binStatEnd = -1) {
         if (doVerb) {
             cout << "##############################" << endl;
             cout << "####Loading Data Histogram####" << endl;
@@ -326,7 +338,7 @@ struct TTBarEstimator {
             cout << "######Calculating CV SFs######" << endl;
             cout << "##############################" << endl;
         }
-        CalculateSFs(0, doVerb);
+        CalculateSFs(0, doVerb, useTheoryXSec);
         for (int iSyst = 0; iSyst < (int) vecSystNames.size(); ++iSyst) {
             if (doVerb) {
                 cout << "################################" << endl;
@@ -339,7 +351,7 @@ struct TTBarEstimator {
                 cout << "##Calculating SFs for iSyst " << iSyst + 1 << "##" << endl;
                 cout << "################################" << endl;
             }
-            CalculateSFs(iSyst + 1, doVerb);
+            CalculateSFs(iSyst + 1, doVerb, useTheoryXSec);
             
             
             if (doVerb) {
@@ -353,7 +365,7 @@ struct TTBarEstimator {
                 cout << "##Calculating SFs for iSyst " << -1 * (iSyst + 1) << "##" << endl;
                 cout << "################################" << endl;
             }
-            CalculateSFs(-1 * (iSyst + 1), doVerb);
+            CalculateSFs(-1 * (iSyst + 1), doVerb, useTheoryXSec);
         }
     }
     void SetInputSW(SpecificWeight * inSW, int iSyst = 0) {
