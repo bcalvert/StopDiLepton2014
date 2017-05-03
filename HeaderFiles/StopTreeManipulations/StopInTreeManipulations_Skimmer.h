@@ -211,6 +211,10 @@ inline void SetInTreeBranchRecoElec(TTree * fileTree, ElectronEventPointers * in
     fileTree->SetBranchAddress(prefixRecoElec + TString("chargedHadronIso"),    &inEEPs->ElecPFCharHadIso);
     fileTree->SetBranchAddress(prefixRecoElec + TString("neutralHadronIso"),    &inEEPs->ElecPFNeutHadIso);
     fileTree->SetBranchAddress(prefixRecoElec + TString("photonIso"),           &inEEPs->ElecPFPhotIso);
+    //Additional Electron isolation parameters used as part of Loose ID
+    fileTree->SetBranchAddress(prefixRecoElec + TString("dr03EcalSumEt"),       &inEEPs->ElecECALIso);
+    fileTree->SetBranchAddress(prefixRecoElec + TString("dr03HcalSumEt"),       &inEEPs->ElecHCALIso);
+    fileTree->SetBranchAddress(prefixRecoElec + TString("dr03TkSumPt"),         &inEEPs->ElecTrackIso);
     
     //Electron booleans
     fileTree->SetBranchAddress(prefixRecoElec + TString("passConversionVeto"),  &inEEPs->passConvVeto);
