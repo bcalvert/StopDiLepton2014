@@ -1,7 +1,7 @@
 #include "TString.h"
 #include <sstream>
 #include <vector>
-
+/*
 void CallExecV(vector<const char *> * vecComArgs) {
     //Broken, just ignore
     pid_t pid;
@@ -13,7 +13,7 @@ void CallExecV(vector<const char *> * vecComArgs) {
     else {
     }
 }
-
+*/
 void System_RemoveFile(TString fullPathFileToDel, bool debugCommand = false) {
     //Calls the system command to remove the file located at fullPathFileToDel
     stringstream cmdRMFile;
@@ -65,7 +65,19 @@ void System_CopyFile(TString fileNameToCopyFrom, TString fileNameToCopyTo, bool 
 void System_SedInFile(TString fileName, TString stringToReplace, TString stringToReplaceWith, bool debugCommand = false) {
     //Calls the system command to use sed inside the file fileName to replace the string stringToReplace with the string stringToReplaceWith
     stringstream cmdSedInFile;
-    cmdSedInFile << "sed -i 's|" << stringToReplace << "|" << stringToReplaceWith << "|' " << fileName << endl;
+    cmdSedInFile << "sed -i 's|" << stringToReplace << "|" << stringToReplaceWith << "|g' " << fileName << endl;
+    if (debugCommand) {
+        cout << "going to run " << cmdSedInFile.str().c_str() << endl;
+    }
+    else {
+        system(cmdSedInFile.str().c_str());
+    }
+}
+
+void System_SedMultipleInFile(TString fileName, TString stringToReplace, TString stringToReplaceWith, bool debugCommand = false) {
+    //Calls the system command to use sed inside the file fileName to replace the string stringToReplace with the string stringToReplaceWith
+    stringstream cmdSedInFile;
+    cmdSedInFile << "sed -i 's|" << stringToReplace << "|" << stringToReplaceWith << "|g' " << fileName << endl;
     if (debugCommand) {
         cout << "going to run " << cmdSedInFile.str().c_str() << endl;
     }
