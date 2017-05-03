@@ -24,8 +24,10 @@ inline void TwoDeeHistTVec_AddMETPhiCorrHists(vector<HistogramT> * inHistTVec, S
     H_METY_vs_nVtx.yAxis.SetAxis("patsy", stringMET + "Y", &inSHBB->IHBB_PxPy, doSyst);
     H_METY_vs_nVtx.SetIndAxisLabel(stringSmear + stringMET + "Y", mapVartoLabel, 2);
     
+    /*
     inHistTVec->push_back(H_METX_vs_nVtx);
     inHistTVec->push_back(H_METY_vs_nVtx);
+    */
 }
 
 inline void TwoDeeHistTVec_AddMT2CorrelationHists(vector<HistogramT> * inHistTVec, StopHistBinBounds * inSHBB, labelMap * mapVartoLabel, bool isSmear) {
@@ -35,7 +37,8 @@ inline void TwoDeeHistTVec_AddMT2CorrelationHists(vector<HistogramT> * inHistTVe
     //bool noSyst = false;
     
     TString stringSmear = GetStringSmear(isSmear, false);
-    TString stringMET = "MET";    
+    TString stringMET = "MET";
+    TString stringMaxBLepMass = "MaxBLepInvMass";
     TString stringMT2ll = "MT2ll";
     TString stringMT2lblb = "MT2lblb";
     TString stringMT2bb_ZMET = "MT2bb_ZMET";
@@ -48,7 +51,14 @@ inline void TwoDeeHistTVec_AddMT2CorrelationHists(vector<HistogramT> * inHistTVe
     H_MET_vs_MT2ll.SetIndAxisLabel(stringSmear + stringMET, mapVartoLabel, 1);
     H_MET_vs_MT2ll.yAxis.SetAxis("patsy", stringMT2ll, &inSHBB->IHBB_EnergyPtMET, doSyst);
     H_MET_vs_MT2ll.SetIndAxisLabel(stringSmear + stringMT2ll, mapVartoLabel, 2);
-            
+    
+    HistogramT H_MT2lblb_vs_MaxBLepMass; H_MT2lblb_vs_MaxBLepMass.DefaultVarVals();
+    H_MT2lblb_vs_MaxBLepMass.SetName(stringSmear + stringMT2lblb, "_vs_", stringMaxBLepMass);
+    H_MT2lblb_vs_MaxBLepMass.xAxis.SetAxis("patsy", stringMT2lblb, &inSHBB->IHBB_EnergyPtMET, doSyst);
+    H_MT2lblb_vs_MaxBLepMass.SetIndAxisLabel(stringSmear + stringMT2lblb, mapVartoLabel, 1);
+    H_MT2lblb_vs_MaxBLepMass.yAxis.SetAxis("patsy", stringMaxBLepMass, &inSHBB->IHBB_EnergyPtMET, doSyst);
+    H_MT2lblb_vs_MaxBLepMass.SetIndAxisLabel(stringSmear + stringMaxBLepMass, mapVartoLabel, 2);
+    
     
     HistogramT H_MT2ll_vs_MT2lblb; H_MT2ll_vs_MT2lblb.DefaultVarVals();
     H_MT2ll_vs_MT2lblb.SetName(stringSmear + stringMT2ll, "_vs_", stringMT2lblb);
@@ -59,49 +69,52 @@ inline void TwoDeeHistTVec_AddMT2CorrelationHists(vector<HistogramT> * inHistTVe
     
     HistogramT H_MT2ll_vs_MT2lblbShape; H_MT2ll_vs_MT2lblbShape.DefaultVarVals();
     H_MT2ll_vs_MT2lblbShape.SetName(stringSmear + stringMT2ll, "_vs_", stringMT2lblb + stringShape);
-    H_MT2ll_vs_MT2lblbShape.xAxis.SetAxisSpecial("patsy", stringMT2ll, 2, doSyst);
+    H_MT2ll_vs_MT2lblbShape.xAxis.SetAxisSpecial("patsy", stringMT2ll, 9, doSyst);
     H_MT2ll_vs_MT2lblbShape.SetIndAxisLabel(stringSmear + stringMT2ll, mapVartoLabel, 1);
-    H_MT2ll_vs_MT2lblbShape.yAxis.SetAxisSpecial("patsy", stringMT2lblb, 4, doSyst);
+    H_MT2ll_vs_MT2lblbShape.yAxis.SetAxisSpecial("patsy", stringMT2lblb, 11, doSyst);
     H_MT2ll_vs_MT2lblbShape.SetIndAxisLabel(stringSmear + stringMT2lblb, mapVartoLabel, 2);
     
     HistogramT H_MT2ll_vs_MT2bb_ZMETShape; H_MT2ll_vs_MT2bb_ZMETShape.DefaultVarVals();
     H_MT2ll_vs_MT2bb_ZMETShape.SetName(stringSmear + stringMT2ll, "_vs_", stringMT2bb_ZMET + stringShape);
-    H_MT2ll_vs_MT2bb_ZMETShape.xAxis.SetAxisSpecial("patsy", stringMT2ll, 2, doSyst);
+    H_MT2ll_vs_MT2bb_ZMETShape.xAxis.SetAxisSpecial("patsy", stringMT2ll, 9, doSyst);
     H_MT2ll_vs_MT2bb_ZMETShape.SetIndAxisLabel(stringSmear + stringMT2ll, mapVartoLabel, 1);
-    H_MT2ll_vs_MT2bb_ZMETShape.yAxis.SetAxisSpecial("patsy", stringMT2bb_ZMET, 6, doSyst);
+    H_MT2ll_vs_MT2bb_ZMETShape.yAxis.SetAxisSpecial("patsy", stringMT2bb_ZMET, 13, doSyst);
     H_MT2ll_vs_MT2bb_ZMETShape.SetIndAxisLabel(stringSmear + stringMT2bb_ZMET, mapVartoLabel, 2);
     
     HistogramT H_MT2bb_ZMET_vs_MT2lblbShape; H_MT2bb_ZMET_vs_MT2lblbShape.DefaultVarVals();
     H_MT2bb_ZMET_vs_MT2lblbShape.SetName(stringSmear + stringMT2bb_ZMET, "_vs_", stringMT2lblb + stringShape);
-    H_MT2bb_ZMET_vs_MT2lblbShape.xAxis.SetAxisSpecial("patsy", stringMT2bb_ZMET, 6, doSyst);
+    H_MT2bb_ZMET_vs_MT2lblbShape.xAxis.SetAxisSpecial("patsy", stringMT2bb_ZMET, 13, doSyst);
     H_MT2bb_ZMET_vs_MT2lblbShape.SetIndAxisLabel(stringSmear + stringMT2bb_ZMET, mapVartoLabel, 1);
-    H_MT2bb_ZMET_vs_MT2lblbShape.yAxis.SetAxisSpecial("patsy", stringMT2lblb, 4, doSyst);
+    H_MT2bb_ZMET_vs_MT2lblbShape.yAxis.SetAxisSpecial("patsy", stringMT2lblb, 11, doSyst);
     H_MT2bb_ZMET_vs_MT2lblbShape.SetIndAxisLabel(stringSmear + stringMT2lblb, mapVartoLabel, 2);
     
     
     HistogramT H_MT2ll_vs_KT2_TopShape; H_MT2ll_vs_KT2_TopShape.DefaultVarVals();
     H_MT2ll_vs_KT2_TopShape.SetName(stringSmear + stringMT2ll, "_vs_", stringKT2_Top + stringShape);
-    H_MT2ll_vs_KT2_TopShape.xAxis.SetAxisSpecial("patsy", stringMT2ll, 2, doSyst);
+    H_MT2ll_vs_KT2_TopShape.xAxis.SetAxisSpecial("patsy", stringMT2ll, 9, doSyst);
     H_MT2ll_vs_KT2_TopShape.SetIndAxisLabel(stringSmear + stringMT2ll, mapVartoLabel, 1);
-    H_MT2ll_vs_KT2_TopShape.yAxis.SetAxisSpecial("patsy", stringKT2_Top, 7, doSyst);
+    H_MT2ll_vs_KT2_TopShape.yAxis.SetAxisSpecial("patsy", stringKT2_Top, 15, doSyst);
     H_MT2ll_vs_KT2_TopShape.SetIndAxisLabel(stringSmear + stringKT2_Top, mapVartoLabel, 2);
     
     HistogramT H_KT2_Top_vs_MT2lblbShape; H_KT2_Top_vs_MT2lblbShape.DefaultVarVals();
     H_KT2_Top_vs_MT2lblbShape.SetName(stringSmear + stringKT2_Top, "_vs_", stringMT2lblb + stringShape);
-    H_KT2_Top_vs_MT2lblbShape.xAxis.SetAxisSpecial("patsy", stringKT2_Top, 7, doSyst);
+    H_KT2_Top_vs_MT2lblbShape.xAxis.SetAxisSpecial("patsy", stringKT2_Top, 15, doSyst);
     H_KT2_Top_vs_MT2lblbShape.SetIndAxisLabel(stringSmear + stringKT2_Top, mapVartoLabel, 1);
-    H_KT2_Top_vs_MT2lblbShape.yAxis.SetAxisSpecial("patsy", stringMT2lblb, 4, doSyst);
+    H_KT2_Top_vs_MT2lblbShape.yAxis.SetAxisSpecial("patsy", stringMT2lblb, 11, doSyst);
     H_KT2_Top_vs_MT2lblbShape.SetIndAxisLabel(stringSmear + stringMT2lblb, mapVartoLabel, 2);
     
-    inHistTVec->push_back(H_MET_vs_MT2ll);
-    inHistTVec->push_back(H_MT2ll_vs_MT2lblb);
+    //inHistTVec->push_back(H_MET_vs_MT2ll);
+    inHistTVec->push_back(H_MT2lblb_vs_MaxBLepMass);
+    //inHistTVec->push_back(H_MT2ll_vs_MT2lblb);
     
     inHistTVec->push_back(H_MT2ll_vs_MT2lblbShape);
+    /*
     inHistTVec->push_back(H_MT2ll_vs_MT2bb_ZMETShape);
     inHistTVec->push_back(H_MT2bb_ZMET_vs_MT2lblbShape);
     
     inHistTVec->push_back(H_MT2ll_vs_KT2_TopShape);
     inHistTVec->push_back(H_KT2_Top_vs_MT2lblbShape);
+     */
     /*
     HistogramT H_DPhiBLep0BLep1; H_DPhiBLep0BLep1.DefaultVarVals();
     H_DPhiBLep0BLep1.SetName(stringSmear + DPhiVarString(intBLep, intBLep), "", "");
