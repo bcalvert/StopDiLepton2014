@@ -1,5 +1,6 @@
 #include <cmath>
 #include "TCanvas.h"
+#include "TH1.h"
 #include "TH1F.h"
 #include "TString.h"
 #include "TPad.h"
@@ -8,7 +9,10 @@
 #include "TLorentzVector.h"
 #include "./HistogramStyleFunctions.h"
 #include "TGraph.h"
+#include "TGraphErrors.h"
+#include "TAxis.h"
 
+#include <vector>
 using namespace std;
 inline void DebugStatement(int inputIntToCheck, vector<int> * inputAllowedValsForInt, TString intVarName, TString nameFunction) {
     bool intFails = true;
@@ -434,6 +438,44 @@ inline void FixPadSingle(TPad * &inputPad, TCanvas * &inputCanvas) {
     inputPad->SetFrameLineWidth(2);
     inputPad->SetFrameBorderMode(0);
 }
+inline void FixPadTriple(TPad * &inputPad, int whichPad, TCanvas * &inputCanvas) {
+    
+    Double_t canvWidth = 800.;
+    Double_t canvHeight = 700.;
+    
+    inputCanvas->SetWindowSize(canvWidth, canvHeight);
+    
+    TString arrPadName[3] = {"padhigh_", "padmed_", "padlow_"};
+    Double_t xLowPads[3] = {0.01, 0.01, 0.01};
+//    Double_t yLowPads[3] = {2./3, 1./3, 0.037};
+    Double_t yLowPads[3] = {2./3, 1./3, 0.01};
+    Double_t xUpPads[3] = {0.99, 0.99, 0.99};
+    Double_t yUpPads[3] = {0.99, 2./3 - .01, 1./3 + .015};
+    
+    Double_t leftMarginPads[3] = {0.09, 0.09, 0.09};
+    Double_t rightMarginPads[3] = {0.033, 0.033, 0.033};
+    Double_t topMarginPads[3] = {0.047, 0.0, 0.00};
+    Double_t botMarginPads[3] = {0.147, 0.147, 0.33};
+
+    TString padname_ = arrPadName[whichPad - 1];
+    padname_ += inputCanvas->GetTitle();
+    Color_t borderColor = kWhite;
+    Short_t borderSize = 0;
+    Short_t borderMode = 0;
+    
+    inputPad->SetPad(padname_, padname_, xLowPads[whichPad - 1], yLowPads[whichPad - 1], xUpPads[whichPad - 1], yUpPads[whichPad - 1], borderColor, borderSize, borderMode);
+    
+    inputPad->SetLeftMargin(leftMarginPads[whichPad - 1]);
+    inputPad->SetRightMargin(rightMarginPads[whichPad - 1]);
+    inputPad->SetTopMargin(topMarginPads[whichPad - 1]);
+    inputPad->SetBottomMargin(botMarginPads[whichPad - 1]);
+    inputPad->SetFillColor(0);
+    inputPad->SetTickx(1);
+    inputPad->SetTicky(1);
+    inputPad->SetFrameFillStyle(0);
+    inputPad->SetFrameLineWidth(2);
+    inputPad->SetFrameBorderMode(0);
+}
 
 inline float dPhi(float phi1, float phi2) {
     float result = phi1-phi2;
@@ -504,11 +546,41 @@ inline void HistogramUnderflowOverflow(TH1F * inputHist, bool doUnderflow, bool 
         inputHist->SetBinContent(1, inputHist->GetBinContent(1) + inputHist->GetBinContent(0));
         newHistErr = TMath::Sqrt(inputHist->GetBinError(1)*inputHist->GetBinError(1) + inputHist->GetBinError(0)*inputHist->GetBinError(0));
         inputHist->SetBinError(1, newHistErr);
+        inputHist->SetBinContent(0, 0);
+        inputHist->SetBinError(0, 0);
     }
     if (doOverflow) {
         inputHist->SetBinContent(NBins, inputHist->GetBinContent(NBins) + inputHist->GetBinContent(NBins+1));
         newHistErr = TMath::Sqrt(inputHist->GetBinError(NBins)*inputHist->GetBinError(NBins) + inputHist->GetBinError(NBins+1)*inputHist->GetBinError(NBins+1));
         inputHist->SetBinError(NBins, newHistErr);
+        inputHist->SetBinContent(NBins + 1, 0);
+        inputHist->SetBinError(NBins + 1, 0);
+    }
+}
+
+inline void RebinnedHistUnderOverflow(TH1F * inputHist, int whichBin, int whichDir) {
+    float newHistErr;
+    double integral, integralErr;
+    int NBins = inputHist->GetNbinsX();
+    if (whichDir < 0) {
+        integral = inputHist->IntegralAndError(0, whichBin - 1, integralErr);
+        inputHist->SetBinContent(whichBin, inputHist->GetBinContent(whichBin) + integral);
+        newHistErr = TMath::Sqrt(inputHist->GetBinError(whichBin)*inputHist->GetBinError(whichBin) + integralErr * integralErr);
+        inputHist->SetBinError(whichBin, newHistErr);
+        for (int iBin = 0; iBin <= whichBin -1; ++iBin) {
+            inputHist->SetBinContent(iBin, 0);
+            inputHist->SetBinError(iBin, 0);
+        }
+    }
+    else if (whichDir > 0) {
+        integral = inputHist->IntegralAndError(whichBin + 1, NBins + 1, integralErr);
+        inputHist->SetBinContent(whichBin, inputHist->GetBinContent(whichBin) + integral);
+        newHistErr = TMath::Sqrt(inputHist->GetBinError(whichBin) * inputHist->GetBinError(whichBin) + integralErr * integralErr);
+        inputHist->SetBinError(whichBin, newHistErr);
+        for (int iBin = whichBin + 1; iBin <= NBins + 1; ++iBin) {
+            inputHist->SetBinContent(iBin, 0);
+            inputHist->SetBinError(iBin, 0);
+        }
     }
 }
 
@@ -910,12 +982,62 @@ inline TH1F * PassCutHisto(TH1 * inputHist, vector<int> * values, vector<TString
     return outHist;
 }
 
+inline TH1F * LogYHist(TH1F * inputHist, bool doVerbosity) {
+    int nBins = inputHist->GetNbinsX();
+    TH1F * outHist =  (TH1F *) inputHist->Clone(inputHist->GetName() + TString("_LogY"));
+    float currBinContent, currBinErr;
+    float x, y, yErr;
+    for (int iBin = 1; iBin <= nBins; ++iBin) {
+        x = inputHist->GetXaxis()->GetBinCenter(iBin);
+        currBinContent = inputHist->GetBinContent(iBin);
+        currBinErr = inputHist->GetBinError(iBin);
+        if (currBinContent > 0) {
+            y = TMath::Log(currBinContent);
+            yErr = TMath::Abs(y * currBinErr / currBinContent);
+            outHist->SetBinContent(iBin, y);
+            outHist->SetBinError(iBin, yErr);
+            if (doVerbosity) {
+                cout << "x " << x << endl;
+                cout << "currBinContent " << currBinContent << endl;
+                cout << "currBinErr " << currBinErr << endl;
+                cout << "y " << y << endl;
+                cout << "yErr " << yErr << endl;
+            }
+        }
+    }
+    return outHist;
+}
 
+inline TGraphErrors LogYGraph(TH1F * inputHist, bool doVerbosity) {
+    int nBins = inputHist->GetNbinsX();
+    TGraphErrors outGraph(nBins);
+    float currBinContent, currBinErr;
+    float x, y, yErr;
+    for (int iBin = 0; iBin < nBins; ++iBin) {
+        x = inputHist->GetXaxis()->GetBinCenter(iBin + 1);
+        currBinContent = inputHist->GetBinContent(iBin + 1);
+        currBinErr = inputHist->GetBinError(iBin + 1);
+        if (currBinContent > 0) {
+            y = TMath::Log(currBinContent);
+            yErr = TMath::Abs(y * currBinErr / currBinContent);
+            outGraph.SetPoint(iBin, x, y);
+            outGraph.SetPointError(iBin, 0, yErr);
+            if (doVerbosity) {
+                cout << "x " << x << endl;
+                cout << "currBinContent " << currBinContent << endl;
+                cout << "currBinErr " << currBinErr << endl;
+                cout << "y " << y << endl;
+                cout << "yErr " << yErr << endl;
+            }
+        }
+    }
+    return outGraph;
+}
 
 inline TGraph LogLogGraph(TH1F * inputHist) {
     int nBins = inputHist->GetNbinsX();
     TGraph outGraph(nBins);
-    float x, y;
+    float x, y; //, yErr; -- not using y-error for now
     for (int iBin = 0; iBin < nBins; ++iBin) {
         x = TMath::Log(inputHist->GetXaxis()->GetBinLowEdge(iBin + 1));
         y = TMath::Log(inputHist->GetBinContent(iBin + 1));
@@ -1074,3 +1196,145 @@ void ZeroOutNegHistBins(TH1 * inputHist) {
         }
     }
 }
+
+
+TH1F * CompareHists(TH2F * histCoarseBin, TH2F * histFineBin) {
+    
+    TH1F * testDiff = new TH1F("testDiff", ";#frac{Value Coarse - Value Fine}{Value Coarse}; Number of bins", 100, -1, 1);
+    
+    int nBinsX = histCoarseBin->GetNbinsX();
+    int nBinsY = histCoarseBin->GetNbinsY();
+    
+    float currBinCenterX, currBinCenterY;
+    float currFineBinCenterX, currFineBinCenterY;
+    
+    int currBinX_FineHist;
+    int currBinY_FineHist;
+    
+    float currBinContent_Coarse, currBinContent_Fine;
+    float currDiff;
+    for (int iBinX = 1; iBinX <= nBinsX; ++iBinX) {
+        currBinCenterX = histCoarseBin->GetXaxis()->GetBinCenter(iBinX);
+        currBinX_FineHist = histFineBin->GetXaxis()->FindBin(currBinCenterX);
+        currFineBinCenterX = histFineBin->GetXaxis()->GetBinCenter(currBinX_FineHist);
+        if (abs(currFineBinCenterX - currBinCenterX) > 1E-2) {
+            cout << "something wrong with their X bin difference!" << currFineBinCenterX - currBinX_FineHist << endl;
+        }
+        for (int iBinY = 1; iBinY <= nBinsY; ++iBinY) {
+            currBinContent_Coarse = histCoarseBin->GetBinContent(iBinX, iBinY);
+            
+            currBinCenterY = histCoarseBin->GetYaxis()->GetBinCenter(iBinY);
+            currBinY_FineHist = histFineBin->GetYaxis()->FindBin(currBinCenterY);
+            currFineBinCenterY = histFineBin->GetYaxis()->GetBinCenter(currBinY_FineHist);
+            if (abs(currFineBinCenterY - currBinCenterY) > 1E-2) {
+                cout << "something wrong with their Y bin difference!" << currFineBinCenterY - currBinY_FineHist << endl;
+            }
+
+            
+            
+            currBinContent_Fine = histFineBin->GetBinContent(currBinX_FineHist, currBinY_FineHist);
+            
+            currDiff = currBinContent_Coarse - currBinContent_Fine;
+            
+            cout << "for mStop:mLSP of " << currBinCenterX << ":" << currBinCenterY << endl;
+            cout << "diff of values is " << currDiff << endl;
+            testDiff->Fill(currDiff/currBinContent_Coarse);
+        }
+    }
+    return testDiff;
+}
+
+int FindBinInHistRange(TAxis * inputAxis, float inputXVal) {
+    int nBins = inputAxis->GetNbins();
+    int currBin = inputAxis->FindBin(inputXVal);
+    
+    if (currBin < 1) currBin = 1;
+    if (currBin > nBins) currBin = nBins;
+    
+    return currBin;
+}
+
+void SetHistogramData(TH1 * inputHist, TString &histName, vector<int> * inVecNumBinsAxis, vector<TAxis *> * inVecHistAxes, vector<float> * inVecAxisBinWidths) {
+    //Function to automatically set-up commonly used axis parameters
+    
+    inVecNumBinsAxis->resize(0);
+    inVecHistAxes->resize(0);
+    inVecAxisBinWidths->resize(0);
+
+    histName = inputHist->GetName();
+    
+    TAxis * xAxis = inputHist->GetXaxis();
+    TAxis * yAxis = inputHist->GetYaxis();
+    TAxis * zAxis = inputHist->GetZaxis();
+    
+    inVecNumBinsAxis->push_back(xAxis->GetNbins());
+    inVecNumBinsAxis->push_back(yAxis->GetNbins());
+    inVecNumBinsAxis->push_back(zAxis->GetNbins());
+    
+    inVecAxisBinWidths->push_back(xAxis->GetBinWidth(1));
+    inVecAxisBinWidths->push_back(yAxis->GetBinWidth(1));
+    inVecAxisBinWidths->push_back(zAxis->GetBinWidth(1));
+    
+    inVecHistAxes->push_back(xAxis);
+    inVecHistAxes->push_back(yAxis);
+    inVecHistAxes->push_back(zAxis);
+}
+
+
+TString ConditionalStringReplacement(TString inputString, TString searchString, TString replaceString) {
+    TString outString = inputString;
+    int strIndex = inputString.Index(searchString);
+    if (strIndex != -1) {
+        int sizeSearch = searchString.Length();
+        outString.Replace(strIndex, sizeSearch, replaceString);
+    }
+    return outString;
+}
+
+TH1 * LoadMultipleHistogram(vector<TFile *> * vecInputFiles, TString grabHistName, int minIndex, int maxIndex, TString addName) {
+    TH1 * currHist = NULL, * outHist = NULL;
+    TString currHistName;
+    for (int iFile = minIndex; iFile < maxIndex; ++iFile) {
+        currHist = (TH1 *) vecInputFiles->at(iFile)->Get(grabHistName);
+        currHistName = currHist->GetName();
+        if (outHist == NULL) {
+            outHist = (TH1 *) currHist->Clone(currHistName + addName);
+        }
+        else {
+            outHist->Add(currHist);
+        }
+    }
+    return outHist;
+}
+
+void CloseMultipleFiles(vector<TFile *> * vecInputFiles) {
+    unsigned int numFiles = vecInputFiles->size();
+    for (unsigned int iFile = 0; iFile < numFiles; ++iFile) {
+        if (vecInputFiles->at(iFile)) {
+            cout << "going to close " << vecInputFiles->at(iFile)->GetName() << endl;
+            vecInputFiles->at(iFile)->Close();
+        }
+    }
+}
+
+void DeleteVector(vector<TObject *> * inVecTObjects) {
+    unsigned int numObjs = inVecTObjects->size();
+    for (unsigned int iObj = 0; iObj < numObjs; ++iObj) {
+        inVecTObjects->at(iObj)->Delete();
+    }
+    inVecTObjects->clear();
+}
+
+void DeleteVector(vector<TH2F *> * inVecTObjects) {
+    unsigned int numObjs = inVecTObjects->size();
+    for (unsigned int iObj = 0; iObj < numObjs; ++iObj) {
+        inVecTObjects->at(iObj)->Delete();
+    }
+    inVecTObjects->clear();
+}
+
+void SmoothNearestNeighbor() {
+    
+}
+
+
