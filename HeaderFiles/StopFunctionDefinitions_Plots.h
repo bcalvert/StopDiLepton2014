@@ -133,6 +133,7 @@ inline vector<TH1F *> * OneDProjectionReturnVec(TH1 * inputHist, int numDims, in
 #include "./StopHistTDefinitions_1D.h"
 #include "./StopHistTDefinitions_2D.h"
 #include "./StopHistTDefinitions_3D.h"
+#include "./StopHistTDefinitions_METPerformance.h"
 /*
  #include "./StopHistTDefinitions/StopHistTDefinitions_1D.h"
  #include "./StopHistTDefinitions/StopHistTDefinitions_2D.h"
@@ -140,7 +141,7 @@ inline vector<TH1F *> * OneDProjectionReturnVec(TH1 * inputHist, int numDims, in
  */
 
 inline void SetHistTVec_Inclusive(vector<HistogramT> * inHistTVec, StopHistBinBounds * inSHBB, labelMap * mapVartoLabel, int numDims, int cutPlotLevel) {
-    bool noSmear = false;
+    //bool noSmear = false;
     
     switch (numDims) {
         case 1:
@@ -158,7 +159,7 @@ inline void SetHistTVec_Inclusive(vector<HistogramT> * inHistTVec, StopHistBinBo
     }
 }
 inline void SetHistTVec_Inclusive_Smeared(vector<HistogramT> * inHistTVec, StopHistBinBounds * inSHBB, labelMap * mapVartoLabel, int numDims, int cutPlotLevel) {
-    bool noSmear = false;
+    //bool noSmear = false;
     
     switch (numDims) {
         case 1:
@@ -175,6 +176,39 @@ inline void SetHistTVec_Inclusive_Smeared(vector<HistogramT> * inHistTVec, StopH
             break;
     }
 }
+
+inline void SetHistTVec_METPerformance_Smeared(vector<HistogramT> * inHistTVec, StopHistBinBounds * inSHBB, labelMap * mapVartoLabel, int numDims) {
+    switch (numDims) {
+        case 1:
+            OneDeeHistTVec_AddMETPerformanceHists(inHistTVec, inSHBB, mapVartoLabel, true);
+            OneDeeHistTVec_AddDiKinObjectHists_Main(inHistTVec, inSHBB, mapVartoLabel, 0, true, true);
+            break;
+        case 2:
+            TwoDeeHistTVec_METPerformance(inHistTVec, inSHBB, mapVartoLabel);
+            break;
+        default:
+            cout << "num of Dims should be 1, 2 -- it is " << numDims << endl;
+            break;
+    }
+}
+
+inline void SetHistTVec_METPerformance(vector<HistogramT> * inHistTVec, StopHistBinBounds * inSHBB, labelMap * mapVartoLabel, int numDims) {
+    switch (numDims) {
+        case 1:
+            OneDeeHistTVec_AddMETPerformanceHists(inHistTVec, inSHBB, mapVartoLabel, false);
+            OneDeeHistTVec_AddDiKinObjectHists_Main(inHistTVec, inSHBB, mapVartoLabel, 0, false, true);
+            break;
+        case 2:
+            TwoDeeHistTVec_METPerformance_NoSmear(inHistTVec, inSHBB, mapVartoLabel);
+            break;
+        default:
+            cout << "num of Dims should be 1, 2 -- it is " << numDims << endl;
+            break;
+    }
+}
+
+
+
 inline void AddSystHists(vector<HistogramT> * outputHistTVec, vector<HistogramT> * inputHistTVec, vector<SystT> * inputSystTVec, bool isData, bool isSignal, bool doVerbosity = false) {
     TString currSystName, currHistName;
     HistogramT currHistT;
@@ -232,17 +266,20 @@ inline void SetSubSampVec(vector<SampleT> * subSampVec, int whichSubSampType = -
     TString BJetCutString = "_BJet1";
     
     TString stringZVeto[2] = {"_inZ", "_outZ"};
-    TString stringJetCut[5] = {"", "_Jet2", "_Jet2_METGeq40", "_Jet2_BJet1", "_Jet2_BJet1_METGeq40"};
     
-    int cutJet[5] = {-1, 2, 2, 2, 2};
-    int cutBJet[5] = {-1, -1, -1, 1, 1};
-    int cutMETVals[5] = {0, 0, 40, 0, 40};
+    const int numIndSamps = 7;
+    
+    TString stringJetCut[numIndSamps] = {"", "_Jet2", "_Jet2_METGeq40", "_Jet2_BJet1", "_Jet2_BJet1_METGeq40", "_Jet2_BJet2", "_Jet2_BJet2_METGeq40"};
+    
+    int cutJet[numIndSamps] = {-1, 2, 2, 2, 2, 2, 2};
+    int cutBJet[numIndSamps] = {-1, -1, -1, 1, 1, 2, 2};
+    int cutMETVals[numIndSamps] = {0, 0, 40, 0, 40, 0, 40};
     
     vector< vector< SampleT > > vecSampT_ZSF; vecSampT_ZSF.resize(2);
     
     for (unsigned int iDiLepMass = 0; iDiLepMass < 2; ++iDiLepMass) {
-        vecSampT_ZSF[iDiLepMass].resize(5);
-        for (unsigned int iJetMET = 0; iJetMET < 5; ++iJetMET) {
+        vecSampT_ZSF[iDiLepMass].resize(numIndSamps);
+        for (unsigned int iJetMET = 0; iJetMET < numIndSamps; ++iJetMET) {
             vecSampT_ZSF[iDiLepMass][iJetMET].DefaultVarVals();
             
             vecSampT_ZSF[iDiLepMass][iJetMET].doZVeto = iDiLepMass;
@@ -252,8 +289,7 @@ inline void SetSubSampVec(vector<SampleT> * subSampVec, int whichSubSampType = -
             
             vecSampT_ZSF[iDiLepMass][iJetMET].histNameSuffix = stringZVeto[iDiLepMass];
             vecSampT_ZSF[iDiLepMass][iJetMET].histNameSuffix += stringJetCut[iJetMET];
-            
-            if (whichSubSampType < 2) {
+            if (whichSubSampType < 2 || (whichSubSampType > 3 && iJetMET <= 1)) {
                 subSampVec->push_back(vecSampT_ZSF[iDiLepMass][iJetMET]);
             }
         }
@@ -273,15 +309,42 @@ inline void SetSubSampVec(vector<SampleT> * subSampVec, int whichSubSampType = -
     events_inZ_ZCR_LowBLepMass.whichdiLepType = -1; events_inZ_ZCR_LowBLepMass.doZVeto = 0; events_inZ_ZCR_LowBLepMass.cutNJets = 2; events_inZ_ZCR_LowBLepMass.cutNBJets = -1; events_inZ_ZCR_LowBLepMass.cutMET = 40.;
     events_inZ_ZCR_LowBLepMass.blindDataChannel = 1;
     
+    SampleT events_FullCut_0BJets; events_FullCut_0BJets.histNameSuffix = "_FullCut_0BJets"; events_FullCut_0BJets.histXaxisSuffix = "";
+    events_FullCut_0BJets.histYaxisSuffix = ""; events_FullCut_0BJets.histZaxisSuffix = "";
+    events_FullCut_0BJets.whichdiLepType = -1; events_FullCut_0BJets.doZVeto = 1; events_FullCut_0BJets.cutNJets = 2; events_FullCut_0BJets.cutNBJets = -1; events_FullCut_0BJets.cutMET = 40.;
+    events_FullCut_0BJets.blindDataChannel = 1;
+    
+    SampleT events_FullCut_0BJets_LowBLepMass; events_FullCut_0BJets_LowBLepMass.histNameSuffix = "_FullCut_0BJets_LowBLepMass"; events_FullCut_0BJets_LowBLepMass.histXaxisSuffix = "";
+    events_FullCut_0BJets_LowBLepMass.histYaxisSuffix = ""; events_FullCut_0BJets_LowBLepMass.histZaxisSuffix = "";
+    events_FullCut_0BJets_LowBLepMass.whichdiLepType = -1; events_FullCut_0BJets_LowBLepMass.doZVeto = 1; events_FullCut_0BJets_LowBLepMass.cutNJets = 2; events_FullCut_0BJets_LowBLepMass.cutNBJets = -1; events_FullCut_0BJets_LowBLepMass.cutMET = 40.;
+    events_FullCut_0BJets_LowBLepMass.blindDataChannel = 1;
+    
     SampleT events_FullCut; events_FullCut.histNameSuffix = "_FullCut"; events_FullCut.histXaxisSuffix = ""; 
     events_FullCut.histYaxisSuffix = ""; events_FullCut.histZaxisSuffix = "";
     events_FullCut.whichdiLepType = -1; events_FullCut.doZVeto = 1; events_FullCut.cutNJets = 2; events_FullCut.cutNBJets = 1; events_FullCut.cutMET = 40.;
     events_FullCut.blindDataChannel = 1;
+
+    SampleT events_FullCut2BJets; events_FullCut2BJets.histNameSuffix = "_FullCut2BJets"; events_FullCut2BJets.histXaxisSuffix = ""; 
+    events_FullCut2BJets.histYaxisSuffix = ""; events_FullCut2BJets.histZaxisSuffix = "";
+    events_FullCut2BJets.whichdiLepType = -1; events_FullCut2BJets.doZVeto = 1; events_FullCut2BJets.cutNJets = 2; events_FullCut2BJets.cutNBJets = 2; events_FullCut2BJets.cutMET = 40.;
+    events_FullCut2BJets.blindDataChannel = 1;
+
+    
+    SampleT events_FullCut2BJets_LowBLepMass; events_FullCut2BJets_LowBLepMass.histNameSuffix = "_FullCut2BJets_LowBLepMass"; events_FullCut2BJets_LowBLepMass.histXaxisSuffix = "";
+    events_FullCut2BJets_LowBLepMass.histYaxisSuffix = ""; events_FullCut2BJets_LowBLepMass.histZaxisSuffix = "";
+    events_FullCut2BJets_LowBLepMass.whichdiLepType = -1; events_FullCut2BJets_LowBLepMass.doZVeto = 1; events_FullCut2BJets_LowBLepMass.cutNJets = 2; events_FullCut2BJets_LowBLepMass.cutNBJets = 2; events_FullCut2BJets_LowBLepMass.cutMET = 40.;
+    events_FullCut2BJets_LowBLepMass.blindDataChannel = 1;
     
     SampleT events_FullCut_LowBLepMass; events_FullCut_LowBLepMass.histNameSuffix = "_FullCut_LowBLepMass"; events_FullCut_LowBLepMass.histXaxisSuffix = "";
     events_FullCut_LowBLepMass.histYaxisSuffix = ""; events_FullCut_LowBLepMass.histZaxisSuffix = "";
     events_FullCut_LowBLepMass.whichdiLepType = -1; events_FullCut_LowBLepMass.doZVeto = 1; events_FullCut_LowBLepMass.cutNJets = 2; events_FullCut_LowBLepMass.cutNBJets = 1; events_FullCut_LowBLepMass.cutMET = 40.;
     events_FullCut_LowBLepMass.blindDataChannel = 1;
+    
+    SampleT events_FullCut_LowBLepMass170; events_FullCut_LowBLepMass170.histNameSuffix = "_FullCut_LowBLepMass170"; events_FullCut_LowBLepMass170.histXaxisSuffix = "";
+    events_FullCut_LowBLepMass170.histYaxisSuffix = ""; events_FullCut_LowBLepMass170.histZaxisSuffix = "";
+    events_FullCut_LowBLepMass170.whichdiLepType = -1; events_FullCut_LowBLepMass170.doZVeto = 1; events_FullCut_LowBLepMass170.cutNJets = 2; events_FullCut_LowBLepMass170.cutNBJets = 1; events_FullCut_LowBLepMass170.cutMET = 40.;
+    events_FullCut_LowBLepMass170.blindDataChannel = 1;
+
     
     SampleT events_FullCutTTBarControl; events_FullCutTTBarControl.histNameSuffix = "_FullCutTTBarControl"; events_FullCutTTBarControl.histXaxisSuffix = "";
     events_FullCutTTBarControl.histYaxisSuffix = ""; events_FullCutTTBarControl.histZaxisSuffix = "";
@@ -293,20 +356,20 @@ inline void SetSubSampVec(vector<SampleT> * subSampVec, int whichSubSampType = -
     events_FullCutSignal.whichdiLepType = -1; events_FullCutSignal.doZVeto = 1; events_FullCutSignal.cutNJets = 2; events_FullCutSignal.cutNBJets = 1; events_FullCutSignal.cutMET = 40.;
     events_FullCutSignal.blindDataChannel = 1;
     
-    SampleT events_FullCutMETSig1D; events_FullCutMETSig1D.histNameSuffix = "_FullCutMETSig1D"; events_FullCutMETSig1D.histXaxisSuffix = "";
-    events_FullCutMETSig1D.histYaxisSuffix = ""; events_FullCutMETSig1D.histZaxisSuffix = "";
-    events_FullCutMETSig1D.whichdiLepType = -1; events_FullCutMETSig1D.doZVeto = 1; events_FullCutMETSig1D.cutNJets = 2; events_FullCutMETSig1D.cutNBJets = 1; events_FullCutMETSig1D.cutMET = 0.;
-    events_FullCutMETSig1D.blindDataChannel = 1;
+    SampleT events_FullCutMETSig1D_LowBLepMass; events_FullCutMETSig1D_LowBLepMass.histNameSuffix = "_FullCutMETSig1D_LowBLepMass"; events_FullCutMETSig1D_LowBLepMass.histXaxisSuffix = "";
+    events_FullCutMETSig1D_LowBLepMass.histYaxisSuffix = ""; events_FullCutMETSig1D_LowBLepMass.histZaxisSuffix = "";
+    events_FullCutMETSig1D_LowBLepMass.whichdiLepType = -1; events_FullCutMETSig1D_LowBLepMass.doZVeto = 1; events_FullCutMETSig1D_LowBLepMass.cutNJets = 2; events_FullCutMETSig1D_LowBLepMass.cutNBJets = 1; events_FullCutMETSig1D_LowBLepMass.cutMET = 0.;
+    events_FullCutMETSig1D_LowBLepMass.blindDataChannel = 1;
     
-    SampleT events_FullCutMETSig2D; events_FullCutMETSig2D.histNameSuffix = "_FullCutMETSig2D"; events_FullCutMETSig2D.histXaxisSuffix = ""; 
-    events_FullCutMETSig2D.histYaxisSuffix = ""; events_FullCutMETSig2D.histZaxisSuffix = "";
-    events_FullCutMETSig2D.whichdiLepType = -1; events_FullCutMETSig2D.doZVeto = 1; events_FullCutMETSig2D.cutNJets = 2; events_FullCutMETSig2D.cutNBJets = 1; events_FullCutMETSig2D.cutMET = 0.;
-    events_FullCutMETSig2D.blindDataChannel = 1;
+    SampleT events_FullCutMETSig2D_LowBLepMass; events_FullCutMETSig2D_LowBLepMass.histNameSuffix = "_FullCutMETSig2D_LowBLepMass"; events_FullCutMETSig2D_LowBLepMass.histXaxisSuffix = "";
+    events_FullCutMETSig2D_LowBLepMass.histYaxisSuffix = ""; events_FullCutMETSig2D_LowBLepMass.histZaxisSuffix = "";
+    events_FullCutMETSig2D_LowBLepMass.whichdiLepType = -1; events_FullCutMETSig2D_LowBLepMass.doZVeto = 1; events_FullCutMETSig2D_LowBLepMass.cutNJets = 2; events_FullCutMETSig2D_LowBLepMass.cutNBJets = 1; events_FullCutMETSig2D_LowBLepMass.cutMET = 0.;
+    events_FullCutMETSig2D_LowBLepMass.blindDataChannel = 1;
     
-    SampleT events_FullCutMETSigTrue; events_FullCutMETSigTrue.histNameSuffix = "_FullCutMETSigTrue"; events_FullCutMETSigTrue.histXaxisSuffix = ""; 
-    events_FullCutMETSigTrue.histYaxisSuffix = ""; events_FullCutMETSigTrue.histZaxisSuffix = "";
-    events_FullCutMETSigTrue.whichdiLepType = -1; events_FullCutMETSigTrue.doZVeto = 1; events_FullCutMETSigTrue.cutNJets = 2; events_FullCutMETSigTrue.cutNBJets = 1; events_FullCutMETSigTrue.cutMET = 0.;
-    events_FullCutMETSigTrue.blindDataChannel = 1;
+    SampleT events_FullCutMETSigTrue_LowBLepMass; events_FullCutMETSigTrue_LowBLepMass.histNameSuffix = "_FullCutMETSigTrue_LowBLepMass"; events_FullCutMETSigTrue_LowBLepMass.histXaxisSuffix = "";
+    events_FullCutMETSigTrue_LowBLepMass.histYaxisSuffix = ""; events_FullCutMETSigTrue_LowBLepMass.histZaxisSuffix = "";
+    events_FullCutMETSigTrue_LowBLepMass.whichdiLepType = -1; events_FullCutMETSigTrue_LowBLepMass.doZVeto = 1; events_FullCutMETSigTrue_LowBLepMass.cutNJets = 2; events_FullCutMETSigTrue_LowBLepMass.cutNBJets = 1; events_FullCutMETSigTrue_LowBLepMass.cutMET = 0.;
+    events_FullCutMETSigTrue_LowBLepMass.blindDataChannel = 1;
     
     SampleT events_FullCutOnly2Leps; events_FullCutOnly2Leps.histNameSuffix = "_FullCutOnly2Leps"; events_FullCutOnly2Leps.histXaxisSuffix = ""; 
     events_FullCutOnly2Leps.histYaxisSuffix = ""; events_FullCutOnly2Leps.histZaxisSuffix = "";
@@ -337,25 +400,66 @@ inline void SetSubSampVec(vector<SampleT> * subSampVec, int whichSubSampType = -
     events_FullCutISR_200Only2Leps.whichdiLepType = -1; events_FullCutISR_200Only2Leps.doZVeto = 1; events_FullCutISR_200Only2Leps.cutNJets = 3; events_FullCutISR_200Only2Leps.cutNBJets = 1; events_FullCutISR_200Only2Leps.cutMET = 40.;
     events_FullCutISR_200Only2Leps.blindDataChannel = 1;
     
-    if (whichSubSampType < 2) {
+    if (whichSubSampType > 2) {
         subSampVec->push_back(events_outZ_ZCR);
         subSampVec->push_back(events_inZ_ZCR);
-        
+            
         subSampVec->push_back(events_inZ_ZCR_LowBLepMass);
+        subSampVec->push_back(allEvents);
     }
-    subSampVec->push_back(events_FullCut);
-    subSampVec->push_back(events_FullCut_LowBLepMass);
-    subSampVec->push_back(events_FullCutTTBarControl);
-    subSampVec->push_back(events_FullCutSignal);
-    if (whichSubSampType < 2) {
-        subSampVec->push_back(events_FullCutMETSig1D);
-        subSampVec->push_back(events_FullCutMETSig2D);
-        subSampVec->push_back(events_FullCutMETSigTrue);
-        subSampVec->push_back(events_FullCutOnly2Leps);
-        subSampVec->push_back(events_FullCutISR_100); subSampVec->push_back(events_FullCutISR_200);
-        subSampVec->push_back(events_FullCutISR_100Only2Leps); subSampVec->push_back(events_FullCutISR_200Only2Leps);
+    else {
+        if (whichSubSampType != 2) {
+            subSampVec->push_back(events_FullCut_0BJets);
+            subSampVec->push_back(events_FullCut_0BJets_LowBLepMass);
+        }
+        if (whichSubSampType < 2 && whichSubSampType > -1) {
+            subSampVec->push_back(events_outZ_ZCR);
+            subSampVec->push_back(events_inZ_ZCR);
+            
+            subSampVec->push_back(events_inZ_ZCR_LowBLepMass);
+            
+            subSampVec->push_back(events_FullCut);
+            subSampVec->push_back(events_FullCut2BJets);
+            subSampVec->push_back(events_FullCut2BJets_LowBLepMass);
+            subSampVec->push_back(events_FullCut_LowBLepMass);
+            subSampVec->push_back(events_FullCutMETSig1D_LowBLepMass);
+            subSampVec->push_back(events_FullCutMETSigTrue_LowBLepMass);
+        }
+        else if (whichSubSampType == 2 || whichSubSampType == -1) {
+            subSampVec->push_back(events_FullCut);
+            subSampVec->push_back(events_FullCut2BJets);
+            subSampVec->push_back(events_FullCut2BJets_LowBLepMass);
+            subSampVec->push_back(events_FullCut_LowBLepMass);
+            subSampVec->push_back(events_FullCut_LowBLepMass170);
+            
+            subSampVec->push_back(events_FullCutTTBarControl);
+            subSampVec->push_back(events_FullCutSignal);
+            subSampVec->push_back(events_FullCutMETSig1D_LowBLepMass);
+            subSampVec->push_back(events_FullCutMETSig2D_LowBLepMass);
+            subSampVec->push_back(events_FullCutMETSigTrue_LowBLepMass);
+            
+            if (whichSubSampType == 2) {
+                subSampVec->push_back(events_FullCut_0BJets);
+                subSampVec->push_back(events_FullCut_0BJets_LowBLepMass);
+                subSampVec->push_back(events_inZ_ZCR_LowBLepMass);
+            }
+        }
+        if (whichSubSampType == -1) {
+            subSampVec->push_back(events_outZ_ZCR);
+            subSampVec->push_back(events_inZ_ZCR);
+            
+            subSampVec->push_back(events_inZ_ZCR_LowBLepMass);
+        }
+        if (whichSubSampType < 2) {
+            
+            /*
+            subSampVec->push_back(events_FullCutOnly2Leps);
+            subSampVec->push_back(events_FullCutISR_100); subSampVec->push_back(events_FullCutISR_200);
+            subSampVec->push_back(events_FullCutISR_100Only2Leps); subSampVec->push_back(events_FullCutISR_200Only2Leps);
+             */
+        }
+        subSampVec->push_back(allEvents);
     }
-    subSampVec->push_back(allEvents);
 }
 
 inline void SetSystVec(vector<SystT> * inVecSystT, bool includeJetSmear, bool doFakeLep = false) {
@@ -442,7 +546,9 @@ inline void SetSystVec_PDF(vector<SystT> * inVecSystT) {
     
     int numCT10 = 25;
     int numMSTW = 23;
-    int numNNPDF = 50;
+    //int numNNPDF = 50;
+    int numNNPDF = 0;
+    cout << "not running NNPDF for now! " << endl;
     
     vector<TString> vecSystNames_CT10;
     vector<TString> vecSystNames_MSTW;
