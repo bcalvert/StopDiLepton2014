@@ -7,7 +7,7 @@ void SetProjectionLatex(LatexString * inLS, int whichProjection, TString cutUsed
     float textSize = 0.04;
     int alignText = 11;
     float xLB = 0.22;
-    float yLB = whichProjection ? 0.76 : 0.86;
+    float yLB = whichProjection ? 0.66 : 0.76;
     TString textToShow = cutUsed;
     Color_t latexColor = kBlack;
     
@@ -33,7 +33,7 @@ void SetCMSPreliminaryLatex(LatexString * inLS, bool isPrelim = true) {
     float yLB = 0.96;
     TString textToShow = isPrelim ? "CMS preliminary 2012" : "";
     Color_t latexColor = kBlack;
-
+    
     inLS->SetLatex(useNDC, textSize, alignText, xLB, yLB, textToShow, latexColor);
 }
 void SetLumiLatex(LatexString * inLS, float intLumi) {
@@ -47,6 +47,15 @@ void SetLumiLatex(LatexString * inLS, float intLumi) {
     
     inLS->SetLatex(useNDC, textSize, alignText, xLB, yLB, textToShow, latexColor);
 }
+void SetGeneralLatexString(LatexString * inLS, TString genText) {
+    bool useNDC = true;
+    float textSize = 0.04;
+    int alignText = 11;
+    float xLB = 0.2;
+    float yLB = 0.96;
+    Color_t latexColor = kBlack;
+    inLS->SetLatex(useNDC, textSize, alignText, xLB, yLB, genText, latexColor);
+}
 void SetMETLatexString(LatexString * inLS, int typeMET = 0, TString textExtra = "") {
     const int numMET = 5;
     TString stringMET[numMET] = {"PF", "NoPU PF", "MVA PF", "MVA Unity PF" , "Calo"};
@@ -58,7 +67,7 @@ void SetMETLatexString(LatexString * inLS, int typeMET = 0, TString textExtra = 
     int alignText = 11;
     float xLB = 0.2;
     float yLB = 0.96;
-    Color_t latexColor = kBlack;    
+    Color_t latexColor = kBlack;
     inLS->SetLatex(useNDC, textSize, alignText, xLB, yLB, textToShow, latexColor);
 }
 
@@ -82,12 +91,29 @@ void SetDilepLatexString(LatexString * inLS, int typeDilep = -1) {
 void BaseCanvasSetup(TCanvas * InputCanvas, bool logYPad1) {
     InputCanvas->Divide(1, 2);
     TPad * Pad1 = (TPad *) InputCanvas->cd(1);
-    FixPad(Pad1, 1, InputCanvas);    
+    FixPad(Pad1, 1, InputCanvas);
     Pad1->SetLogy(logYPad1);
     TPad * botPad = (TPad *) InputCanvas->cd(2);
     FixPad(botPad, 2, InputCanvas);
-    botPad->SetGridy(1);    
+    botPad->SetGridy(1);
 }
+
+void SplitSystCanvasSetup(TCanvas * InputCanvas, unsigned int numISBs) {
+    InputCanvas->Divide(1, numISBs);
+    vector<TPad *> vecTPad;
+    for (unsigned iISB = 1; iISB <= numISBs; ++iISB) {
+        vecTPad.push_back((TPad *) InputCanvas->cd(iISB));
+        FixPadTriple(vecTPad[iISB - 1], iISB, InputCanvas);
+    }
+    /*
+     FixPad(Pad1, 1, InputCanvas);
+     Pad1->SetLogy(logYPad1);
+     TPad * botPad = (TPad *) InputCanvas->cd(2);
+     FixPad(botPad, 2, InputCanvas);
+     botPad->SetGridy(1);
+     */
+}
+
 void BaseSpectrumDraw(TCanvas * InputCanvas, TH1F * Hist1, AncillaryDrawingVariables * inADV) {
     TPad * topPad = (TPad *) InputCanvas->cd(1);
     Hist1->Draw("e1");
@@ -113,64 +139,80 @@ void BaseSpectrumDraw(TCanvas * InputCanvas, TH1F * Hist1, TH1F * errHist, THSta
     TPad * topPad = (TPad *) InputCanvas->cd(1);
     Hist1->Draw("e1");
     MCStack->Draw("hist same");
-    errHist->Draw("e2 same");    
+    errHist->Draw("e2 same");
     Hist1->Draw("axis same");
     topPad->Update();
     topPad->Modified();
 }
-void DrawBottomRatio(TCanvas * InputCanvas, AncillaryDrawingVariables * inADV, bool doSFR, bool doSyst = false, bool doSmoothSyst = false) {
-    TPad * botPad = (TPad *) InputCanvas->cd(2);
-    TH1F * fracRatioHist = inADV->fracRatioHist;
+
+void DrawBottomRatio(TVirtualPad * inputPadToDrawOn, AncillaryDrawingVariables * inADV, bool doSFR, bool doSyst = false, bool doSmoothSyst = false, bool doSignif = false) {
+    //TPad * botPad = (TPad *) InputCanvas->cd(2);
+    inputPadToDrawOn->cd();
+    TH1F * fracRatioHist = doSignif ? inADV->signifHist : inADV->fracRatioHist;
     TAxis * YAxis = fracRatioHist->GetYaxis();
     TAxis * XAxis = fracRatioHist->GetXaxis();
     TString titleXAxis = XAxis->GetTitle();
     inADV->xADPs[1].SetStrings(titleXAxis, "");
     inADV->xADPs[1].SetAxisParams(XAxis);
-    YAxis->SetNdivisions(3,5,0);
+    if (doSignif) {
+        YAxis->SetNdivisions(510);
+    }
+    else {
+        YAxis->SetNdivisions(3,5,0);
+    }
     XAxis->SetNdivisions(6,5,0);
     float RatioMax;
-    float RatioMin;  
+    float RatioMin;
     if (doSFR) {
         RatioMax = fracRatioHist->GetBinContent(fracRatioHist->GetMaximumBin());
         RatioMin = fracRatioHist->GetBinContent(fracRatioHist->GetMinimumBin());
         if (abs(RatioMin - 0) < 1E-3) RatioMin = fracRatioHist->GetMinimum(1E-3);
         YAxis->SetRangeUser(RatioMin - 0.1, RatioMax + 0.1);
     }
-    TGraphAsymmErrors * fracRatioDrawGraph = ClonePoints(fracRatioHist, false);
-    fracRatioHist->SetLineColor(kBlack);
+    TGraphAsymmErrors * fracRatioDrawGraph = ClonePoints(fracRatioHist, false, true);
+    if (!doSignif) {
+        fracRatioHist->SetLineColor(kBlack);
+    }
     HistToGraphCopyAttributes(fracRatioHist, fracRatioDrawGraph);
     TH1F * patsy = (TH1F*) fracRatioHist->Clone("frac_patsy");
     patsy->SetLineColor(kWhite);
     patsy->SetMarkerColor(kWhite);
     patsy->Draw("e1");
     
-    if (doSyst) {
-        if (doSmoothSyst && inADV->fracRatioErrGraphSyst->GetN() > 10) {
-            SmoothedTGraph(inADV->fracRatioErrGraphSyst);
+    if (!doSignif) {
+        if (doSyst) {
+            if (doSmoothSyst && inADV->fracRatioErrGraphSyst->GetN() > 10) {
+                SmoothedTGraph(inADV->fracRatioErrGraphSyst);
+            }
+            inADV->fracRatioErrGraphSyst->Draw("2 same");
         }
-        inADV->fracRatioErrGraphSyst->Draw("2 same");
+        fracRatioDrawGraph->SetMarkerStyle(20);
+        fracRatioDrawGraph->Draw("p0 same");
     }
-    fracRatioDrawGraph->Draw("p0 same");
-    botPad->Update();
-    botPad->Modified();
+    else {
+        YAxis->SetRangeUser(-4, 4);
+        inADV->signifHist->Draw("hist same");
+    }
+    inputPadToDrawOn->Update();
+    inputPadToDrawOn->Modified();
 }
 
 void SetStyle_Text_TopPad(TCanvas * InputCanvas, TH1F * Hist1, AncillaryDrawingVariables * inADV) {
     TPad * topPad = (TPad *) InputCanvas->cd(1);
-    int NBins = Hist1->GetNbinsX();    
+    int NBins = Hist1->GetNbinsX();
     TAxis * XAxis = Hist1->GetXaxis();
     float XBinUB = XAxis->GetXmax();
     float XBinLB = XAxis->GetXmin();
     float BinWidthGeVInit = (XBinUB - XBinLB)/NBins;
     float BinWidthGeV = nDigits(BinWidthGeVInit, 3);
     stringstream ss (stringstream::in | stringstream::out);
-    ss << BinWidthGeV;   
+    ss << BinWidthGeV;
     string attempt = ss.str();
     TString BinWidthString;
     BinWidthString += attempt;
     
     TAxis * YAxis = Hist1->GetYaxis();
-    TString YAxisTitle = YAxis->GetTitle(); 
+    TString YAxisTitle = YAxis->GetTitle();
     int StrPos = YAxisTitle.Index("NUM", 3, TString::kExact);
     if (StrPos != -1) YAxisTitle.Replace(StrPos, 3, BinWidthString);
     inADV->yADPs[0].SetStrings(YAxisTitle, "");

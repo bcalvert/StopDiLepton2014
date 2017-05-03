@@ -46,10 +46,10 @@ void LegendTextDrawBotPad(TCanvas * InputCanvas, AncillaryDrawingVariables * inA
     // legend is contained within the AncillaryDrawingVariables struct
     
     TPad * botPad = (TPad *) InputCanvas->cd(2);
-    float ratioXLB = 0.8;
-    float ratioXUB = 0.95;
-    float ratioYLB = 0.8;
-    float ratioYUB = 0.95;
+    float ratioXLB = 0.21;
+    float ratioXUB = 0.36;
+    float ratioYLB = 0.78;
+    float ratioYUB = 0.93;
     XYBounds legXYBs; legXYBs.SetBounds(ratioXLB, ratioYLB, ratioXUB, ratioYUB);
     if (doVerbosity) {
         cout << "about to set bottom legend bounds " << endl;
@@ -88,10 +88,10 @@ void SpectrumDraw(TCanvas * InputCanvas, HistogramDisplayStructs * inHDP_Data, H
     }
     LegendTextDrawTopPad(InputCanvas, Hist1, legHist1, inADV, doMean, inHDP_MC, true, showLegend, doVerbosity);
 
-    DrawBottomRatio(InputCanvas, inADV, doSFR);
+    DrawBottomRatio(InputCanvas->cd(2), inADV, doSFR);
 }
 
-void SpectrumDrawSyst(TCanvas * InputCanvas, HistogramDisplayStructs * inHDP_Data, HistogramDisplayStructs * inHDP_MC, AncillaryDrawingVariables * inADV, bool doMean, GlobalHistPlotInfo * inGHPI, bool doSFR, bool showLegend, bool doSmoothSyst, bool doVerbosity = false) {
+void SpectrumDrawSyst(TCanvas * InputCanvas, HistogramDisplayStructs * inHDP_Data, HistogramDisplayStructs * inHDP_MC, AncillaryDrawingVariables * inADV, bool doMean, GlobalHistPlotInfo * inGHPI, bool doSFR, bool showLegend, bool doSmoothSyst, bool doVerbosity = false, bool doSignif = false) {
     
     // function that draws the MC systematics for the top part of a typical two pad canvas (that is, draws them overlaying the spectra
     // and draws the bottom part systematics (i.e. the systematics band on the ratio
@@ -118,8 +118,29 @@ void SpectrumDrawSyst(TCanvas * InputCanvas, HistogramDisplayStructs * inHDP_Dat
     }
     LegendTextDrawTopPad(InputCanvas, Hist1, legHist1, inADV, doMean, inHDP_MC, false, showLegend, doVerbosity);
     
-    DrawBottomRatio(InputCanvas, inADV, doSFR, true, doSmoothSyst);
-    LegendTextDrawBotPad(InputCanvas, inADV, doVerbosity);
+    DrawBottomRatio(InputCanvas->cd(2), inADV, doSFR, true, doSmoothSyst, doSignif);
+    if (!doSignif) {
+        LegendTextDrawBotPad(InputCanvas, inADV, doVerbosity);
+    }
+}
+
+
+
+
+void SpectrumDrawSplitSyst(TCanvas * InputCanvas, AncillaryDrawingVariables * inADV, GlobalHistPlotInfo * inGHPI, vector<IndivSystBand> * inVecISB, bool doSFR, bool doSmoothSyst, bool doVerbosity = false) {
+    
+    // function that draws the split MC systematics for the three pad canvas
+    
+    inGHPI->DrawLatexStrings(InputCanvas, 1, doVerbosity);
+    
+    unsigned int numISBs = inVecISB->size();
+    SplitSystCanvasSetup(InputCanvas, numISBs);
+    bool isBotPad = false;
+    for (unsigned int iISB = 0; iISB < numISBs; ++iISB) {
+        DrawBottomRatio(InputCanvas->cd(numISBs - iISB), inADV, doSFR, false, doSmoothSyst);
+        isBotPad = (iISB == 0);
+        inVecISB->at(iISB).DrawBands(InputCanvas->cd(numISBs - iISB), isBotPad);
+    }
 }
 
 
