@@ -2,7 +2,7 @@
 // for the various TTrees used as part of making plots
 
 inline TString SystString(int whichSyst = 0) {
-    TString suffixSyst[7] = {"", "LepES", "JetES", "BTagEffSF", "BMisTagSF", "JetSmear", "UncES"};
+    TString suffixSyst[8] = {"", "LepES", "JetES", "BTagEffSF", "BMisTagSF", "JetSmear", "UncES", "UncESHack"};
     TString outString = "";
     if (whichSyst == 0) {
         return outString;
