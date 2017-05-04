@@ -6,6 +6,76 @@ typedef pair<int, int> intBounds;
 typedef pair<TString, intBounds> indMCParams;
 
 
+float GetNDCX(float x) {
+    gPad->Update();//this is necessary!
+    float NDCX = (x - gPad->GetX1())/(gPad->GetX2()-gPad->GetX1());
+    return NDCX;
+}
+
+float GetNDCY(float y) {
+    gPad->Update();//this is necessary!
+    float NDCY = (y - gPad->GetY1())/(gPad->GetY2()-gPad->GetY1());
+    return NDCY;
+}
+
+
+void DoOverflow(TH1 * inputHist) {
+    int nBinsX = inputHist->GetNbinsX();
+    int nBinsY = inputHist->GetNbinsY();
+    int nBinsZ = inputHist->GetNbinsZ();
+    
+    float currBinContent, currBinContentToAddTo;
+    
+    int currBinToAddToX, currBinToAddToY, currBinToAddToZ;
+    bool isOverflowX = false;
+    bool isOverflowY = false;
+    bool isOverflowZ = false;
+    for (int iBinX = 0; iBinX <= nBinsX + 1; ++iBinX) {
+        isOverflowX = false;
+        currBinToAddToX = iBinX;
+        if (currBinToAddToX == 0) {
+            isOverflowX = true;
+            currBinToAddToX = 1;
+        }
+        else if (currBinToAddToX > nBinsX) {
+            isOverflowX = true;
+            currBinToAddToX = nBinsX;
+        }
+        for (int iBinY = 0; iBinY <= nBinsY + 1; ++iBinY) {
+            isOverflowY = false;
+            currBinToAddToY = iBinY;
+            if (currBinToAddToY == 0) {
+                isOverflowY = true;
+                currBinToAddToY = 1;
+            }
+            else if (currBinToAddToY > nBinsY) {
+                isOverflowY = true;
+                currBinToAddToY = nBinsY;
+            }
+            for (int iBinZ = 0; iBinZ <= nBinsZ + 1; ++iBinZ) {
+                isOverflowZ = false;
+                currBinToAddToZ = iBinZ;
+                if (currBinToAddToZ == 0) {
+                    isOverflowZ = true;
+                    currBinToAddToZ = 1;
+                }
+                else if (currBinToAddToZ > nBinsZ) {
+                    isOverflowZ = true;
+                    currBinToAddToZ = nBinsZ;
+                }
+                if (!(isOverflowX || isOverflowY || isOverflowZ)) continue;
+                currBinContent = inputHist->GetBinContent(iBinX, iBinY, iBinZ);
+                currBinContentToAddTo = inputHist->GetBinContent(currBinToAddToX, currBinToAddToY, currBinToAddToZ);
+                
+                inputHist->SetBinContent(iBinX, iBinY, iBinZ, 0);
+                inputHist->SetBinContent(currBinToAddToX, currBinToAddToY, currBinToAddToZ, currBinContentToAddTo + currBinContent);
+            }
+        }
+    }
+}
+
+
+
 TString CorrGrabName(TString grabName, int sampleType) {
     TString outString = grabName;
     if ((sampleType == 0 || sampleType == 100) && outString.Contains("Smear")) {
@@ -17,10 +87,27 @@ TString CorrGrabName(TString grabName, int sampleType) {
 typedef struct AxisProjInfo {
     int numDims, whichAxisToProjTo, whichAxisForDist, axisProjLB, axisProjUB;
     int whichAxisToMix;
+    int axis1DLB, axis1DUB;
     TString nameBase;
     vector<int> vecAxesProjBounds;
     float nRMS;
     int RMSWidth;
+    void SetUp3DSig(int inWAtPt, int whichBin) {
+        whichAxisToProjTo = inWAtPt;
+        vecAxesProjBounds.resize(4);
+        for (int iBin = 0; iBin < 4; ++iBin) {
+            vecAxesProjBounds[iBin] = whichBin;
+        }
+    }
+    TString Get3DSigCanvNameAPI() {
+        TString outString = "_3DSig_WAtPt";
+        outString += whichAxisToProjTo;
+        outString += "_ProjLB";
+        outString += vecAxesProjBounds[0];
+        outString += "_ProjUB";
+        outString += vecAxesProjBounds[1];
+        return outString;
+    }
     TString GetCanvNameAPI() {
         TString outString = "numDims";
         outString += numDims;
@@ -44,12 +131,28 @@ typedef struct AxisProjInfo {
         numDims = 1;
         whichAxisToProjTo = 1;
         whichAxisForDist = 1;
+        axis1DLB = 1;
+        axis1DUB = -1;
         axisProjLB = 4;
         axisProjUB = 20;
         // For HLT paths defined above 1: 40 GeV, 2: 60 GeV, 3: 90 GeV, 4: 100 GeV, 5: 120 GeV, 6: 150 GeV, 7: 165 GeV, 8: 200 GeV, 9: 250 GeV, 10: 300 GeV, 11: 400 GeV, 12: 500 GeV, 13: 650 GeV, 14: 800 GeV, 15: 1000 GeV
         whichAxisToMix = 6 - (whichAxisForDist + whichAxisToProjTo);
         nRMS = -1;
         RMSWidth = 200;
+    }
+    void ReRangeHist(TH1F * inputHist) {
+        if (axis1DLB > 1 || axis1DUB > - 1) {
+            if (axis1DUB > - 1) {
+                inputHist->GetXaxis()->SetRange(axis1DLB, axis1DUB);
+                RebinnedHistUnderOverflow(inputHist, axis1DUB, 1);
+            }
+            else {
+                inputHist->GetXaxis()->SetRange(axis1DLB, inputHist->GetNbinsX());
+            }
+            if (axis1DLB > 1) {
+                RebinnedHistUnderOverflow(inputHist, axis1DLB, -1);
+            }
+        }
     }
     void SetVars(int inND, int inWAtPt, int inWAfD, int inAxProjLB, int inAxProjUB) {
         if (vecAxesProjBounds.size() == 0) vecAxesProjBounds.resize(4);
@@ -137,6 +240,7 @@ typedef struct AxisProjInfo {
                 patsy_1D->GetYaxis()->SetTitle("Events / GeV");
             }
         }
+        patsy_1D->SetTitle("");
         return patsy_1D;
     }
     void SetAxesProjBounds_IndDist(int &currIndex) {
@@ -200,6 +304,53 @@ typedef struct AxisProjInfo {
         }
         return projHist;
     }
+    
+    TH2F * ThreeDeeToTwoDeeProjection(TH3F * inputHist, TString setName, bool doVerb = 0) {
+        //Function that takes an input 3D histogram and, in the 2D plane of the 2 axes not projected with, projects the remaining axis
+        //and calculates some statistical quantity with this projection, the idea being that you can use this to help visualize 3D distributions
+        //still a little bit of a work in progress
+        int nBinsX3D = inputHist->GetNbinsX();
+        int nBinsY3D = inputHist->GetNbinsY();
+        int nBinsZ3D = inputHist->GetNbinsZ();
+        
+        inputHist->GetXaxis()->SetRange(1, nBinsX3D);
+        inputHist->GetYaxis()->SetRange(1, nBinsY3D);
+        inputHist->GetZaxis()->SetRange(1, nBinsZ3D);
+
+        if (whichAxisToProjTo == 1) {
+            inputHist->GetXaxis()->SetRange(vecAxesProjBounds[0], vecAxesProjBounds[1]);
+        }
+        else if (whichAxisToProjTo == 2) {
+            inputHist->GetYaxis()->SetRange(vecAxesProjBounds[0], vecAxesProjBounds[1]);
+        }
+        else if (whichAxisToProjTo == 3) {
+            inputHist->GetZaxis()->SetRange(vecAxesProjBounds[0], vecAxesProjBounds[1]);
+        }
+        
+        TString optProjString = "p_";
+        switch (whichAxisToProjTo) {
+            case 1:
+                optProjString += "zy";
+                break;
+            case 2:
+                optProjString += "zx";
+                break;
+            case 3:
+                optProjString += "yx";
+                break;
+            default:
+                break;
+        }
+        if (doVerb) {
+            cout << "inputHist name " << inputHist->GetName() << endl;
+            cout << "optProjString " << optProjString << endl;
+        }
+        TH2F * outHist = (TH2F *) inputHist->Project3D(optProjString);
+        outHist->SetName(setName);
+        return outHist;
+    }
+    
+    
     TString GetProjectionString(TH1 * inputHist, TString axisVar, int whichAxisInt) {
         TAxis * specAxis;
         
@@ -233,15 +384,28 @@ typedef struct AxisProjInfo {
         }
         int binLB = whichAxisInt == 1 ? vecAxesProjBounds[0] : vecAxesProjBounds[2];
         int binUB = whichAxisInt == 1 ? vecAxesProjBounds[1] : vecAxesProjBounds[3];
+        cout << "for grabbing string," << endl;
+        cout << "binLB " << binLB << endl;
+        cout << "binUB " << binLB << endl;
         int axisLB = TMath::Nint(specAxis->GetBinLowEdge(binLB));
         int axisUB = TMath::Nint(specAxis->GetBinUpEdge(binUB));
         
         TString outString = "";
-        outString += axisLB;
-        outString += " < ";
-        outString += axisVar;
-        outString += " < ";
-        outString += axisUB;
+        
+        if (binUB <= specAxis->GetNbins()) {
+            outString += axisLB;
+            outString += " GeV #leq ";
+            outString += axisVar;
+            outString += " #leq ";
+            outString += axisUB;
+            outString += " GeV";
+        }
+        else {
+            outString += axisVar;
+            outString += " #geq ";
+            outString += axisLB;
+            outString += " GeV";
+        }
         return outString;
     }
 } AxisProjInfo;
@@ -251,6 +415,8 @@ typedef struct HistDisplayParams {
     bool doOverflow, doUnderflow;
     TString addName;
     int whichIndMCSort;
+    int typeBinLabel;
+    TString xAxisName;
     void SetVals(int inRBNX = 1, bool inDoOverflow = false, bool inDoUnderflow = false, TString inAddName = "") {
         RBNX = inRBNX;
         doOverflow = inDoOverflow;
@@ -262,11 +428,16 @@ typedef struct HistDisplayParams {
         doOverflow = true;
         doUnderflow = true;
         addName = "";
-        whichIndMCSort = 0;
+        whichIndMCSort = 1;
+        typeBinLabel = -1;
+	xAxisName = "";
     }
     void SetParamsFromCommandLine(int argc, char* argv[]) {
         for (int iHistDispParam = 0; iHistDispParam < argc; ++iHistDispParam) {
-            if (strncmp (argv[iHistDispParam],"nRBNX_HDP", 9) == 0) {
+            if (strncmp (argv[iHistDispParam],"makePlots_Paper", 15) == 0) {
+                whichIndMCSort = strtol(argv[iHistDispParam + 1], NULL, 10 );
+            }
+            else if (strncmp (argv[iHistDispParam],"nRBNX_HDP", 9) == 0) {
                 RBNX = strtol(argv[iHistDispParam + 1], NULL, 10);
             }
             else if (strncmp (argv[iHistDispParam],"noOF_HDP", 8) == 0) {
@@ -274,6 +445,12 @@ typedef struct HistDisplayParams {
             }
             else if (strncmp (argv[iHistDispParam],"noUF_HDP", 8) == 0) {
                 doUnderflow = false;
+            }
+            else if (strncmp (argv[iHistDispParam],"xName", 5) == 0) {
+	        xAxisName = TString(argv[iHistDispParam + 1]);
+            }
+            else if (strncmp (argv[iHistDispParam],"binLabelType", 12) == 0) {
+                typeBinLabel = strtol(argv[iHistDispParam + 1], NULL, 10);
             }
             else if (strncmp (argv[iHistDispParam],"addName_HDP", 11) == 0) {
                 addName = TString(argv[iHistDispParam + 1]);
@@ -305,7 +482,258 @@ typedef struct IndSamplePlotInfo {
     int sampleType; // 0: Data, 1: TTbar, 2: ZDY, 3: EWK, 4: TTbar + Vec boson, 5: Other:, -1: Signal
     
     SampleSystematicsInfo indSSI;
-    void DefaultWeights(int numSystVars = 0) {        
+    
+    void ScaleHists(float scaleFactor) {
+        grabbedHist_TH1F->Scale(scaleFactor);
+        for (unsigned int iSyst = 0; iSyst < vecGrabbedHist_SystVarUp_TH1F.size(); ++iSyst) {
+            vecGrabbedHist_SystVarUp_TH1F[iSyst]->Scale(scaleFactor);
+            vecGrabbedHist_SystVarDown_TH1F[iSyst]->Scale(scaleFactor);
+        }
+    }
+  void ChangeXAxisName(TString xAxisName) {
+    grabbedHist_TH1F->GetXaxis()->SetTitle(xAxisName);
+  }
+    void ChangeAxisUnitVar(TString replaceString, TString strToReplace = "GeV") {
+        TString xTitle = grabbedHist_TH1F->GetXaxis()->GetTitle();
+        TString yTitle = grabbedHist_TH1F->GetYaxis()->GetTitle();
+
+        int lengthStrToReplace = strToReplace.Length();
+        int lengthReplaceString = replaceString.Length();
+        
+        xTitle.Replace(xTitle.Index(strToReplace), lengthStrToReplace, replaceString, lengthReplaceString);
+        yTitle.Replace(yTitle.Index(strToReplace), lengthStrToReplace, replaceString, lengthReplaceString);
+        
+        grabbedHist_TH1F->GetXaxis()->SetTitle(xTitle);
+        grabbedHist_TH1F->GetYaxis()->SetTitle(yTitle);
+    }
+    void DrawBinLabels1D(TPad * inputPad, float yAxisLowVal, TH1F * inputHist, int whichBinLabelType) {
+        //whichBinLabelType: 0 is standard wide range GeV plot, 1 is object multiplicity, 2 is passes cut, 3 is deltaPhi
+        inputPad->cd();
+        
+        if (whichBinLabelType == -1) return;
+        TAxis * xAxis = inputHist->GetXaxis();
+        xAxis->SetLabelOffset(1);
+        inputPad->Update();
+        inputPad->Modified();
+        TAxis * yAxis = inputHist->GetYaxis();
+        
+        TLatex labelTex;
+        //labelTex.SetNDC();
+        float size = 0.15;
+        labelTex.SetTextSize(size);
+        float currNDCX, currNDCY;
+        double currTextSize;
+        
+        int binLB = xAxis->GetFirst();
+        int binUB = xAxis->GetLast();
+        int binRange = binUB - binLB;
+        
+        int minBin = binLB;
+        int maxBin = binUB;
+        int binStep = 1;
+        
+        float bigBinThresh = 250;
+        
+        vector<int> vecModBins;
+        
+        
+        int modFactorBigBin = 50;
+        if (whichBinLabelType == 0) {
+            if (xAxis->GetBinCenter(binUB) > bigBinThresh) {
+                modFactorBigBin = 100;
+            }
+        }
+        else if (whichBinLabelType == 1) {
+            binStep = binRange > 4 ? 2 : 1;
+            modFactorBigBin = 1;
+        }
+        else if (whichBinLabelType == 2) {
+            xAxis->SetBinLabel(1, "Failed");
+            xAxis->SetBinLabel(2, "Passed");
+            
+            labelTex.SetText(0, yAxisLowVal, "Failed");
+            currTextSize = labelTex.GetXsize();
+            labelTex.DrawLatex(0. - currTextSize/2, yAxisLowVal, "Failed");
+            
+            labelTex.SetText(1, yAxisLowVal, "Passed");
+            currTextSize = labelTex.GetXsize();
+            labelTex.DrawLatex(1. - currTextSize/2, yAxisLowVal, "Passed");
+        }
+        else if (whichBinLabelType == 3) {
+	    float pi = 3.14159;
+	    labelTex.DrawLatex(0., yAxisLowVal, "0");
+	    labelTex.DrawLatex(pi/4, yAxisLowVal, "#frac{#pi}{4}");
+	    labelTex.DrawLatex(pi/2, yAxisLowVal, "#frac{#pi}{2}");
+	    labelTex.DrawLatex(pi * 0.75, yAxisLowVal, "#frac{3#pi}{4}");
+	    labelTex.DrawLatex(pi, yAxisLowVal, "#pi");
+	    labelTex.DrawLatex(0., yAxisLowVal, "0");
+	    labelTex.DrawLatex(0., yAxisLowVal, "0");
+	    labelTex.DrawLatex(0., yAxisLowVal, "0");
+	  
+            xAxis->SetBinLabel(xAxis->FindBin(0.), "0");
+            xAxis->SetBinLabel(xAxis->FindBin(3.14159/4), "#frac{#pi}{4}");
+            xAxis->SetBinLabel(xAxis->FindBin(3.14159/2), "#frac{#pi}{2}");
+            xAxis->SetBinLabel(xAxis->FindBin(3.14159 * 0.75), "#frac{3#pi}{4}");
+            xAxis->SetBinLabel(xAxis->FindBin(3.14159), "#pi");
+        }
+        else if ((whichBinLabelType / 10) % 4 == 0) {
+            TString name = inputHist->GetName();
+            if (whichBinLabelType == 40) {
+                vecModBins.push_back(0);
+                vecModBins.push_back(80);
+                vecModBins.push_back(100);
+                vecModBins.push_back(120);
+                vecModBins.push_back(150);
+            }
+            else if (whichBinLabelType == 41) {
+                vecModBins.push_back(0);
+                vecModBins.push_back(80);
+                vecModBins.push_back(130);
+                vecModBins.push_back(170);
+                vecModBins.push_back(210);
+                vecModBins.push_back(250);
+                vecModBins.push_back(300);
+            }
+            else if (whichBinLabelType == 42) {
+                vecModBins.push_back(80);
+                vecModBins.push_back(130);
+                vecModBins.push_back(170);
+                vecModBins.push_back(210);
+                vecModBins.push_back(250);
+                vecModBins.push_back(300);
+            }
+        }
+        
+        unsigned int numMod = vecModBins.size();
+        
+        int currBinValue;
+        TString currBinLabel;
+        if (whichBinLabelType < 2 || whichBinLabelType > 3) {
+            for (int iBinX = minBin; iBinX <= maxBin; iBinX += binStep) {
+                currBinValue = (int) (xAxis->GetBinLowEdge(iBinX) + 0.5);
+                bool doBin = iBinX == minBin;
+                
+                if (whichBinLabelType < 2) {
+                    doBin = iBinX == minBin || (currBinValue % modFactorBigBin == 0 && iBinX < maxBin - 1);
+                }
+                else {
+                    for (unsigned int iMod = 0; iMod < numMod; ++iMod) {
+//                        cout << "iMod " << iMod << endl;
+//                        cout << "vecModBins[iMod] " << vecModBins[iMod] << endl;
+//                        cout << "currBinValue / vecModBins[iMod] " << currBinValue / vecModBins[iMod] << endl;
+                        if (currBinValue == vecModBins[iMod] && iBinX < maxBin - 1) doBin = true;
+                    }
+                }
+                if (doBin) {
+                    currBinLabel = "";
+                    currBinLabel += currBinValue;
+                    //currNDCX = GetNDCX((float) currBinValue);
+                    //currNDCY = GetNDCY((float) yAxisLowVal);
+                    labelTex.SetText(currBinValue, yAxisLowVal, currBinLabel);
+                    currTextSize = labelTex.GetXsize();
+                    labelTex.DrawLatex(currBinValue - currTextSize/2, yAxisLowVal, currBinLabel);
+                    //labelTex.DrawLatex(currNDCX - size/2, currNDCY, currBinLabel);
+                }
+            }
+//            currBinValue = (int) (xAxis->GetBinUpEdge(maxBin) + 0.5);
+            currBinValue = (int) (xAxis->GetBinLowEdge(maxBin) + 0.5);
+            cout << "currBinValue " << currBinValue << endl;
+            currBinLabel = "";
+            currBinLabel += "#geq ";
+            currBinLabel += currBinValue;
+            labelTex.SetText(currBinValue, yAxisLowVal, currBinLabel);
+            currTextSize = labelTex.GetXsize();
+            currBinValue = (int) (xAxis->GetBinLowEdge(maxBin) + 0.5);
+            labelTex.DrawLatex(currBinValue - currTextSize/2, yAxisLowVal, currBinLabel);
+//            currNDCX = GetNDCX((float) currBinValue);
+//            currNDCY = GetNDCY((float) yAxisLowVal);
+//            labelTex.DrawLatex(currNDCX - size/2, currNDCY, currBinLabel);
+            //labelTex.DrawLatex(currBinValue, yAxisLowVal, currBinLabel);
+        }
+        gPad->Update();
+        gPad->Modified();
+    }
+    void SetBinLabels1D(TH1F * inputHist, int whichBinLabelType) {
+        //whichBinLabelType: 0 is standard wide range GeV plot, 1 is object multiplicity, 2 is passes cut, 3 is deltaPhi
+        
+        TAxis * xAxis = inputHist->GetXaxis();
+        int binLB = xAxis->GetFirst();
+        int binUB = xAxis->GetLast();
+        int binRange = binUB - binLB;
+        
+        int minBin = binLB;
+        int maxBin = binUB;
+        int binStep = 1;
+        
+        float bigBinThresh = 250;
+        
+        
+        int modFactorBigBin = 50;
+        
+        xAxis->SetLabelOffset(1);
+        /*
+        if (whichBinLabelType == 0) {
+            if (xAxis->GetBinCenter(binUB) > bigBinThresh) {
+                modFactorBigBin = 100;
+            }
+        }
+        else if (whichBinLabelType == 1) {
+            binStep = binRange > 4 ? 2 : 1;
+            modFactorBigBin = 1;
+        }
+        else if (whichBinLabelType == 2) {
+            xAxis->SetBinLabel(1, "Failed");
+            xAxis->SetBinLabel(2, "Passed");
+        }
+        else if (whichBinLabelType == 3) {
+            xAxis->SetBinLabel(xAxis->FindBin(0.), "0");
+            xAxis->SetBinLabel(xAxis->FindBin(3.14159/4), "#frac{#pi}{4}");
+            xAxis->SetBinLabel(xAxis->FindBin(3.14159/2), "#frac{#pi}{2}");
+            xAxis->SetBinLabel(xAxis->FindBin(3.14159 * 0.75), "#frac{3#pi}{4}");
+            xAxis->SetBinLabel(xAxis->FindBin(3.14159), "#pi");
+        }
+        
+        int currBinValue;
+        TString currBinLabel;
+        if (whichBinLabelType < 2) {
+            for (int iBinX = minBin; iBinX <= maxBin; iBinX += binStep) {
+                currBinValue = (int) (xAxis->GetBinLowEdge(iBinX) + 0.5);
+                if (iBinX == minBin || currBinValue % modFactorBigBin == 0) {
+                    currBinLabel = "";
+                    currBinLabel += currBinValue;
+                    xAxis->SetBinLabel(iBinX, currBinLabel);
+                }
+            }
+            currBinValue = (int) (xAxis->GetBinLowEdge(maxBin) + 0.5);
+            currBinLabel = "";
+            currBinLabel += "#geq ";
+            currBinLabel += currBinValue;
+            xAxis->SetBinLabel(maxBin, currBinLabel);
+        }
+        xAxis->LabelsOption("h");
+         
+         xAxis->SetLabelFont(62);
+         xAxis->SetLabelSize(0.2);
+         xAxis->SetLabelOffset(0.03);
+
+         */
+        if (whichBinLabelType == 2) {
+            xAxis->SetBinLabel(1, "Failed");
+            xAxis->SetBinLabel(2, "Passed");
+            xAxis->LabelsOption("h");
+            
+            xAxis->SetLabelOffset(0.03);
+        }
+    }
+    
+    void SetBinLabels1D_AllHists(int whichBinLabelType) {
+        SetBinLabels1D(grabbedHist_TH1F, whichBinLabelType);
+        for (unsigned int iSyst = 0; iSyst < vecGrabbedHist_SystVarUp_TH1F.size(); ++iSyst) {
+            SetBinLabels1D(vecGrabbedHist_SystVarUp_TH1F[iSyst], whichBinLabelType);
+            SetBinLabels1D(vecGrabbedHist_SystVarDown_TH1F[iSyst], whichBinLabelType);
+        }
+    }
+    void DefaultWeights(int numSystVars = 0) {
         weight_CentVal = 1.0;
         weight_CentVal_StatErr = 0.0;
         weight_SystVarUp.resize(numSystVars);
@@ -491,7 +919,7 @@ typedef struct IndSamplePlotInfo {
         }
     }
     
-    void GrabHistSystShape(TString baseHistGrabName, vector<TString> * vecSystNameAppends, bool doVerbosity = false) {
+    void GrabHistSystShape(TString baseHistGrabName, vector<TString> * vecSystNameAppends, TString addName = "", bool doVerbosity = false) {
         TString grabName;
         //would really like to make this function part of the other but stuck for now....
         for (unsigned int iSyst = 0; iSyst < vecSystNameAppends->size(); ++iSyst) {
@@ -503,16 +931,16 @@ typedef struct IndSamplePlotInfo {
                 if (doVerbosity) {
                     cout << "for file " << inputFile->GetName() << endl;
                     cout << "for systematic " << vecSystNameAppends->at(iSyst) << endl;
-                    cout << "currently trying to grab histogram " << grabName << endl;
-                    if (inputFile->Get(grabName + TString("Up")) != NULL) {
+                    cout << "currently trying to grab histogram " << grabName + TString("Up") + addName << endl;
+                    if (inputFile->Get(grabName + TString("Up") + addName) != NULL) {
                         cout << "histo is available to grab " << endl;
                         cout << "weight ShiftUp " << weight_SystVarUp[iSyst] << endl;
                         cout << "weight ShiftDown " << weight_SystVarDown[iSyst] << endl;
                     }
                 }
                 
-                vecGrabbedHist_SystVarUp[iSyst] = (TH1 *) inputFile->Get(grabName + TString("Up"));
-                vecGrabbedHist_SystVarDown[iSyst] = (TH1 *) inputFile->Get(grabName + TString("Down"));
+                vecGrabbedHist_SystVarUp[iSyst] = (TH1 *) inputFile->Get(grabName + TString("Up") + addName);
+                vecGrabbedHist_SystVarDown[iSyst] = (TH1 *) inputFile->Get(grabName + TString("Down") + addName);
                 if (weight_SystVarUp[iSyst] != 1.0) {
                     vecGrabbedHist_SystVarUp[iSyst]->Scale(weight_SystVarUp[iSyst]);
                 }
@@ -713,13 +1141,23 @@ typedef struct IndSamplePlotInfo {
             cout << inISPI->grabbedHist->GetName() << endl;
         }
         grabbedHist = (TH1 *) inISPI->grabbedHist->Clone(inISPI->grabbedHist->GetName() + addName);
+        if (doVerbosity) {
+            cout << "grabbedHist? " << grabbedHist << endl;
+        }
         // projections aren't done before adding things together ISPIs
         if (doVerbosity) {
             if (vecGrabbedHist_SystVarUp.size() > 0) {                
                 cout << "about to try cloning syst vars " << endl;
+                cout << "vecGrabbedHist_SystVarUp.size() " << vecGrabbedHist_SystVarUp.size() << endl;
+                cout << "inISPI->vecGrabbedHist_SystVarUp.size() " << inISPI->vecGrabbedHist_SystVarUp.size() << endl;
             }
         }
         for (unsigned int iSyst = 0; iSyst < vecGrabbedHist_SystVarUp.size(); ++iSyst) {
+            if (doVerbosity) {
+                cout << "iSyst " << iSyst << endl;
+                cout << "inISPI->vecGrabbedHist_SystVarUp[iSyst] " << inISPI->vecGrabbedHist_SystVarUp[iSyst] << endl;
+                cout << "inISPI->vecGrabbedHist_SystVarUp[iSyst]->GetName() " << inISPI->vecGrabbedHist_SystVarUp[iSyst]->GetName() << endl;
+            }
             vecGrabbedHist_SystVarUp[iSyst] = (TH1 *) inISPI->vecGrabbedHist_SystVarUp[iSyst]->Clone(inISPI->vecGrabbedHist_SystVarUp[iSyst]->GetName() + addName);
             vecGrabbedHist_SystVarDown[iSyst] = (TH1 *) inISPI->vecGrabbedHist_SystVarDown[iSyst]->Clone(inISPI->vecGrabbedHist_SystVarDown[iSyst]->GetName() + addName);
         }
@@ -769,14 +1207,17 @@ typedef struct IndSamplePlotInfo {
         grabbedHist_TH1F = inAPI->DoProjection_Agglomerate(grabbedHist, inHDP->addName);
         grabbedHist_TH1F->RebinX(inHDP->RBNX);
         HistogramUnderflowOverflow(grabbedHist_TH1F, inHDP->doUnderflow, inHDP->doOverflow);
-        for (unsigned int iSyst = 0; iSyst < vecGrabbedHist_SystVarUp.size(); ++iSyst) {        
+        inAPI->ReRangeHist(grabbedHist_TH1F);
+        for (unsigned int iSyst = 0; iSyst < vecGrabbedHist_SystVarUp.size(); ++iSyst) {
             vecGrabbedHist_SystVarUp_TH1F[iSyst] = inAPI->DoProjection_Agglomerate(vecGrabbedHist_SystVarUp[iSyst], inHDP->addName);
             vecGrabbedHist_SystVarUp_TH1F[iSyst]->RebinX(inHDP->RBNX);
             HistogramUnderflowOverflow(vecGrabbedHist_SystVarUp_TH1F[iSyst], inHDP->doUnderflow, inHDP->doOverflow);
+            inAPI->ReRangeHist(vecGrabbedHist_SystVarUp_TH1F[iSyst]);
             
             vecGrabbedHist_SystVarDown_TH1F[iSyst] = inAPI->DoProjection_Agglomerate(vecGrabbedHist_SystVarDown[iSyst], inHDP->addName);
             vecGrabbedHist_SystVarDown_TH1F[iSyst]->RebinX(inHDP->RBNX);
             HistogramUnderflowOverflow(vecGrabbedHist_SystVarDown_TH1F[iSyst], inHDP->doUnderflow, inHDP->doOverflow);
+            inAPI->ReRangeHist(vecGrabbedHist_SystVarDown_TH1F[iSyst]);
         }
         DivideHistogramBins(&vecStringsToDivide);
     }
@@ -866,7 +1307,7 @@ typedef struct IndSamplePlotInfo {
     void SetStatPlusSystErrorOnYields(TString inNameISPI, int whichBin = 2, bool justStat = false, bool noSystPlusStat = true, bool doSymErr = false) {
         indSSI.SetStatPlusSystErrorYields(grabbedHist_TH1F, whichBin, inNameISPI, justStat, noSystPlusStat, doSymErr);
     }
-    void PrintOutYieldInfo(bool justStat = true, bool noSystPlusStat = true, bool printSysLim = false, bool printAveSys = false) {
+    void PrintOutYieldInfo(bool justStat = true, bool noSystPlusStat = true, int printSysLim = 0, bool printAveSys = false) {
         indSSI.PrintOut(justStat, noSystPlusStat, printSysLim, printAveSys);
     }
 } IndSamplePlotInfo;
@@ -897,6 +1338,10 @@ typedef struct IndSampleDisplayParams {
         lineDS = inLineDS;
         markerDS = inMarkerDS;
         sortParam = inSP;
+        /*
+        cout << "legendEntry " << legendEntry << endl;
+        cout << "sortParam " << sortParam << endl;
+         */
     }
 } IndSampleDisplayParams;
 typedef pair<IndSamplePlotInfo, IndSampleDisplayParams> SampDisplay;
@@ -913,6 +1358,13 @@ typedef struct HistogramDisplayStructs {
     
     SampDisplay nonTTBarSD;
     
+    bool doOffset;
+    
+
+  void ChangeXAxisName(TString xAxisName) {
+    compSamp.first.ChangeXAxisName(xAxisName);
+  }
+
     void PrintCompSystHistNames() {
         for (unsigned int iSyst = 0; iSyst < compSamp.first.vecGrabbedHist_SystVarUp_TH1F.size(); ++iSyst) {
             cout << "upSyst name " << compSamp.first.vecGrabbedHist_SystVarUp_TH1F[iSyst]->GetName() << endl;
@@ -920,9 +1372,39 @@ typedef struct HistogramDisplayStructs {
         }
     }
     void DefaultVarVals() {
+        doOffset = false;
         vecISPI_asLoaded.resize(0);
         vecSampDisplay_IndMC.resize(0);        
     }
+    
+    void ScaleISPIs(float scaleFactor) {
+        compSamp.first.ScaleHists(scaleFactor);
+        for (unsigned int iIndMC = 0; iIndMC < vecSampDisplay_IndMC.size(); ++iIndMC) {
+            vecSampDisplay_IndMC[iIndMC].first.ScaleHists(scaleFactor);
+        }
+    }
+    
+    void ChangeAxisUnitVar(TString replaceString, TString strToReplace = "GeV") {
+        compSamp.first.ChangeAxisUnitVar(replaceString, strToReplace);
+        for (unsigned int iIndMC = 0; iIndMC < vecSampDisplay_IndMC.size(); ++iIndMC) {
+            vecSampDisplay_IndMC[iIndMC].first.ChangeAxisUnitVar(replaceString, strToReplace);
+        }
+    }
+    
+    void SetBinLabels1D_AllHists(int whichBinLabelType) {
+        compSamp.first.SetBinLabels1D_AllHists(whichBinLabelType);
+    }
+    void DoOverflowAllHists() {
+        DoOverflow(compSamp.first.grabbedHist);
+        for (unsigned int iIndMC = 0; iIndMC < vecSampDisplay_IndMC.size(); ++iIndMC) {
+            DoOverflow(vecSampDisplay_IndMC[iIndMC].first.grabbedHist);
+            for (unsigned int iSyst = 0; iSyst < vecSampDisplay_IndMC[iIndMC].first.vecGrabbedHist_SystVarUp.size(); ++iSyst) {
+                DoOverflow(vecSampDisplay_IndMC[iIndMC].first.vecGrabbedHist_SystVarUp[iSyst]);
+                DoOverflow(vecSampDisplay_IndMC[iIndMC].first.vecGrabbedHist_SystVarDown[iSyst]);
+            }
+        }
+    }
+    
     void WriteToFile(vector<TFile *> * vecOutFiles, vector<indMCParams> * inVecIndMCParams, vector<TString> * inVecSystNames, vector<int> * vecIndexMC = 0, bool doVerbosity = 0) {
         //if vecIndexMC is non-existent, vecOutFiles should be size 1
         if (!vecIndexMC) {
@@ -943,7 +1425,7 @@ typedef struct HistogramDisplayStructs {
             
             
             TString nonTTBarTrimName = "NonTTBar";
-            int indexFirstNonTTBar = 1;
+            unsigned int indexFirstNonTTBar = 1;
             
             vecOutFiles->at(vecIndexMC->at(indexFirstNonTTBar))->cd();
             TH1 * nonTTBarComboHist = (TH1 *)  vecSampDisplay_IndMC[indexFirstNonTTBar].first.grabbedHist->Clone(nonTTBarTrimName);
@@ -976,9 +1458,11 @@ typedef struct HistogramDisplayStructs {
                 
                 TH1 * indMCHist_MCStatUp  = (TH1 *) vecSampDisplay_IndMC[iIndMC].first.grabbedHist->Clone(vecSampDisplay_IndMC[iIndMC].first.grabbedHist->GetName() + TString("_") + trimName + TString("MCStatUp"));
                 SetMCStatSystHist(indMCHist_MCStatUp, 1, doVerbosity);
+                cout << "indMCHist_MCStatUp name " << indMCHist_MCStatUp->GetName() << endl;
                 //indMCHist_MCStatUp->Write();
                 TH1 * indMCHist_MCStatDown  = (TH1 *) vecSampDisplay_IndMC[iIndMC].first.grabbedHist->Clone(vecSampDisplay_IndMC[iIndMC].first.grabbedHist->GetName() + TString("_") + trimName + TString("MCStatDown"));
                 SetMCStatSystHist(indMCHist_MCStatDown, -1, doVerbosity);
+                cout << "indMCHist_MCStatDown name " << indMCHist_MCStatDown->GetName() << endl;
                 //indMCHist_MCStatDown->Write();
                 
                 for (unsigned int iSyst = 0; iSyst < vecSampDisplay_IndMC[iIndMC].first.vecGrabbedHist_SystVarUp.size(); ++iSyst) {
@@ -987,6 +1471,7 @@ typedef struct HistogramDisplayStructs {
                         systName = "_";
                         systName += inVecSystNames->at(iSyst);
                     }
+                    cout << "writing " << systName << endl;
                     //systName.Replace(systName.Index("_"), 1, "");
                     vecSampDisplay_IndMC[iIndMC].first.vecGrabbedHist_SystVarUp[iSyst]->SetName(trimName + systName + TString("Up"));
                     vecSampDisplay_IndMC[iIndMC].first.vecGrabbedHist_SystVarUp[iSyst]->Write();
@@ -1131,7 +1616,7 @@ typedef struct HistogramDisplayStructs {
             nonTTBarSD.first.SetStatPlusSystErrorOnYields(whichBin, justStat, noSystPlusStat, doSymErr);
         }
     }
-    void PrintSSI_YieldInfo(bool doIndMC = false, bool justStat = true, bool noSystPlusStat = true, bool printSysLim = false, bool printAveSys = false) {
+    void PrintSSI_YieldInfo(bool doIndMC = false, bool justStat = true, bool noSystPlusStat = true, int printSysLim = 0, bool printAveSys = false) {
         compSamp.first.PrintOutYieldInfo(justStat, noSystPlusStat, printSysLim, printAveSys);
         
         bool hasTTBar = false;
@@ -1158,7 +1643,7 @@ typedef struct HistogramDisplayStructs {
                 //Color_t signalColors[6] = {kMagenta, kMagenta + 1, kMagenta + 2, kViolet + 1, kViolet + 5, kViolet + 10};
                 //    Style_t signalStyles[6] = {1, 2, 4, 8, 6, 10};
                 fillDS.SetParams(kWhite, 0, -1, -1);
-                lineDS.SetParams(kMagenta, 1, 2, -1);
+                lineDS.SetParams(kCyan, 1, 2, -1);
                 markerDS.SetParams(kWhite, 0, -1, 0);
                 break;
             case 0:
@@ -1247,6 +1732,10 @@ typedef struct HistogramDisplayStructs {
         }
     }
     
+    void AddSignalToStack(THStack * MCStack) {
+        MCStack->Add(compSamp.first.grabbedHist_TH1F);
+    }
+    
     //Shape Spectra functions
     void SetInputFileShape(vector<TString> * inVecFileNames, TString basePath, TString nameAppend, int numSysts, bool doVerbosity = 0) {
         vecISPI_asLoaded.resize(inVecFileNames->size());
@@ -1272,17 +1761,17 @@ typedef struct HistogramDisplayStructs {
             vecISPI_asLoaded[iISPI].DefaultWeights(numSysts);
         }
     }
-    void GrabCentralValues(bool doVerbosity = false) {
+    void GrabCentralValuesShape(TString addName = "", bool doVerbosity = false) {
         TString grabName = "";
         for (unsigned int iISPI = 0; iISPI < vecISPI_asLoaded.size(); ++iISPI) {
             if (vecISPI_asLoaded[iISPI].nameISPI.Contains("Data")) {
-                grabName = "data_obs";
+                grabName = "data_obs" + addName;
             }
             else if (vecISPI_asLoaded[iISPI].nameISPI.Contains("T2tt") || vecISPI_asLoaded[iISPI].nameISPI.Contains("T2bw")) {
-                grabName = "signal";
+                grabName = "signal" + addName;
             }
             else {
-                grabName = vecISPI_asLoaded[iISPI].nameISPI;
+                grabName = vecISPI_asLoaded[iISPI].nameISPI + addName;
             }
             if (doVerbosity) {
                 cout << "for iISPI = " << iISPI << ", trying to grab " << grabName << endl;
@@ -1290,7 +1779,7 @@ typedef struct HistogramDisplayStructs {
             vecISPI_asLoaded[iISPI].GrabHist(grabName, doVerbosity);
         }
     }
-    void GrabSystValues(vector<TString> * vecSystNameAppends, bool doVerbosity = false) {
+    void GrabSystValues(vector<TString> * vecSystNameAppends, TString addName = "", bool doVerbosity = false) {
         TString baseHistGrabName = "";
         for (unsigned int iISPI = 0; iISPI < vecISPI_asLoaded.size(); ++iISPI) {
             if (vecISPI_asLoaded[iISPI].nameISPI.Contains("Data")) {
@@ -1305,7 +1794,7 @@ typedef struct HistogramDisplayStructs {
             if (doVerbosity) {
                 cout << "for iISPI = " << iISPI << ", trying to grab " << baseHistGrabName << endl;
             }
-            vecISPI_asLoaded[iISPI].GrabHistSystShape(baseHistGrabName, vecSystNameAppends, doVerbosity);
+            vecISPI_asLoaded[iISPI].GrabHistSystShape(baseHistGrabName, vecSystNameAppends, addName, doVerbosity);
         }
     }
     
@@ -1314,12 +1803,14 @@ typedef struct HistogramDisplayStructs {
 typedef struct GlobalHistPlotInfo {
     vector<LatexString> vecLatexStrings;
     AxisDisplayParams fracRatioADP;
+    TString strExtra;
     void DefaultVarVals() {
         vecLatexStrings.resize(5);
         //TopCMSPreliminary String is index 0, Integrated Lumi string is index 1
         //Gen cut string is index 2, MET String is index 3
         //Dilep String is index 4
         fracRatioADP.DefaultVarVals();
+        strExtra = "";
     }
     void SetFracRatioADPNameRange(bool doAbsRatio, float fracRatioYAxisRangeLB, float fracRatioYAxisRangeUB) {
         TString fracRatioNumerName;
@@ -1347,9 +1838,15 @@ typedef struct GlobalHistPlotInfo {
     }
     void SetLatexStringVec(float intLumi, int typeMET = 0, TString extraMETText = "", int typeDiLep = -1, TString genCutUsed = "", bool isPrelim = true) {
         SetCMSPreliminaryLatex(&vecLatexStrings[0], isPrelim);
+	vecLatexStrings[0].straightGhetto.textFont = 42;
         SetLumiLatex(&vecLatexStrings[1], intLumi);
         SetGenCutLatex(&vecLatexStrings[2],  genCutUsed);
-        SetMETLatexString(&vecLatexStrings[3], typeMET, extraMETText);
+        if (strExtra.Length() > 0) {
+            SetGeneralLatexString(&vecLatexStrings[3], strExtra);
+        }
+        else {
+            SetMETLatexString(&vecLatexStrings[3], typeMET, extraMETText);
+        }
         SetDilepLatexString(&vecLatexStrings[4], typeDiLep);
     }
     void AddProjectionLatexStrings(TString projString1 = "", TString projString2 = "") {
@@ -1365,6 +1862,16 @@ typedef struct GlobalHistPlotInfo {
                 cout << "iLS = " << iLS << ", and text is " << vecLatexStrings[iLS].text << endl;
             }
             vecLatexStrings[iLS].DrawCanvas(inputCanvas, whichPad, doVerbosity);
+        }
+    }
+    void SetParamsFromCommandLine(int argc, char * argv[]) {
+        for (int iGHPIParam = 0; iGHPIParam < argc; ++iGHPIParam) {
+            if (strncmp (argv[iGHPIParam],"strExtra", 8) == 0) {
+                strExtra = TString(argv[iGHPIParam + 1]);
+                while (strExtra.Contains("SPACE")) {
+                    strExtra.Replace(strExtra.Index("SPACE"), 5, " ");
+                }
+            }
         }
     }
 } GlobalHistPlotInfo;
