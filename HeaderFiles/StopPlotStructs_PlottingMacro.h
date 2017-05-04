@@ -36,6 +36,8 @@ typedef struct SampLoadSettings {
     bool readHistListFile;
     TString indHistName;
     
+    int numDims;
+    bool doOneDeeHack;
     
     bool doReReco;
     bool useUnblindedData;
@@ -49,6 +51,16 @@ typedef struct SampLoadSettings {
     TString whichChanName;
     bool SmearedPlots;
     int  JetsSmeared;
+    
+    void SetUpSLSForPlots(int inWSS) {
+        useUnblindedData = 1;
+        whichTTbarGen = 2;
+        doDropFakes = 1;
+        noGenRecRW = 1;
+        SmearedPlots = 1;
+        JetsSmeared = 0;
+        whichSSType = inWSS;
+    }
     
     void DefaultVarVals() {
         whichChan = 0;
@@ -76,10 +88,12 @@ typedef struct SampLoadSettings {
         multiChannelAdd = 0;
         multiChannelSetupFile = "";
         
+        numDims = -1;
+        doOneDeeHack = true;
         
         multiHistSetupFile = "";
         
-        doReReco       = 0;
+        doReReco       = 1;
         useUnblindedData = 0;
         justMT2Plots   = 0;
         
@@ -90,9 +104,90 @@ typedef struct SampLoadSettings {
         customPathSignalFile = "../RootFiles/Signal/Dir_";
         customPathSignalNorm = "../PlotMakingCode/Histos_";
     }
+    
+    void PrintSignalInfo() {
+        cout << "prefixT2tt " << prefixT2tt << endl;
+        cout << "size of vecs: " << endl;
+        cout << "vecStopMassGrab: " << vecStopMassGrab.size() << endl;
+        cout << "vecChi0MassGrab: " << vecChi0MassGrab.size() << endl;
+        cout << "vecPercentPolGrab: " << vecPercentPolGrab.size() << endl;
+        cout << "vecCharginoMassGrab: " << vecCharginoMassGrab.size() << endl;
+        for (unsigned int iSig = 0; iSig < vecStopMassGrab.size(); ++iSig) {
+            cout << "contents of vecs at iSig = " << iSig << ": " << endl;
+            cout << "vecStopMassGrab: " << vecStopMassGrab[iSig] << endl;
+            cout << "vecChi0MassGrab: " << vecChi0MassGrab[iSig] << endl;
+            cout << "vecPercentPolGrab: " << vecPercentPolGrab[iSig] << endl;
+            cout << "vecCharginoMassGrab: " << vecCharginoMassGrab[iSig] << endl;
+        }
+    }
+    
+    TString SignalShapeString() {
+        TString strDim[4] = {"", "OneDee", "TwoDee", "ThreeDee"};
+        if (numDims > -1) {
+            return strDim[numDims];
+        }
+        return "";
+    }
+    TString ShapeNameAppend() {
+        TString strInit = SignalShapeString();
+        TString strEnd = doOneDeeHack ? "ToOneDee.root" : ".root";
+        return strInit + strEnd;
+    }
+    TString NameSigFile(int sigIndex, bool doVerbosity = false) {
+        bool isT2tt = prefixT2tt.Contains("T2tt");
+        TString strSMS = "h_Stop";
+        strSMS += vecStopMassGrab[sigIndex];
+        strSMS += "_LSP";
+        strSMS += vecChi0MassGrab[sigIndex];
+        strSMS += isT2tt ? "T2tt" : "T2bw";
+        if (isT2tt) {
+            strSMS += "PerPol";
+            strSMS += vecPercentPolGrab[sigIndex];
+        }
+        else {
+            strSMS += "CharginoFrac0.";
+            strSMS += vecCharginoMassGrab[sigIndex];
+            strSMS += "_SCharSW";
+        }
+        return strSMS;
+    }
+    TString PathStringFile(int sigIndex) {
+        bool isT2tt = prefixT2tt.Contains("T2tt");
+        TString strSMS = isT2tt ? "T2tt/" : "T2bw/";
+        if (isT2tt) {
+            strSMS += "PerPol";
+            strSMS += vecPercentPolGrab[sigIndex];
+        }
+        else {
+            strSMS += "CharFrac0.";
+            strSMS += vecCharginoMassGrab[sigIndex];
+            strSMS += "/SCharSW/";
+        }
+        strSMS += "/";
+        strSMS += "Stop";
+        strSMS += vecStopMassGrab[sigIndex];
+        strSMS += "/";
+        strSMS += "LSP";
+        strSMS += vecChi0MassGrab[sigIndex];
+        strSMS += "/";
+        
+        return strSMS;
+    }
+    TString FullPathFile(int whichKind, int sigIndex = 0) {
+        TString baseString = "../LimitSetting/ShapeAnalysis/";
+        TString arrStrKind[3] = {"Data/", "Backgrounds/", "Signal/"};
+        TString sigString = "";
+        if (whichKind == 2) {
+            //running on signal so grab more
+            sigString = PathStringFile(sigIndex);
+        }
+        
+        return baseString + arrStrKind[whichKind] + sigString;
+    }
+    
     TString TTBarString() {
         // return the appropriate ttbar generator name for the input file
-        TString appendNamesTTBarGens[3] = {"_Madspin", "_MCatNLO", "_Powheg"};
+        TString appendNamesTTBarGens[4] = {"_Madgraph_Exclusive", "_MCatNLO", "_Powheg", "_Madgraph"};
         return appendNamesTTBarGens[whichTTbarGen];
     }
     TString SignalStringForFile(int sigIndex) {
@@ -209,7 +304,7 @@ typedef struct SampLoadSettings {
             stringSSType += whichSSType;
         }
         
-        TString strDiLep[3] = {"_MuMu", "_EE", "_EMu"};
+        TString strDiLep[4] = {"_MuMu", "_EE", "_EMu", "_SF"};
         TString strDiLepType = "";
 
         
@@ -227,6 +322,7 @@ typedef struct SampLoadSettings {
             outString += MCAppendString;
         }
         else if (inISPI->sampleType == 0) {
+
             outString += "_OviedoHaddplots";
             outString += useUnblindedData ? "_NOTBLIND" : "";
             outString += ".root";
@@ -236,7 +332,11 @@ typedef struct SampLoadSettings {
         }
         
         if (inISPI->sampleType == 100) {
-            outString = inISPI->nameISPI + "_OviedoHaddplots.root";
+            outString = inISPI->nameISPI;
+            if (whichDilepType > -1) {
+                outString += strDiLep[whichDilepType];
+            }
+            outString += "_OviedoHaddplots.root";
         }
         
         return outString;
@@ -330,7 +430,7 @@ typedef struct SampLoadSettings {
         }
         if (calcByHand) {
             plotGrabBaseName += "MT2ll";
-            plotGrabBaseName += vecMT2lbCut->size() > 0 ? "_vs_MT2lb" : "";
+            plotGrabBaseName += vecMT2lbCut->size() > 0 ? "_vs_MT2lblb" : "";
         }
         else {
             plotGrabBaseName += "MT2ll";
@@ -346,7 +446,107 @@ typedef struct SampLoadSettings {
                 cout << "MT2CutYield Hist name for iHist = " << iHist << " is " << vecMultiHistNames->at(iHist) << endl;
             }
         }
-    }    
+    }
+    
+    void SetParamsFromCommandLine(int argc, char* argv[]) {
+        for (int iSLSParam = 0; iSLSParam < argc; ++iSLSParam) {
+            if (strncmp (argv[iSLSParam],"wChan", 5) == 0) {
+                whichChan = strtol(argv[iSLSParam + 1], NULL, 10 );
+            }
+            else if (strncmp (argv[iSLSParam],"nameWChan", 9) == 0) {
+                whichChanName = TString(argv[iSLSParam + 1]);
+            }
+            else if (strncmp (argv[iSLSParam],"-p", 2) == 0) {
+                customPath = TString(argv[iSLSParam + 1]);
+            }
+            else if (strncmp (argv[iSLSParam],"wTTbarGen", 9) == 0) {
+                whichTTbarGen = strtol(argv[iSLSParam + 1], NULL, 10 );
+            }
+            else if (strncmp (argv[iSLSParam],"whichSS", 7) == 0) {
+                whichSSType = strtol(argv[iSLSParam + 1], NULL, 10 );
+            }
+            else if (strncmp (argv[iSLSParam],"whichDL", 7) == 0) {
+                whichDilepType = strtol(argv[iSLSParam + 1], NULL, 10 );
+            }
+            else if (strncmp (argv[iSLSParam],"noType0", 7) == 0) {
+                noType0 = 1;
+            }
+            else if (strncmp (argv[iSLSParam],"noFakes", 7) == 0) {
+                doDropFakes = 1;
+            }
+            else if (strncmp (argv[iSLSParam],"noExcSamps", 10) == 0) {
+                doExcSamps = 0;
+            }
+            else if (strncmp (argv[iSLSParam],"noGenRecRW", 10) == 0) {
+                noGenRecRW = 1;
+            }
+            else if (strncmp (argv[iSLSParam],"doSignal", 8) == 0) {
+                doSignal = 1;
+                //                cout << "NB: Format for post command line arguments is TypeSMS, prefix for the file to grab, StopMassToGrab, Chi0MassToGrab, CharginoMassToGrab " << endl;
+                typeSMS = TString(argv[iSLSParam + 1]);
+                prefixT2tt = TString(argv[iSLSParam + 2]);
+                vecStopMassGrab.push_back(strtol(argv[iSLSParam + 3], NULL, 10 ));
+                vecChi0MassGrab.push_back(strtol(argv[iSLSParam + 4], NULL, 10 ));
+                vecCharginoMassGrab.push_back(strtod(argv[iSLSParam + 5], NULL));
+                vecPercentPolGrab.push_back(strtol(argv[iSLSParam + 6], NULL, 10 ));
+                //            vecCharginoMassGrab->push_back(strtol(argv[iSLSParam + 5], NULL, 10 ));
+            }
+            else if (strncmp (argv[iSLSParam],"pathSigFile", 11) == 0) {
+                customPathSignalFile = TString(argv[iSLSParam + 1]);
+                //                cout << "setting sig file path to " << customPathSignalFile << endl;
+            }
+            else if (strncmp (argv[iSLSParam],"pathSigNorm", 11) == 0) {
+                customPathSignalNorm = TString(argv[iSLSParam + 1]);
+                //                cout << "setting sig norm file path to " << customPathSignalNorm << endl;
+            }
+            else if (strncmp (argv[iSLSParam],"ReleaseTheKraken", 16) == 0) {
+                useUnblindedData = 1;
+                cout << "RELEASING THE KRAKEN!!! " << endl;
+                cout << "http://www.youtube.com/watch?v=gb2zIR2rvRQ " << endl;
+            }
+            else if (strncmp (argv[iSLSParam],"jMT2P", 5) == 0) {
+                justMT2Plots = 1;
+            }
+            else if (strncmp (argv[iSLSParam],"noPURW", 6) == 0) {
+                doPURW = 0;
+            }
+            else if (strncmp (argv[iSLSParam],"noSyst", 6) == 0) {
+                doSyst = 0;
+            }
+            else if (strncmp (argv[iSLSParam],"JsSm", 4) == 0) {
+                SmearedPlots = 1;
+                JetsSmeared = strtol(argv[iSLSParam + 1], NULL, 10);
+            }
+            else if (strncmp (argv[iSLSParam],"multiChan", 9) == 0) {
+                multiChannelAdd = 1;
+                multiChannelSetupFile = TString(argv[iSLSParam + 1]);
+                multiChannelSetupFile += ".txt";
+            }
+            else if (strncmp (argv[iSLSParam],"specHist", 8) == 0) {
+                multiHistList = 1;
+                readHistListFile = 0;
+                indHistName = TString(argv[iSLSParam + 1]);
+            }
+            else if (strncmp (argv[iSLSParam],"listHist", 8) == 0) {
+                multiHistList = 1;
+                readHistListFile = 1;
+                multiHistSetupFile = TString(argv[iSLSParam + 1]);
+                multiHistSetupFile += ".txt";
+            }
+            else if (strncmp (argv[iSLSParam],"noReReco", 8) == 0) {
+                doReReco = 0;
+            }
+            else if (strncmp (argv[iSLSParam],"doNonSig", 8) == 0) {
+                doNonSig = 1;
+            }
+            else if (strncmp (argv[iSLSParam],"numDims", 7) == 0) {
+                numDims = strtol(argv[iSLSParam + 1], NULL, 10);
+            }
+            else if (strncmp (argv[iSLSParam],"noHack", 6) == 0) {
+                doOneDeeHack = false;
+            }
+        }
+    }
 } SampLoadSettings;
 typedef struct HistPlotMaking{
     // struck that contains variables that affect what histograms are made and any special modifications thereof
@@ -362,6 +562,10 @@ typedef struct HistPlotMaking{
     bool doOneDee;          // Plots 1D histograms, as in the 1D HistTs defined in StopFunctionDefinitions_v2.h
     bool doTwoDee;          // Plots 2D histograms, as in the 2D HistTs defined in StopFunctionDefinitions_v2.h -- note, this involves making projections and what-not so there (as of 7/10/13) isn't actual plotting of 2D histograms
     bool doThreeDee;          // Plots 3D histograms, as in the 3D HistTs defined in StopFunctionDefinitions_v2.h -- note, this involves making projections and what-not so there (as of 7/10/13) isn't actual plotting of 3D histograms
+    
+    TString strAxis1, strAxis2;
+    
+    
     bool doIsoPlots;          // Plots the electron isolation variables to check what is the deal with them for Oviedo vs. DESY
     bool reportChi2;          // nominally, reports data/MC chi2 value in the control region
     bool doCDF;          // nominally, creates Cumulative Distribution Functions for MC and Data -- (6/25/13) haven't tested yet
@@ -373,7 +577,7 @@ typedef struct HistPlotMaking{
     TString FOMString;
     bool doYieldV1;
     bool doYieldV2;
-    bool printSysLim;
+    int printSysLim;
     bool printAveSyst;
     bool doStopXSec;
     
@@ -385,11 +589,29 @@ typedef struct HistPlotMaking{
     bool  cutMT2lb;
     float inputMT2lbCut;
     int whichIntType;
+    bool doControl;
     
     bool doSaveHistograms;
+    int  saveHistoDimension;
     
+    TString saveLocation;
+    
+    TString unitAxis;
+    
+    float scaleFactor;
+    
+    void SetUpHPMForPlots() {
+        useDDEstimate = 1;
+        useDDEstimate_TTBar = 1;
+        versDDEst_TTBar = 0;
+        useDDEstimate_DY = 1;
+        versDDEst_DY = 4;
+        
+        unitAxis = "GeV / c^{2}";
+    }
     
     void DefaultVarVals() {
+        scaleFactor = 1.0;
         addThings     = 1;
         calcTTBarNorm = 0;
         useDDEstimate = 0;
@@ -400,11 +622,14 @@ typedef struct HistPlotMaking{
         doOneDee      = 1;
         doTwoDee      = 0;
         doThreeDee    = 0;
+        strAxis1      = "";
+        strAxis2      = "";
         doIsoPlots    = 0;
         reportChi2    = 0;
         doCDF         = 0;
         
         doSaveHistograms = false;
+        saveHistoDimension = -1;
         
         doVerbosity = 0;
         
@@ -429,6 +654,11 @@ typedef struct HistPlotMaking{
         cutMT2lb        = 0;
         inputMT2lbCut   = 170;
         whichIntType = 0;
+        doControl = 0;
+        
+        unitAxis = "GeV";
+        
+        saveLocation = "../Plots/";
     }
     
     void SetCutValues(vector<float> * vecMT2llCut, vector<float> * vecMT2lbCut, int levelVerbosity = 0) {
@@ -458,6 +688,7 @@ typedef struct HistPlotMaking{
 typedef struct GlobalHistSettings {
     // global settings applied to the plotting of histograms
     
+    bool doZeroNegBins;
     bool doStats;          // show statistics for data and mc spectra on plots -- e.g. mean and RMS -- (6/25/13) haven't tested yet to see how positioning looks
     bool doAbsRatio;          // Affects what gets shown in fractional ratio plots -- 0: (MC - Data) / Data, 1: Data/MC
     bool doSmartFracRatio;    // If on, makes it so that the ratio plot centers itself to include the ratio plot (i.e. matters when the ratio plot is going out of the nominal axis
@@ -466,7 +697,15 @@ typedef struct GlobalHistSettings {
     
     float fracAbsRatioLB, fracAbsRatioUB;
     float fracRelRatioLB, fracRelRatioUB;
+    
+    void SetUpGHSForPlots() {
+        fracAbsRatioLB = 0.5;
+        fracAbsRatioUB = 1.6;
+    }
+    
     void DefaultVarVals() {
+        doZeroNegBins = 1;
+        
         doSmartFracRatio = 0;
         doStats         = 0;
         doAbsRatio      = 1;
@@ -497,15 +736,19 @@ typedef struct GlobalSaveInfo {
     TString saveName;
     bool saveDotCFile; // If on, saves a .C version of every plot that is made
     bool makePlots;
+    int typeSystPlotToSave; // 0: saves individual systematics plots (plus no Syst plot), 1: saves Full Systematics plot plus breakdown plot
     void DefaultVarVals() {
         saveDotCFile = 0;
         makePlots = 1;
+        typeSystPlotToSave = 1;
     }
     void SetSaveName(SampLoadSettings * inSLS, GlobalHistSettings * inGHS, HistPlotMaking * inHPM) {
-        TString TTBarGenName[3] = {"_madgraph", "_mcatnlo", "_powheg"};
+        TString TTBarGenName[4] = {"_madgraph_exclusive", "_mcatnlo", "_powheg", "_madgraph"};
         TString nameNTuple = "_Ovi";
         TString nameDiLep[3] = {"_MuMu", "_EE", "_EMu"};
-
+        
+        TString nameSignalShape[4] = {"", "_OneDeeShape", "_TwoDeeShape", "_ThreeDeeShape"};
+        TString stringSigShape = inSLS->SignalShapeString();
         TString stringDDEstimate = (inHPM->useDDEstimate) ? "_wDDEst" : "";
         TString stringExcSamp = (inSLS->doExcSamps) ? "_ExcSamps" : "";
         TString stringSignal = "";
@@ -527,24 +770,42 @@ typedef struct GlobalSaveInfo {
                 stringSignal += "_PerPol_";
                 stringSignal += inSLS->vecPercentPolGrab[0];
             }
-        }   
+        }
+        
         
         saveName = TTBarGenName[inSLS->whichTTbarGen];
         if (inSLS->whichDilepType > -1) {
             saveName += nameDiLep[inSLS->whichDilepType];
         }
         saveName += nameNTuple;
+        saveName += stringSigShape;
         saveName += stringDDEstimate;
         saveName += stringExcSamp;
         saveName += stringSignal;
         if (inSLS->doReReco) saveName += "_ReReco";
-        if (inGHS->doAbsRatio) saveName += "_AbsRatio";        
+        if (inGHS->doAbsRatio) saveName += "_AbsRatio";
+        if (!inGHS->doZeroNegBins) saveName += "_noZNB";
         if (inSLS->noType0) saveName += "_noType0";
         if (!inGHS->showLegend) saveName += "_noLegend";
         if (inSLS->SmearedPlots) saveName += "_SmearedMET";
         if (inGHS->doSmoothSyst) saveName += "_SmoothedSysts";
         if (inSLS->useUnblindedData) saveName += "_UnblindedData";
-        if (inSLS->noGenRecRW) saveName += "_noGenRecRW";        
+        if (inSLS->noGenRecRW) saveName += "_noGenRecRW";
+        if (!inSLS->doDropFakes) saveName += "_keepFakes";
+    }
+    void SetParamsFromCommandLine(int argc, char* argv[]) {
+        for (int iGSIParam = 0; iGSIParam < argc; ++iGSIParam) {
+            
+            if (strncmp (argv[iGSIParam],"sDCF", 4) == 0) {
+                saveDotCFile = 1;
+            }
+            else if (strncmp (argv[iGSIParam],"noPlots", 7) == 0) {
+                makePlots = 0;
+            }
+            else if (strncmp (argv[iGSIParam],"typeSystPlot", 12) == 0) {
+                typeSystPlotToSave = strtol(argv[iGSIParam + 1], NULL, 10);
+            }
+        }
     }
 } GlobalSaveInfo;
 
@@ -567,104 +828,28 @@ typedef struct RunParams {
         GSI.SetSaveName(&SLS, &GHS, &HPM);
     }
     void SetVals(int argc, char * argv[]) {
+        SLS.SetParamsFromCommandLine(argc, argv);
+        GSI.SetParamsFromCommandLine(argc, argv);
         for (int k = 0; k < argc; ++k) {
             cout << "argv[k] for k = " << k << " is: " << argv[k] << endl;
-            if (strncmp (argv[k],"wChan", 5) == 0) {
-                SLS.whichChan = strtol(argv[k+1], NULL, 10 );
+            if (strncmp (argv[k],"makePlots_Paper", 15) == 0) {
+                int inWSS = 3;
+                SLS.SetUpSLSForPlots(inWSS);
+                HPM.SetUpHPMForPlots();
+                GHS.SetUpGHSForPlots();
             }
-            else if (strncmp (argv[k],"nameWChan", 9) == 0) {
-                SLS.whichChanName = TString(argv[k+1]);
-            }
-            else if (strncmp (argv[k],"-p", 2) == 0) {
-                SLS.customPath = TString(argv[k+1]);
-            }
-            else if (strncmp (argv[k],"wTTbarGen", 9) == 0) {
-                SLS.whichTTbarGen = strtol(argv[k+1], NULL, 10 );
-            }
-            else if (strncmp (argv[k],"whichSS", 7) == 0) {
-                SLS.whichSSType = strtol(argv[k+1], NULL, 10 );
-            }
-            else if (strncmp (argv[k],"whichDL", 7) == 0) {
-                SLS.whichDilepType = strtol(argv[k+1], NULL, 10 );
-            }
-            else if (strncmp (argv[k],"noType0", 7) == 0) {
-                SLS.noType0 = 1;
-            }
-            else if (strncmp (argv[k],"noFakes", 7) == 0) {
-                SLS.doDropFakes = 1;
-            }
-            else if (strncmp (argv[k],"noExcSamps", 10) == 0) {
-                SLS.doExcSamps = 0;
-            }
-            else if (strncmp (argv[k],"noGenRecRW", 10) == 0) {
-                SLS.noGenRecRW = 1;
-            }    
-            else if (strncmp (argv[k],"doSignal", 8) == 0) {
-                SLS.doSignal = 1;
-//                cout << "NB: Format for post command line arguments is TypeSMS, prefix for the file to grab, StopMassToGrab, Chi0MassToGrab, CharginoMassToGrab " << endl;
-                SLS.typeSMS = TString(argv[k+1]);
-                SLS.prefixT2tt = TString(argv[k+2]);
-                SLS.vecStopMassGrab.push_back(strtol(argv[k+3], NULL, 10 ));
-                SLS.vecChi0MassGrab.push_back(strtol(argv[k+4], NULL, 10 ));            
-                SLS.vecCharginoMassGrab.push_back(strtod(argv[k+5], NULL));
-                SLS.vecPercentPolGrab.push_back(strtol(argv[k+6], NULL, 10 ));            
-                //            vecCharginoMassGrab->push_back(strtol(argv[k+5], NULL, 10 ));
-            }
-            else if (strncmp (argv[k],"pathSigFile", 11) == 0) {
-                SLS.customPathSignalFile = TString(argv[k + 1]);
-                //                cout << "setting sig file path to " << SLS.customPathSignalFile << endl;
-            }
-            else if (strncmp (argv[k],"pathSigNorm", 11) == 0) {
-                SLS.customPathSignalNorm = TString(argv[k + 1]);
-                //                cout << "setting sig norm file path to " << SLS.customPathSignalNorm << endl;
-            }
-            else if (strncmp (argv[k],"ReleaseTheKraken", 16) == 0) {
-                SLS.useUnblindedData = 1;
-                cout << "RELEASING THE KRAKEN!!! " << endl;
-                cout << "http://www.youtube.com/watch?v=gb2zIR2rvRQ " << endl;
-            }
-            else if (strncmp (argv[k],"jMT2P", 5) == 0) {
-                SLS.justMT2Plots = 1;
-            }
-            else if (strncmp (argv[k],"noPURW", 6) == 0) {
-                SLS.doPURW = 0;
-            }
-            else if (strncmp (argv[k],"noSyst", 6) == 0) {
-                SLS.doSyst = 0;
-            }
-            else if (strncmp (argv[k],"JsSm", 4) == 0) {
-                SLS.SmearedPlots = 1;
-                SLS.JetsSmeared = strtol(argv[k+1], NULL, 10);
-            }
-            else if (strncmp (argv[k],"multiChan", 9) == 0) {
-                SLS.multiChannelAdd = 1;
-                SLS.multiChannelSetupFile = TString(argv[k+1]);
-                SLS.multiChannelSetupFile += ".txt";
-            }
-            else if (strncmp (argv[k],"specHist", 8) == 0) {            
-                SLS.multiHistList = 1;
-                SLS.readHistListFile = 0;
-                SLS.indHistName = TString(argv[k+1]);
-            }
-            else if (strncmp (argv[k],"listHist", 8) == 0) {            
-                SLS.multiHistList = 1;
-                SLS.readHistListFile = 1;
-                SLS.multiHistSetupFile = TString(argv[k+1]);
-                SLS.multiHistSetupFile += ".txt";
-            }
-            /*
-             else if (strncmp (argv[k],"versNum", 7) == 0) {
-             versNumber = strtol(argv[k+1], NULL, 10 );
-             }   
-             */
-            else if (strncmp (argv[k],"doReReco", 8) == 0) {
-                SLS.doReReco = 1;
-            }
-            else if (strncmp (argv[k],"doNonSig", 8) == 0) {
-                SLS.doNonSig = 1;
-            } 
             else if (strncmp (argv[k],"noAdd", 5) == 0) {
                 HPM.addThings = 0;
+            }
+            else if (strncmp (argv[k],"psl", 3) == 0) {
+                cout << "argc " << argc << endl;
+                cout << "k " << k << endl;
+                cout << "k + 1 " << k + 1 << endl;
+                cout << "argv[k + 1] " << argv[k] << endl;
+                cout << "argv[k + 1] " << argv[k + 1] << endl;
+                cout << "TString(argv[k + 1]) " << TString(string(argv[k + 1])) << endl;
+                HPM.saveLocation = TString(argv[k + 1]);
+                HPM.saveLocation += "/";
             }
             else if (strncmp (argv[k],"doVerbosity", 11) == 0) {
                 HPM.doVerbosity = 1;
@@ -673,12 +858,15 @@ typedef struct RunParams {
             else if (strncmp (argv[k],"calcTTBarNorm", 13) == 0) {
                 HPM.calcTTBarNorm = 1;
             }
+            else if (strncmp (argv[k],"scaleFactor", 11) == 0) {
+                HPM.scaleFactor = strtod(argv[k + 1], NULL);
+            }
             else if (strncmp (argv[k],"useDDEst", 8) == 0) {
                 HPM.useDDEstimate = 1;
                 HPM.useDDEstimate_TTBar = 1;
                 HPM.versDDEst_TTBar = 0;
                 HPM.useDDEstimate_DY = 1;
-                HPM.versDDEst_DY = 3;
+                HPM.versDDEst_DY = 4;
             }
             else if (strncmp (argv[k],"useTTBarDDEst", 13) == 0) {
                 HPM.useDDEstimate = 1;
@@ -699,11 +887,33 @@ typedef struct RunParams {
             else if (strncmp (argv[k],"noOneDee", 8) == 0) {
                 HPM.doOneDee = 0;
             }
-            else if (strncmp (argv[k],"doTwoDee", 6) == 0) {
+            else if (strncmp (argv[k],"doTwoDee", 8) == 0) {
                 HPM.doTwoDee = 1;
+                HPM.doOneDee = 0;
+                cout << "Specify which axis to project to, followed by the LB and UB bins for the other axis, i.e...." << endl;
+                cout << "doTwoDee 1 2 3 to project to x Axis ('1') using bin 2-3 along the y-axis ('2' and '3') and use STRING as the axis variable" << endl;
+                API.numDims  = 2;
+                API.whichAxisToProjTo = strtol(argv[k+1], NULL, 10 );
+                API.SetAxesProjBounds_Agglomerate(strtol(argv[k+2], NULL, 10 ), strtol(argv[k+3], NULL, 10 ), -1, -1);
             }
-            else if (strncmp (argv[k],"doThreeDee", 8) == 0) {
+            else if (strncmp (argv[k],"doThreeDee", 10) == 0) {
                 HPM.doThreeDee = 1;
+                HPM.doTwoDee = 0;
+                HPM.doOneDee = 0;
+                cout << "Specify which axis to project to, followed by the LB and UB bins for the other two axes, i.e...." << endl;
+                cout << "doThreeDee 3 2 3 1 3 to project to z Axis (first '3') using bin 2-3 along the x-axis (the subsequent '2' and '3') ";
+                cout << "and bins 1-3 of the y-axis (the subsequent '1' and '3')"<< endl;
+                API.numDims  = 3;
+                API.whichAxisToProjTo = strtol(argv[k+1], NULL, 10 );
+                API.SetAxesProjBounds_Agglomerate(strtol(argv[k+2], NULL, 10 ), strtol(argv[k+3], NULL, 10 ), strtol(argv[k+4], NULL, 10 ), strtol(argv[k+5], NULL, 10 ));
+            }
+            else if (strncmp (argv[k],"axisRange1D", 11) == 0) {
+                API.axis1DLB = strtol(argv[k+1], NULL, 10 );
+                API.axis1DUB = strtol(argv[k+2], NULL, 10 );
+            }
+            else if (strncmp (argv[k],"setAxesNames", 12) == 0) {
+                HPM.strAxis1 = TString(argv[k+1]);
+                HPM.strAxis2 = TString(argv[k+2]);
             }
             else if (strncmp (argv[k],"doIsoPlots", 10) == 0) {
                 HPM.doIsoPlots = 1;
@@ -729,6 +939,7 @@ typedef struct RunParams {
             else if (strncmp (argv[k],"doSave", 6) == 0) {
                 HPM.doYieldV1 = 0;
                 HPM.doSaveHistograms = true;
+                HPM.saveHistoDimension = strtol(argv[k+1], NULL, 10 );
             }
             else if (strncmp (argv[k],"printAveSystLim", 12) == 0) {
                 HPM.printAveSyst = 1;
@@ -737,6 +948,10 @@ typedef struct RunParams {
             }
             else if (strncmp (argv[k],"printSystLim", 12) == 0) {
                 HPM.printSysLim = 1;
+                HPM.doStopXSec = 0;
+            }
+            else if (strncmp (argv[k],"printPerSystLim", 15) == 0) {
+                HPM.printSysLim = 2;
                 HPM.doStopXSec = 0;
             }
             else if (strncmp (argv[k],"tryCPBH", 7) == 0) {
@@ -762,6 +977,9 @@ typedef struct RunParams {
             else if (strncmp (argv[k],"wInTy", 5) == 0) {
                 HPM.whichIntType = strtol(argv[k+1], NULL, 10 );
             }
+            else if (strncmp (argv[k],"doControl", 9) == 0) {
+                HPM.doControl = 1;
+            }
             else if (strncmp (argv[k],"noLeg", 5) == 0) {
                 GHS.showLegend = 0;
             }
@@ -778,11 +996,8 @@ typedef struct RunParams {
             else if (strncmp (argv[k],"doStats", 7) == 0) {
                 GHS.doStats = 1;
             }
-            else if (strncmp (argv[k],"sDCF", 4) == 0) {
-                GSI.saveDotCFile = 1;
-            }
-            else if (strncmp (argv[k],"noPlots", 7) == 0) {
-                GSI.makePlots = 0;
+            else if (strncmp (argv[k],"keepNBs", 7) == 0) {
+                GHS.doZeroNegBins = 0;
             }
         }    
     }

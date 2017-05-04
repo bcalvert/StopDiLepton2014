@@ -315,7 +315,7 @@ int main( int argc, char* argv[]) {
                     }
                 }
                 if (RP.SLS.doSyst) {
-                    HDS_Signal.GrabSystValues(baseName_Signal, &vecSystNames, doVerb, false);
+                    HDS_Signal.GrabSystValues(baseName_Signal, &vecSystNames, doVerb);
                 }
                 /*
                 if (RP.GHS.doZeroNegBins) {

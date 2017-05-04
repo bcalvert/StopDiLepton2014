@@ -44,14 +44,24 @@ void SetWeights(HistogramDisplayStructs * inHDS, WeightCalculators * inWC, SampL
     }
 }
 
-void SetSystBasics(HistogramDisplayStructs * inHDS, vector<TString> * vecSystNames, bool doSmear, bool isSignalHDS) {
+void SetSystBasics(HistogramDisplayStructs * inHDS, vector<TString> * vecSystNames, bool doSmear, bool isSignalHDS, bool doVerbosity = false) {
     unsigned int numSysts = vecSystNames->size();
     for (unsigned int iSyst = 0; iSyst < numSysts; ++iSyst) {
         for (unsigned int iISPI = 0; iISPI < inHDS->vecISPI_asLoaded.size(); ++iISPI) {
+            if (doVerbosity) {
+                cout << "For Syst " << vecSystNames->at(iSyst) << endl;
+                cout << "inHDS->vecISPI_asLoaded[iISPI].nameISPI " << inHDS->vecISPI_asLoaded[iISPI].nameISPI << endl;
+            }
             if (vecSystNames->at(iSyst).Contains("Fake")) {
+                if (doVerbosity) {
+                    cout << "syst is a fake syst " << endl;
+                }
                 if (!inHDS->vecISPI_asLoaded[iISPI].nameISPI.Contains("FakeLep")) {
                     //not on a sample that is a fake lepton sample so nuke that ish
                     inHDS->SetBoolSysts(iSyst, iISPI, false);
+                }
+                else {
+                    inHDS->SetBoolSysts(iSyst, iISPI, true);
                 }
             }
             else {
@@ -69,6 +79,9 @@ void SetSystBasics(HistogramDisplayStructs * inHDS, vector<TString> * vecSystNam
                         inHDS->SetBoolSysts(iSyst, iISPI, doSmear);
                         //                inHDS->SetBoolSysts(iSyst, iISPI, false);
                     }
+                    else if (vecSystNames->at(iSyst).Contains("Norm")) {
+                        inHDS->SetBoolSysts(iSyst, iISPI, false);
+                    }
                     else {
                         inHDS->SetBoolSysts(iSyst, iISPI, true);
                         //                inHDS->SetBoolSysts(iSyst, iISPI, false);
@@ -78,3 +91,25 @@ void SetSystBasics(HistogramDisplayStructs * inHDS, vector<TString> * vecSystNam
         }
     }
 }
+
+void SetSystBasicsShape(HistogramDisplayStructs * inHDS, vector<TString> * vecSystNames) {
+    unsigned int numSysts = vecSystNames->size();
+    for (unsigned int iSyst = 0; iSyst < numSysts; ++iSyst) {
+        for (unsigned int iISPI = 0; iISPI < inHDS->vecISPI_asLoaded.size(); ++iISPI) {
+            if (inHDS->vecISPI_asLoaded[iISPI].nameISPI.Contains("T2tt") || inHDS->vecISPI_asLoaded[iISPI].nameISPI.Contains("T2bw")) {
+                if (vecSystNames->at(iSyst).Contains("Norm") || vecSystNames->at(iSyst).Contains("Fake")) {
+                    //signal files don't have Norm nor Fake systs saved
+                    inHDS->SetBoolSysts(iSyst, iISPI, false);
+                }
+                else {
+                    inHDS->SetBoolSysts(iSyst, iISPI, true);
+                }
+            }
+            else {
+                inHDS->SetBoolSysts(iSyst, iISPI, true);
+            }
+        }
+    }
+}
+
+
