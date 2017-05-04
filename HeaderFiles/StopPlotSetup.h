@@ -144,15 +144,15 @@ void SignalSkimEfficiencyCalc(vector<float> * scaleBackVec, SampLoadSettings * i
 vector<TH1 *> * IndividualHistSysts(TFile * inputFile, TH1 * centValTH1Hist, TString histPlotName, vector<SampleT> * inputSubSampVec, vector<int> * subSampChanIDs, vector<SystT> * systVec, int whichNTuple) {
     TString fileName, systName, mcGrabName, currHistGrabName;
     TH1 * currHist, * currHistPatsy;
-    TH1 * systCompHist;
-    TString mcSystPlotName, systCompHistName;
+    //TH1 * systCompHist;
+    TString mcSystPlotName; //, systCompHistName;
     bool grabSyst;
     
     vector<TH1 *> * outVec = new vector<TH1 *>;
     fileName = inputFile->GetName();
     for (unsigned int iSyst = 0; iSyst < systVec->size(); ++iSyst) {
         grabSyst = true;
-        systCompHist = NULL;
+        //systCompHist = NULL;
         cout << "iSyst " << iSyst << endl;
         systName = systVec->at(iSyst).name;
         cout << "systName " << systName << endl;
@@ -203,14 +203,14 @@ vector<TH1 *> * IndividualHistSysts(TFile * inputFile, TH1 * centValTH1Hist, TSt
 vector<TH1 *> * IndividualHistSysts(TFile * inputFile, TH1 * centValTH1Hist, TString histPlotName, TString subSampName, vector<SystT> * systVec, int whichNTuple) {    
     TString fileName, systName, mcGrabName, currHistGrabName;
     TH1 * currHist;
-    TH1 * systCompHist;
-    TString mcSystPlotName, systCompHistName;
+    //TH1 * systCompHist;
+    TString mcSystPlotName; //, systCompHistName;
     bool grabSyst;
     vector<TH1 *> * outVec = new vector<TH1 *>;
     fileName = inputFile->GetName();
     for (unsigned int iSyst = 0; iSyst < systVec->size(); ++iSyst) {
         grabSyst = true;
-        systCompHist = NULL;
+        //systCompHist = NULL;
         mcGrabName = "";
         mcGrabName += histPlotName;
         cout << "iSyst " << iSyst << endl;
@@ -386,31 +386,31 @@ TH2F * SystHistFinderTwoDee(vector<TH1 *> * vecSystHists, TString searchString) 
 
 
 void HistogramVecGrabber(vector<TFile *> * inputFiles, vector<TH2F *> * dataHistVec, vector<TH2F *> * mcIndHistCentValVec, vector<TH2F *> * mcCompHistSystVec, vector<float> * nVtxBackScaleVec, vector<SystT> * systVec, TString dataPlotName, TString mcPlotName, TString subSampName, int RBNX, int RBNY, int RBNZ, bool doOverflow, bool doUnderflow, bool doSyst, bool useDDEstimate, float scaleFacTTBar, float scaleLumi, bool allMT2llSystematic, int whichNTuple) {
-    int NBinsX, NBinsY, NBinsZ;
+    //int NBinsX, NBinsY, NBinsZ;
     TString fileName, systName, mcGrabName;
     TH2F * currHist;
     TH2F * systCompHist = NULL;
     //    cout << "inputFiles size " << inputFiles->size() << endl;
     cout << "nVtxBackScale size " << nVtxBackScaleVec->size() << endl;
     TString mcSystPlotName, systCompHistName;
+    /*
+     code was everywhere
+     if (NBinsY > 1) {
+     if (NBinsZ > 1) {
+     }
+     else {
+     }
+     }
+     else {
+     }
+     */
     for (unsigned int k = 0; k < inputFiles->size(); ++k) {
         mcGrabName = "";
         fileName = inputFiles->at(k)->GetName();
         cout << "fileName" << " is " << fileName << endl;
         if (fileName.Contains("Data")) {
             currHist = (TH2F *) inputFiles->at(k)->Get(dataPlotName);
-            NBinsX = currHist->GetNbinsX();
-            NBinsY = currHist->GetNbinsY();
-            NBinsZ = currHist->GetNbinsZ();
             currHist->RebinX(RBNX);
-            if (NBinsY > 1) {
-                if (NBinsZ > 1) {
-                }
-                else {
-                }
-            }
-            else {
-            }
             dataHistVec->push_back(currHist);
         }
         else {
@@ -421,18 +421,7 @@ void HistogramVecGrabber(vector<TFile *> * inputFiles, vector<TH2F *> * dataHist
             currHist->Scale(scaleLumi);
             currHist->Scale(nVtxBackScaleVec->at(k)); // correct for PURW changes to integral
             if (useDDEstimate && fileName.Contains("TTBar")&& !fileName.Contains("VecBoson")) currHist->Scale(scaleFacTTBar);
-            NBinsX = currHist->GetNbinsX();
-            NBinsY = currHist->GetNbinsY();
-            NBinsZ = currHist->GetNbinsZ();
             currHist->RebinX(RBNX);
-            if (NBinsY > 1) {
-                if (NBinsZ > 1) {
-                }
-                else {
-                }
-            }
-            else {
-            }
             mcIndHistCentValVec->push_back(currHist);
         }
     }
@@ -478,18 +467,7 @@ void HistogramVecGrabber(vector<TFile *> * inputFiles, vector<TH2F *> * dataHist
                 else {
                     currHist = (TH2F *) inputFiles->at(k)->Get(mcGrabName);
                 }
-                NBinsX = currHist->GetNbinsX();
-                NBinsY = currHist->GetNbinsY();
-                NBinsZ = currHist->GetNbinsZ();
                 currHist->RebinX(RBNX);
-                if (NBinsY > 1) {
-                    if (NBinsZ > 1) {
-                    }
-                    else {
-                    }
-                }
-                else {
-                }
                 if (systCompHist == NULL) {
                     systCompHistName = currHist->GetName();
                     systCompHistName += "_Comp";
@@ -611,31 +589,35 @@ void SystGraphMakersIndivSamp(TH1F * inputBaseMCHist, vector<TH1F *> * inputBase
 
 
 void HistogramVecGrabber(vector<TFile *> * inputFiles, vector<TH3F *> * dataHistVec, vector<TH3F *> * mcIndHistCentValVec, vector<TH3F *> * mcCompHistSystVec, vector<float> * nVtxBackScaleVec, vector<SystT> * systVec, TString dataPlotName, TString mcPlotName, TString subSampName, int RBNX, int RBNY, int RBNZ, bool doOverflow, bool doUnderflow, bool doSyst, bool useDDEstimate, float scaleFacTTBar, float scaleLumi, bool allMT2llSystematic, int whichNTuple) {
-    int NBinsX, NBinsY, NBinsZ;
+    //int NBinsX, NBinsY, NBinsZ;
     TString fileName, systName, mcGrabName;
     TH3F * currHist;
     TH3F * systCompHist = NULL;
     //    cout << "inputFiles size " << inputFiles->size() << endl;
     //    cout << "nVtxBackScale size " << nVtxBackScaleVec->size() << endl;
     TString mcSystPlotName, systCompHistName;
+    
+    //This piece of code was in each loop
+    /*
+     NBinsX = currHist->GetNbinsX();
+     NBinsY = currHist->GetNbinsY();
+     NBinsZ = currHist->GetNbinsZ();
+     if (NBinsY > 1) {
+     if (NBinsZ > 1) {
+     }
+     else {
+     }
+     }
+     else {
+     }
+     */
     for (unsigned int k = 0; k < inputFiles->size(); ++k) {
         mcGrabName = "";
         fileName = inputFiles->at(k)->GetName();
         cout << "fileName" << " is " << fileName << endl;
         if (fileName.Contains("Data")) {
             currHist = (TH3F *) inputFiles->at(k)->Get(dataPlotName);
-            NBinsX = currHist->GetNbinsX();
-            NBinsY = currHist->GetNbinsY();
-            NBinsZ = currHist->GetNbinsZ();
             currHist->RebinX(RBNX);
-            if (NBinsY > 1) {
-                if (NBinsZ > 1) {
-                }
-                else {
-                }
-            }
-            else {
-            }
             dataHistVec->push_back(currHist);
         }
         else {
@@ -646,18 +628,7 @@ void HistogramVecGrabber(vector<TFile *> * inputFiles, vector<TH3F *> * dataHist
             currHist->Scale(scaleLumi);
             currHist->Scale(nVtxBackScaleVec->at(k)); // correct for PURW changes to integral
             if (useDDEstimate && fileName.Contains("TTBar")) currHist->Scale(scaleFacTTBar);
-            NBinsX = currHist->GetNbinsX();
-            NBinsY = currHist->GetNbinsY();
-            NBinsZ = currHist->GetNbinsZ();
             currHist->RebinX(RBNX);
-            if (NBinsY > 1) {
-                if (NBinsZ > 1) {
-                }
-                else {
-                }
-            }
-            else {
-            }
             mcIndHistCentValVec->push_back(currHist);
         }
     }
@@ -695,18 +666,7 @@ void HistogramVecGrabber(vector<TFile *> * inputFiles, vector<TH3F *> * dataHist
                 //                currHist = (TH3F *) inputFiles->at(k)->Get(mcSystPlotName);   
                 currHist->Scale(nVtxBackScaleVec->at(k)); // correct for PURW changes to integral
                 if (useDDEstimate && fileName.Contains("TTBar")) currHist->Scale(scaleFacTTBar);
-                NBinsX = currHist->GetNbinsX();
-                NBinsY = currHist->GetNbinsY();
-                NBinsZ = currHist->GetNbinsZ();
                 currHist->RebinX(RBNX);
-                if (NBinsY > 1) {
-                    if (NBinsZ > 1) {
-                    }
-                    else {
-                    }
-                }
-                else {
-                }
                 if (systCompHist == NULL) {
                     systCompHistName = currHist->GetName();
                     systCompHistName += "_Comp";
@@ -839,9 +799,12 @@ void SetupPlotRunning_Part1(int argc, char * argv[], RunParams * inRP, WeightCal
     
     inWC->DefaultVarVals();
     //    inWC->SetUniWeights(&RP.SLS);
-    inWC->SetIntLumi();    
+    inWC->SetIntLumi();
     
-    inPMS->SetStructs(&inRP->SLS);
+    inHDP->DefaultVarVals();
+    inHDP->SetParamsFromCommandLine(argc, argv);
+    
+    inPMS->SetStructs(&inRP->SLS, inHDP->whichIndMCSort);
     /*
     if (inRP->HPM.useDDEstimate_TTBar) {
         inWC->LoadTTBarWeight(&inRP->SLS, &inPMS->vecSystNames);        
@@ -864,21 +827,18 @@ void SetupPlotRunning_Part1(int argc, char * argv[], RunParams * inRP, WeightCal
     TString stringMETExtra = inRP->SLS.noType0 ? " w/o Type 0" : "";
     TString genCutUsed = "";
     inGHPI->DefaultVarVals();
+    inGHPI->SetParamsFromCommandLine(argc, argv);
     inGHPI->SetFracRatioADPNameRange(inRP->GHS.doAbsRatio, inRP->GHS.ReturnFracRatioBound(1), inRP->GHS.ReturnFracRatioBound(2));
     inGHPI->SetLatexStringVec(inWC->intLumi, typeMET, stringMETExtra, inRP->SLS.whichDilepType, genCutUsed, true);
-    
-    
-    int RBNX = 1;
-    bool doOverflow = true;
-    bool doUnderflow = true;
-    TString addName = "";
-    inHDP->SetVals(RBNX, doOverflow, doUnderflow, addName);
 }
 
-void SetupPlotRunning_DataMC_DYEstimation(RunParams * inRP, vector<TString> * inVecDataNames, vector<TString> * inVecMCNames, TString baseDir = "/home/bcalvert/DYReweight/") {
+void SetupPlotRunning_DataMC_DYEstimation(RunParams * inRP, vector<TString> * inVecDataNames, vector<TString> * inVecMCNames, TString baseDir = "/data/users/bcalvert/StopDiLepton2014/RootFiles/") {
     TString strDilep[3] = {"_MuMu", "_EE", "_EMu"};
     TString baseStrData[3] = {"DataMuMu", "DataEE", "DataEMu"};
     TString endStrData = "_ReReco_OviedoHaddplots_NOTBLIND.root";
+    
+    TString baseDirData = "Data/";
+    TString baseDirMC = "MC_6_12_15/";
     
     TString baseStrMC = "ZDY";
     
@@ -886,11 +846,11 @@ void SetupPlotRunning_DataMC_DYEstimation(RunParams * inRP, vector<TString> * in
     inVecMCNames->resize(0);
     TString nameData, nameMC;
     for (int iChan = 0; iChan < 3; ++iChan) {
-        nameData = baseDir + baseStrData[iChan] + endStrData;
+        nameData = baseDir + baseDirData + baseStrData[iChan] + endStrData;
         cout << "For Data, pushing back " << nameData << endl;
         inVecDataNames->push_back(nameData);
         
-        nameMC = baseDir + baseStrMC + inRP->SLS.SampleStringDYLoading();
+        nameMC = baseDir + baseDirMC + baseStrMC + inRP->SLS.SampleStringDYLoading();
         nameMC.Replace(nameMC.Index("_PATSY"), 6, strDilep[iChan]);
         cout << "For MC, pushing back " << nameMC << endl;
         inVecMCNames->push_back(nameMC);
@@ -915,6 +875,9 @@ void SetupPlotRunning_DataMC(RunParams * inRP, WeightCalculators * inWC, PlotMak
     
     inHDS_MC->DefaultVarVals();
     inHDS_MC->vecISPI_asLoaded.resize(vecBaseFileNames_MC.size());
+    if (doVerb) {
+        cout << "Going to set file names in StopPlotSetup.h " << endl;
+    }
     SetFileNames(&inHDS_MC->vecISPI_asLoaded, &vecBaseFileNames_MC, &inRP->SLS, isNotSig, doVerb);
     inHDS_MC->SetCompParams("MC", 1);
     
@@ -935,8 +898,29 @@ void SetupPlotRunning_DataMC(RunParams * inRP, WeightCalculators * inWC, PlotMak
     inHDS_MC->SetIndMCParams(&inPMS->vecMCLegends, &inPMS->vecMCColors, &inPMS->vecMCSortParams);
     inHDS_MC->SetSystSize(inPMS->numSysts, inRP->SLS.doSyst);
     SetWeights(inHDS_MC, inWC, &inRP->SLS, inRP->HPM.useDDEstimate_TTBar, inRP->HPM.useDDEstimate_DY, doVerb, &inPMS->vecSystNames);
-    SetSystBasics(inHDS_MC, &inPMS->vecSystNames, inRP->SLS.SmearedPlots, false);
+    SetSystBasics(inHDS_MC, &inPMS->vecSystNames, inRP->SLS.SmearedPlots, false, doVerb);
 }
+
+/*
+void SetupPlotRunning_Signal(RunParams * inRP, WeightCalculators * inWC, PlotMakingStructs * inPMS, HistogramDisplayStructs * inHDS_Signal, bool doVerb = false) {
+    bool isSig = true;
+    
+    vector<TString> vecBaseFileNames_Signal;
+    StopBaseFileNames_Signal(&vecBaseFileNames_Signal, &inRP->SLS);
+    
+    vector<float> signalSkimScaleVec;
+    SignalSkimEfficiencyCalc(&signalSkimScaleVec, &inRP->SLS, inWC->intLumi, doVerb);
+    
+    inHDS_Signal->DefaultVarVals();
+    inHDS_Signal->vecISPI_asLoaded.resize(vecBaseFileNames_Signal.size());
+    SetFileNames(&inHDS_Signal->vecISPI_asLoaded, &vecBaseFileNames_Signal, &inRP->SLS, isSig, doVerb);
+    
+    inHDS_Signal->SetCompParams(inRP->SLS.SignalLegendString(0), -1);
+    inHDS_Signal->SetSystSize(inPMS->numSysts, inRP->SLS.doSyst);
+    SetWeights(inHDS_Signal, inWC, &inRP->SLS, inRP->HPM.useDDEstimate_TTBar, inRP->HPM.useDDEstimate_DY, doVerb, &inPMS->vecSystNames, &signalSkimScaleVec);
+    SetSystBasics(inHDS_Signal, &inPMS->vecSystNames, inRP->SLS.SmearedPlots, true, doVerb);
+}
+*/
 
 void SetupPlotRunning_Signal(RunParams * inRP, WeightCalculators * inWC, PlotMakingStructs * inPMS, HistogramDisplayStructs * inHDS_Signal, bool doVerb = false) {
     bool isSig = true;
@@ -954,7 +938,7 @@ void SetupPlotRunning_Signal(RunParams * inRP, WeightCalculators * inWC, PlotMak
     inHDS_Signal->SetCompParams(inRP->SLS.SignalLegendString(0), -1);
     inHDS_Signal->SetSystSize(inPMS->numSysts, inRP->SLS.doSyst);
     SetWeights(inHDS_Signal, inWC, &inRP->SLS, inRP->HPM.useDDEstimate_TTBar, inRP->HPM.useDDEstimate_DY, doVerb, &inPMS->vecSystNames, &signalSkimScaleVec);
-    SetSystBasics(inHDS_Signal, &inPMS->vecSystNames, inRP->SLS.SmearedPlots, true);    
+    SetSystBasics(inHDS_Signal, &inPMS->vecSystNames, inRP->SLS.SmearedPlots, true, doVerb);
 }
 
 
