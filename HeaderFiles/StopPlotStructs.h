@@ -3,8 +3,23 @@ using namespace std;
 typedef pair<int, int> intBounds;
 typedef pair<TString, intBounds> indMCParams;
 typedef pair<float, float> valPlusErr;
+inline TString SystStringForPlotShape(int whichSyst = 0) {
+    TString suffixSyst[8] = {"", "LepES", "JetES", "BTagSF", "JetSmear", "UncES", "LepEffSF", "genRecoilRW"};
+    ////    cout << "suffixSyst[7] " << suffixSyst[7] << endl;
+    //    cout << "suffixSyst[8] " << suffixSyst[8] << endl;
+    //    cout << "suffixSyst[9] " << suffixSyst[9] << endl;
+    TString outString = "";
+    if (whichSyst == 0) {
+        return outString;
+    }
+    else {
+        outString = "_";
+        outString += suffixSyst[abs(whichSyst)];
+    }
+    return outString;
+}
 inline TString SystStringForPlot(int whichSyst = 0) {
-    TString suffixSyst[10] = {"", "LepES", "JetES", "BTagEffSF", "BMisTagSF", "JetSmear", "UncES", "LepEffSF", "genRecoilRW", "genStopXSec"};
+    TString suffixSyst[9] = {"", "LepES", "JetES", "BTagEffSF", "BMisTagSF", "JetSmear", "UncES", "LepEffSF", "genRecoilRW"};
     ////    cout << "suffixSyst[7] " << suffixSyst[7] << endl;
     //    cout << "suffixSyst[8] " << suffixSyst[8] << endl;
     //    cout << "suffixSyst[9] " << suffixSyst[9] << endl;
@@ -18,6 +33,19 @@ inline TString SystStringForPlot(int whichSyst = 0) {
     }
     return outString;
 }
+
+inline void AddFakeLepSysts(vector<TString> * vecSystString) {
+    TString suffixFakeLepSyst[3] = {"_FakeLepStat", "_FakeLepFakeRateSyst", "_FakeLepPromptRateSyst"};
+    for (int iSystFake = 0; iSystFake < 3; ++iSystFake) {
+        vecSystString->push_back(suffixFakeLepSyst[iSystFake]);
+    }
+}
+inline void AddNormSysts(vector<TString> * vecSystString) {
+    TString suffixNormSyst[3] = {"_TTBarNorm", "_DYNorm", "_EWKNorm"};
+    for (int iSystNorm = 0; iSystNorm < 3; ++iSystNorm) {
+        vecSystString->push_back(suffixNormSyst[iSystNorm]);
+    }
+}
 void MakeSystVec(vector<TString> * vecSystString, bool isSmear = false) {
     const int numSysts = 8;
     int indexSystJetSmear = 5;
@@ -26,6 +54,20 @@ void MakeSystVec(vector<TString> * vecSystString, bool isSmear = false) {
         if (!isSmear && (iSyst == indexSystJetSmear || iSyst == indexSystUncES)) continue;
         vecSystString->push_back(SystStringForPlot(iSyst));
     }
+    AddFakeLepSysts(vecSystString);
+    AddNormSysts(vecSystString);
+}
+
+void MakeSystVecShape(vector<TString> * vecSystString, bool isSmear = false) {
+    const int numSysts = 7;
+    int indexSystJetSmear = 4;
+    int indexSystUncES = 5;
+    for (int iSyst = 1; iSyst <= numSysts; ++iSyst) {
+        if (!isSmear && (iSyst == indexSystJetSmear || iSyst == indexSystUncES)) continue;
+        vecSystString->push_back(SystStringForPlotShape(iSyst));
+    }
+    AddFakeLepSysts(vecSystString);
+    AddNormSysts(vecSystString);
 }
 
 typedef struct SpecificWeight {
@@ -97,7 +139,30 @@ typedef struct SpecificWeight {
         histToSet->SetBinContent(1, inVE->centVal);
         histToSet->SetBinError(1, inVE->upError);
     }
-    float GetSF(int whichSyst = 0) {
+    float GetSF(int whichSyst = 0, bool doVerbosity = false) {
+        float outSF;
+        TH1F * histToGetSFFrom;
+        if (whichSyst == 0) {
+            histToGetSFFrom = weightHistCV;
+        }
+        else {
+            if (abs(whichSyst) - 1 >= (int) weightHist_SystVarUp.size()) {
+                if (doVerbosity) {
+                    cout << "continuing for whichSyst " << whichSyst << " because it's as big as the size of the weightVec " << weightHist_SystVarUp.size() << endl;
+                }
+                return 1;
+            }
+            if (whichSyst > 0) {
+                histToGetSFFrom = weightHist_SystVarUp[abs(whichSyst) - 1];
+            }
+            if (whichSyst < 0) {
+                histToGetSFFrom = weightHist_SystVarDown[abs(whichSyst) - 1];
+            }
+        }
+        outSF = histToGetSFFrom->GetBinContent(1);
+        return outSF;
+    }
+    float GetSFError(int whichSyst = 0) {
         float outSF;
         TH1F * histToGetSFFrom;
         if (whichSyst == 0) {
@@ -109,7 +174,7 @@ typedef struct SpecificWeight {
         else if (whichSyst < 0) {
             histToGetSFFrom = weightHist_SystVarDown[abs(whichSyst) - 1];
         }
-        outSF = histToGetSFFrom->GetBinContent(1);
+        outSF = histToGetSFFrom->GetBinError(1);
         return outSF;
     }
     void WriteToFile(TFile * outputFile) {
@@ -129,25 +194,32 @@ typedef struct SpecificWeight {
         weightHistCV = (TH1F *) outputFile->Get(grabName);
         
         int numSysts = (int) vecSystString->size();
-        weightHist_SystVarUp.resize(numSysts);
-        weightHist_SystVarDown.resize(numSysts);
+//        weightHist_SystVarUp.resize(numSysts);
+//        weightHist_SystVarDown.resize(numSysts);
+        weightHist_SystVarUp.resize(0);
+        weightHist_SystVarDown.resize(0);
         
         for (int iSyst = 0; iSyst < numSysts; ++iSyst) {
+            if (vecSystString->at(iSyst).Contains("Norm")) {
+                continue;
+            }
             grabName = baseHistName + vecSystString->at(iSyst) + TString("ShiftUp");
-            weightHist_SystVarUp[iSyst] = (TH1F *) outputFile->Get(grabName);
+//            weightHist_SystVarUp[iSyst] = (TH1F *) outputFile->Get(grabName);
+            weightHist_SystVarUp.push_back((TH1F *) outputFile->Get(grabName));
             grabName = baseHistName + vecSystString->at(iSyst) + TString("ShiftDown");
-            weightHist_SystVarDown[iSyst] = (TH1F *) outputFile->Get(grabName);
+//            weightHist_SystVarDown[iSyst] = (TH1F *) outputFile->Get(grabName);
+            weightHist_SystVarDown.push_back((TH1F *) outputFile->Get(grabName));
         }
     }
     void PrintWeights() {
         TH1F * histToPrint = weightHistCV;
-        cout << "Weight for Hist " << histToPrint->GetName() << " is " << GetSF(0) << endl;
+        cout << "Weight for Hist " << histToPrint->GetName() << " is " << GetSF(0) << " with a stat error of " << GetSFError(0) << endl;
         for (int iSyst = 1; iSyst <= (int) weightHist_SystVarUp.size(); ++iSyst) {
             histToPrint = weightHist_SystVarUp[iSyst - 1];
-            cout << "Weight for Hist " << histToPrint->GetName() << " is " << GetSF(iSyst) << endl;
+            cout << "Weight for Hist " << histToPrint->GetName() << " is " << GetSF(iSyst) << " with a stat error of " << GetSFError(iSyst) << endl;
             
             histToPrint = weightHist_SystVarDown[iSyst - 1];
-            cout << "Weight for Hist " << histToPrint->GetName() << " is " << GetSF(-1 * iSyst) << endl;
+            cout << "Weight for Hist " << histToPrint->GetName() << " is " << GetSF(-1 * iSyst) << " with a stat error of " << GetSFError(-1 * iSyst) << endl;
         }
     }
 } SpecificWeight;
@@ -155,18 +227,31 @@ typedef struct WeightCalculators {
     float SFLumi;
     int intLumi;
     
+    float xSecUncertEWK;
+    
     vector<TString> vecChanNames;
     vector<TString> vecTTBarNames, vecDYNames;
     
     vector<SpecificWeight> vecWeightTTBar_Dilep;
     vector<SpecificWeight> vecWeightDY_Dilep;
     
-    SpecificWeight weightTTBar_DDNormEE, weightTTBar_DDNormEMu, weightTTBar_DDNormMuMu;
-    SpecificWeight weightDY_DDNormEE, weightDY_DDNormEMu, weightDY_DDNormMuMu;
-    
+    TString ChanName(int whichTTBarDDEst) {
+        const int numChans = 10;
+        TString arrChanName[numChans] = {"_FullCut", "_FullCutTTBarControl", "_FullCut", "_FullCut_LowBLepMass", "_FullCut2BJets_LowBLepMass", "_FullCutMETSig1D_LowBLepMass", "_FullCutMETSigTrue_LowBLepMass", "_FullCutMETSig2D_LowBLepMass", "_FullCut_0BJets_LowBLepMass", "_FullCut2BJets"};
+        return arrChanName[whichTTBarDDEst];
+    }
     void SetTTBarNames() {
         vecTTBarNames.resize(0);
         vecTTBarNames.push_back("_FullCut");
+        vecTTBarNames.push_back("_FullCutTTBarControl");
+        vecTTBarNames.push_back("_TheoryNorm");
+        vecTTBarNames.push_back("_FullCut_LowBLepMass");
+        vecTTBarNames.push_back("_FullCut2BJets_LowBLepMass");
+        vecTTBarNames.push_back("_FullCutMETSig1D_LowBLepMass");
+        vecTTBarNames.push_back("_FullCutMETSigTrue_LowBLepMass");
+        vecTTBarNames.push_back("_FullCutMETSig2D_LowBLepMass");
+        vecTTBarNames.push_back("_FullCut_0BJets_LowBLepMass");
+        vecTTBarNames.push_back("_FullCut2BJets");
     }
     void SetDYNames() {
         vecDYNames.resize(0);
@@ -175,6 +260,9 @@ typedef struct WeightCalculators {
         vecDYNames.push_back("_Jet2MET");
         vecDYNames.push_back("_Jet2BJet1");
         vecDYNames.push_back("_Jet2BJet1MET");
+        vecDYNames.push_back("_ZCR");
+        vecDYNames.push_back("_Jet2BJet2");
+        vecDYNames.push_back("_Jet2BJet2MET");
     }
     void SetChanNames() {
         vecChanNames.resize(0);
@@ -213,25 +301,48 @@ typedef struct WeightCalculators {
         vecDebugInts.push_back(1);
         DebugStatement(whichWeightType, &vecDebugInts, "whichWeightType", "LoadWeights");
 
-        TString weightNameSF = GetWeightName(whichWeightType, versNumber, true);
-        TString weightNameOF = GetWeightName(whichWeightType, versNumber, false);
         
-        TString addString = inSLS->TTBarString();
+        TString weightNameMuMu = GetWeightName(whichWeightType, versNumber, true);
+        TString weightNameEE = GetWeightName(whichWeightType, versNumber, true);
+        TString weightNameEMu = GetWeightName(whichWeightType, versNumber, false);
+        
+        TString arrNames[3] = {"_MuMu", "_EE", "_EMu"};
+//        TString arrNames[3] = {"All", "All", "All"};
+        TString addString = "";
+        if (whichWeightType == 0) {
+            addString = inSLS->TTBarString();
+        }
+    
         addString += inSLS->SampleStringScaleFacSaving();
         
-        TString nameFileSF = "ScaleFactors";
-        nameFileSF += weightNameSF;
-        nameFileSF += addString;
-
-        TString nameFileOF = "ScaleFactors";
-        nameFileOF += weightNameOF;
-        nameFileOF += addString;
+        TString nameFileMuMu = "ScaleFactors";
+        nameFileMuMu += weightNameMuMu;
+        if (whichWeightType == 0) {
+            nameFileMuMu += arrNames[0];
+        }
+        nameFileMuMu += addString;
         
-        cout << "going to try and grab SF File: " << nameFileSF << endl;
-        cout << "going to try and grab OF File: " << nameFileOF << endl;
+        TString nameFileEE = "ScaleFactors";
+        nameFileEE += weightNameEE;
+        if (whichWeightType == 0) {
+            nameFileEE += arrNames[1];
+        }
+        nameFileEE += addString;
         
-        TFile * inFileSF = TFile::Open(nameFileSF);
-        TFile * inFileOF = TFile::Open(nameFileOF);
+        TString nameFileEMu = "ScaleFactors";
+        nameFileEMu += weightNameEMu;
+        if (whichWeightType == 0) {
+            nameFileEMu += arrNames[2];
+        }
+        nameFileEMu += addString;
+        
+        cout << "going to try and grab MuMu File: " << nameFileMuMu << endl;
+        cout << "going to try and grab EE File: " << nameFileEE << endl;
+        cout << "going to try and grab EMu File: " << nameFileEMu << endl;
+        
+        TFile * inFileMuMu = TFile::Open(nameFileMuMu);
+        TFile * inFileEE = TFile::Open(nameFileEE);
+        TFile * inFileEMu = TFile::Open(nameFileEMu);
         
         vector<SpecificWeight> * vecSWToUse = GetVecSW(whichWeightType);
         vecSWToUse->resize(vecChanNames.size());
@@ -241,12 +352,29 @@ typedef struct WeightCalculators {
         
         for (unsigned int iChan = 0; iChan < vecSWToUse->size(); ++iChan) {
             //set which file to grab from based on dilepton type
-            fileToGrabFrom = inFileSF;
-            weightNameToUse = weightNameSF;
-            if (iChan == 2) {
-                fileToGrabFrom = inFileOF;
-                weightNameToUse = weightNameOF;
+            switch (iChan) {
+                case 0:
+                    fileToGrabFrom = inFileMuMu;
+                    weightNameToUse = weightNameMuMu;
+                    break;
+                case 1:
+                    fileToGrabFrom = inFileEE;
+                    weightNameToUse = weightNameEE;
+                    break;
+                case 2:
+                    fileToGrabFrom = inFileEMu;
+                    weightNameToUse = weightNameEMu;
+                    break;
             }
+            /*
+            if (whichWeightType == 0) {
+                cout << "hacking that ish for ttbar " << endl;
+                vecSWToUse->at(iChan).SetHistsFromFile(fileToGrabFrom, weightNameToUse + "All", vecSystString);
+            }
+            else {
+                vecSWToUse->at(iChan).SetHistsFromFile(fileToGrabFrom, weightNameToUse + vecChanNames[iChan], vecSystString);
+            }
+            */
             vecSWToUse->at(iChan).SetHistsFromFile(fileToGrabFrom, weightNameToUse + vecChanNames[iChan], vecSystString);
             cout << "printing " << vecChanNames[iChan] << " weights " << endl;
             vecSWToUse->at(iChan).PrintWeights();
@@ -254,12 +382,13 @@ typedef struct WeightCalculators {
     }
     void DefaultVarVals() {
         SFLumi = 1.0;
+        xSecUncertEWK = 0.5; //50% xsec uncertainty on EWK backgrounds
         SetTTBarNames();
         SetDYNames();
         SetChanNames();
     }
     void SetIntLumi() {
-        float indLumiOvi[4] = {892, 4404, 7032, 7274};
+        float indLumiOvi[4] = {876, 4404, 7016, 7360};
         intLumi = 0.0;
         for (int iLumi = 0; iLumi < 4; ++iLumi) {
             intLumi += indLumiOvi[iLumi];
@@ -269,13 +398,17 @@ typedef struct WeightCalculators {
         SetIntLumi();
     }
     float ScaleBackCalc(TFile * inputFile, bool doVerbosity = false, int whichSyst = 0, vector<TString> * vecSystString = 0) {
+        const int numBadSysts = 5;
         TString mcplot = "h_nVtx_inclusive";
         TString mcplot_preRW = "h_nVtx_preRW_inclusive";
-        TString badSysts[3] = {"JetSmear", "UncES", "genStop"};
+        TString badSysts[numBadSysts] = {"JetSmear", "UncES", "genStop", "Norm", "Fake"};
         TString fileName = inputFile->GetName();
         bool isBadSyst = false;
         if (whichSyst != 0) {
-            for (int iBadSyst = 0; iBadSyst < 3; ++iBadSyst) {
+            if (doVerbosity) {
+                cout << "name of syst: " << vecSystString->at(abs(whichSyst) - 1) << endl;
+            }
+            for (int iBadSyst = 0; iBadSyst < numBadSysts; ++iBadSyst) {
                 if (vecSystString->at(abs(whichSyst) - 1).Contains(badSysts[iBadSyst])) {
                     isBadSyst = true;
                 }
@@ -315,10 +448,11 @@ typedef struct WeightCalculators {
         TString mcplot_preRW = "h_BasicWeightIntegral_inclusive";
         
         TString fileName = inputFile->GetName();
-        TString badSysts[2] = {"JetSmear", "UncES"};
+        const int numBadSysts = 4;
+        TString badSysts[numBadSysts] = {"JetSmear", "UncES", "Norm", "Fake"};
         bool isBadSyst = false;
         if (whichSyst != 0) {
-            for (int iBadSyst = 0; iBadSyst < 3; ++iBadSyst) {
+            for (int iBadSyst = 0; iBadSyst < numBadSysts; ++iBadSyst) {
                 if (vecSystString->at(abs(whichSyst) - 1).Contains(badSysts[iBadSyst])) {
                     isBadSyst = true;
                 }
@@ -430,18 +564,19 @@ typedef struct WeightCalculators {
                 nameWeight = "DY";
                 SWtoUse = PickSW(inISPI, inSLS, &vecWeightDY_Dilep);
             }
-            inISPI->weight_CentVal *= SWtoUse->GetSF(0);
+            inISPI->weight_CentVal *= SWtoUse->GetSF(0, doVerbosity);
+            inISPI->weight_CentVal_StatErr = SWtoUse->GetSFError(0);
             if (doVerbosity) {
-                cout << "base " << nameWeight << " weight " << SWtoUse->GetSF(0) << endl;
+                cout << "base " << nameWeight << " weight " << SWtoUse->GetSF(0, doVerbosity) << endl;
             }
             for (unsigned int iSyst = 1; iSyst <= inISPI->weight_SystVarUp.size(); ++iSyst) {
                 if (doVerbosity) {
                     cout << " for iSyst " << iSyst << endl;
-                    cout << "weight " << nameWeight << " Syst Var Up " << SWtoUse->GetSF(iSyst) << endl;
-                    cout << "weight " << nameWeight << " Syst Var Down " << SWtoUse->GetSF(- 1 * iSyst) << endl;
+                    cout << "weight " << nameWeight << " Syst Var Up " << SWtoUse->GetSF(iSyst, doVerbosity) << endl;
+                    cout << "weight " << nameWeight << " Syst Var Down " << SWtoUse->GetSF(- 1 * iSyst, doVerbosity) << endl;
                 }
-                inISPI->weight_SystVarUp[iSyst - 1] *= SWtoUse->GetSF(iSyst);
-                inISPI->weight_SystVarDown[iSyst - 1] *= SWtoUse->GetSF(- 1 * iSyst);
+                inISPI->weight_SystVarUp[iSyst - 1] *= SWtoUse->GetSF(iSyst, doVerbosity);
+                inISPI->weight_SystVarDown[iSyst - 1] *= SWtoUse->GetSF(- 1 * iSyst, doVerbosity);
             }
         }
     }
@@ -484,6 +619,10 @@ typedef struct WeightCalculators {
             }
             else {
                 SetISPIWeightNVtxRecoil(inISPI, doVerbosity, vecSystString);
+            }
+            if (inISPI->sampleType == 3) {
+                cout << "for inISPI " << inISPI->nameISPI << " setting stat uncert. on weight to be " << xSecUncertEWK << endl;
+                inISPI->weight_CentVal_StatErr = xSecUncertEWK;
             }
         }
     }    
@@ -595,43 +734,61 @@ typedef struct PlotMakingStructs {
     //structs for MT2CutYieldCalc.C
     vector<float> vecXaxisCut, vecYaxisCut;
     vector<TString> vecHistNamesForYieldCalc;
-    /*
     ////Set of functions
-    void SetFileNameVector(vector<TFile *> * inVecTFile, int index, int doNonSig, bool doSig) {
-        TString dataName = "Data.root";
-        TString mcName1, mcName2;
-        if (doSig && !doNonSig) {
-            mcName1
-        }
-        TString mcName1 = "TTBar";
-        if (doSig) mc
+    void SetFileNameVector(TString saveNameDim, vector<TFile *> * inVecTFile, int index, bool doNonSig, bool doSig) {
+        TString strAppend = saveNameDim + ".root";
         if (doNonSig) {
             if (index == 0) {
-                inVecTFile->at(0) = new TFile("Data.root", "RECREATE");
+                inVecTFile->at(0) = new TFile("Data" + strAppend, "RECREATE");
             }
-            else {
-                if (index == 1) {
-                    if (
-                }h
+            else if (index == 1) {
+                inVecTFile->at(0) = new TFile("TTBar" + strAppend, "RECREATE");
+                inVecTFile->at(1) = new TFile("NonTTBar" + strAppend, "RECREATE");
+                if (doSig) {
+                    inVecTFile->at(2) = new TFile("Signal" + strAppend, "RECREATE");
+                }
+            }
+        }
+        else if (doSig) {
+            inVecTFile->at(0) = new TFile("Signal" + strAppend, "RECREATE");
+        }
+        else {
+            cout << "not saving any TFiles because you've specified both no 'non-signal' and no 'signal'!" << endl;
+        }
+    }
+    
+    void CloseFiles() {
+        for (unsigned int iVec = 0; iVec < vecVecTFiles.size(); ++iVec) {
+            for (unsigned int iVec2= 0; iVec2 < vecVecTFiles[iVec].size(); ++iVec2) {
+                vecVecTFiles[iVec][iVec2]->Write();
+                vecVecTFiles[iVec][iVec2]->Close();
             }
         }
     }
     
-    void SetUpTFiles(bool doNonSig, bool doSig) {
+    void SetUpTFiles(TString saveNameDim, bool doNonSig, bool doSig) {
         if (doNonSig) {
             vecVecTFiles.resize(2);
             vecVecTFiles[0].resize(1); // one output data file
-            vecVecTFiles[1].resize(2); // Two output MC files
+            SetFileNameVector(saveNameDim, &vecVecTFiles[0], 0, doNonSig, doSig);
+            if (doSig) {
+                vecVecTFiles[1].resize(3); // Three output MC files
+            }
+            else {
+                vecVecTFiles[1].resize(2); // Two output MC files
+            }
+            SetFileNameVector(saveNameDim, &vecVecTFiles[1], 1, doNonSig, doSig);
         }
         else if (doSig) {
-            vecVecTFiles.resize(1);
+            vecVecTFiles.resize(2);
+            vecVecTFiles[1].resize(1); // Two output MC files
+            SetFileNameVector(saveNameDim, &vecVecTFiles[1], 0, doNonSig, doSig);
         }
         else {
-            cout << "not saving any TFiles because you've specified both no 'non-signal' and no 'signal'!"
+            cout << "not saving any TFiles because you've specified both no 'non-signal' and no 'signal'!" << endl;
             vecVecTFiles.resize(0);
         }
     }
-    */
     //Functions for Yield calculation
     void SetCutValues(HistPlotMaking * inHPM, int levelVerbosity = 0) {
         vecXaxisCut.resize(0);
@@ -657,12 +814,12 @@ typedef struct PlotMakingStructs {
     }
     ///
     
-    void SetVecIndMCParams(SampLoadSettings * inSLS) {
+    void SetVecIndMCParams(SampLoadSettings * inSLS, int whichIndMCSort, bool isShape = false) {
         vecIndMCParams.resize(0);
         vecMCColors.resize(0);
         vecMCLegends.resize(0);
         vecMCSortParams.resize(0);
-        SampleStartPositionsNames(&vecMCSortParams, &vecMCLegends, &vecMCColors, &vecIndMCParams, inSLS);
+        SampleStartPositionsNames(&vecMCSortParams, &vecMCLegends, &vecMCColors, &vecIndMCParams, inSLS, whichIndMCSort, isShape);
     }
     
     void DefaultMultiChanHistVecs() {
@@ -673,6 +830,12 @@ typedef struct PlotMakingStructs {
     void SetVecSystNames(bool isSmear = false) {
         vecSystNames.resize(0);
         MakeSystVec(&vecSystNames, isSmear);
+        numSysts = (int) vecSystNames.size();
+    }
+    
+    void SetVecSystNamesShape(bool isSmear = false) {
+        vecSystNames.resize(0);
+        MakeSystVecShape(&vecSystNames, isSmear);
         numSysts = (int) vecSystNames.size();
     }
     
@@ -693,7 +856,7 @@ typedef struct PlotMakingStructs {
         Double_t W_ = g_ + n_*w_ + 2*(n_-1)*e_ + d_;
         Double_t H_ = t_ + h_ + b_ + hl_ +2*k_ ;
         Int_t wtopx = 100;
-        Int_t wtopy = 100;
+        Int_t wtopy = 150;
         
         vecCanvasCornerParams.resize(0);
         vecCanvasCornerParams.push_back(wtopx);
@@ -758,14 +921,19 @@ typedef struct PlotMakingStructs {
         }
     }
     
-    void SetStructs(SampLoadSettings * inSLS) {
+    void SetStructs(SampLoadSettings * inSLS, int whichIndMCSort, bool isShape = false) {
         int whichSSType = inSLS->doSignal ? 2 : -1;
         subSampVec = new vector<SampleT>;
         SetSubSampVec(subSampVec, whichSSType);
         SetHistTVecs(inSLS);
         SetCanvasParams();
-        SetVecSystNames(inSLS->SmearedPlots);
-        SetVecIndMCParams(inSLS);
+        if (isShape) {
+            SetVecSystNamesShape(inSLS->SmearedPlots);
+        }
+        else {
+            SetVecSystNames(inSLS->SmearedPlots);
+        }
+        SetVecIndMCParams(inSLS, whichIndMCSort, isShape);
     }
     
 } PlotMakingStructs;
