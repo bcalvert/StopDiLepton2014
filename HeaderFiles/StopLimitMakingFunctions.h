@@ -14,7 +14,7 @@ using namespace std;
 #include "TPaveStats.h"
 #include "TCanvas.h"
 
-//Functions used when making the limit plots -- neew to work on this
+//Functions used when making the limit plots -- need to work on this
 
 int RatioExclusionStatus(int inBinNew, int inBinOld) {
     int onlyExcNew = -1;
