@@ -35,6 +35,7 @@
 #include <map>
 using namespace std;
 
+#include "ParticleUtilityFunctions.h"
 
 
 /*
@@ -793,7 +794,7 @@ inline bool isLeptonJet(vector<Lepton> * isoLeptons, TLorentzVector * inputJet) 
     for (unsigned int iLep = 0; iLep < isoLeptons->size(); ++iLep) {
         lepPtCut = (inputJet->Pt() > jetPtCutForCutLep) ? 10.0: 0.0; // for jets > 20 GeV, check that isoLepton's pT is > 10 GeV, otherwise don't care about pT
         if (isoLeptons->at(iLep).P4.Pt() > lepPtCut) {
-            if (deltaR(inputJet->Eta(), inputJet->Phi(), isoLeptons->at(iLep).P4.Eta(), isoLeptons->at(iLep).P4.Phi()) < dRcut) return true;
+            if (ParticleUtility::dR(inputJet->Eta(), inputJet->Phi(), isoLeptons->at(iLep).P4.Eta(), isoLeptons->at(iLep).P4.Phi()) < dRcut) return true;
         }
     }
     return false;
@@ -949,7 +950,7 @@ inline float JetResolutionHighPt(TLorentzVector * inputJet, vector<TF1> * inputT
 inline bool GenJetMatch(TLorentzVector * inputJet, TLorentzVector * genJet, float &dRGenReco) {
     bool isGenJetMatched;
     float dRmaxGenJetMatch = TMath::Min(0.5, 0.1 + 0.3 * TMath::Exp(-0.05 * (genJet->Pt() - 10)));
-    dRGenReco = deltaR(inputJet->Eta(), inputJet->Phi(), genJet->Eta(), genJet->Phi());
+    dRGenReco = ParticleUtility::dR(inputJet->Eta(), inputJet->Phi(), genJet->Eta(), genJet->Phi());
     isGenJetMatched = (dRGenReco < dRmaxGenJetMatch);
     return isGenJetMatched;
 }

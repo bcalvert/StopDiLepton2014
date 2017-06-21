@@ -12,6 +12,8 @@
 #include "TGraphErrors.h"
 #include "TAxis.h"
 
+#include "ParticleUtilityFunctions.h"
+
 #include <vector>
 using namespace std;
 inline void DebugStatement(int inputIntToCheck, vector<int> * inputAllowedValsForInt, TString intVarName, TString nameFunction) {
@@ -477,46 +479,6 @@ inline void FixPadTriple(TPad * &inputPad, int whichPad, TCanvas * &inputCanvas)
     inputPad->SetFrameBorderMode(0);
 }
 
-inline float dPhi(float phi1, float phi2) {
-    float result = phi1-phi2;
-    while (result >= TMath::Pi()) result -= 2*TMath::Pi();
-    while (result < -1*TMath::Pi()) result += 2*TMath::Pi();
-    return fabs(result);
-}
-inline float deltaR(float eta1, float phi1, float eta2, float phi2) {
-    float dphi = dPhi(phi1,phi2);
-    float deta = eta1-eta2;
-    float result = dphi*dphi+deta*deta;
-    result = sqrt(result);
-    return result;
-}
-
-inline double dPhi(double phi1, double phi2) {
-    double result = phi1-phi2;
-    while (result >= TMath::Pi()) result -= 2*TMath::Pi();
-    while (result < -1*TMath::Pi()) result += 2*TMath::Pi();
-    return fabs(result);
-}
-inline double dPhi(TLorentzVector * inputVec1, TLorentzVector * inputVec2) {
-    return dPhi(inputVec1->Phi(), inputVec2->Phi());
-}
-
-inline double deltaR(double eta1, double phi1, double eta2, double phi2) {
-    double dphi = dPhi(phi1,phi2);
-    double deta = eta1-eta2;
-    double result = dphi*dphi+deta*deta;
-    result = sqrt(result);
-    return result;
-}
-
-inline Double_t deltaR(TLorentzVector * inputVec1, TLorentzVector * inputVec2) {
-    Double_t DeltaPhi = dPhi(inputVec1->Phi(), inputVec2->Phi());
-    Double_t DeltaEta = inputVec1->Eta() - inputVec2->Eta();
-    Double_t result = DeltaEta * DeltaEta + DeltaPhi * DeltaPhi;
-    result = sqrt(result);
-    return result;
-}
-
 inline float GetMT(TLorentzVector * inputVec1, TLorentzVector * inputVec2) {
     float mass1 = inputVec1->M();
     float mass2 = inputVec2->M();
@@ -524,7 +486,7 @@ inline float GetMT(TLorentzVector * inputVec1, TLorentzVector * inputVec2) {
     float Et2 = inputVec2->Et();
     float Pt1 = inputVec1->Pt();
     float Pt2 = inputVec2->Pt();
-    float Angle = dPhi(inputVec1, inputVec2);
+    float Angle = ParticleUtility::dPhi(inputVec1, inputVec2);
     float MTSq = mass1 * mass1 + mass2 * mass2 + 2 * (Et1 * Et2 - Pt1*Pt2*TMath::Cos(Angle));
     return TMath::Sqrt(MTSq);
 }

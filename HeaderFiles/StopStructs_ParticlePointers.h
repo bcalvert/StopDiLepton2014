@@ -1,6 +1,8 @@
 // Structs to contain sets of particle pointers (pointers to vectors of information) present in the nTuples at Oviedo skim level
 // should be more clear what I mean by that if you look at an individual one
 
+#include "ParticleUtilityFunctions.h"
+
 using namespace std;
 typedef struct PFJetEventPointers {
     // pointers for the PF jets
@@ -871,7 +873,7 @@ typedef struct GenLeptonEventPointers {
             // require consistent PDGID
             if (matchGenPart->PDGID != inLep->PDGID) continue;
             if (inLep->BVC.Vec_Pt < matchPtLB || inLep->BVC.Vec_Pt > matchPtUB) continue;
-            currDeltaR = deltaR(&inLep->P4, &matchGenPart->P4);
+            currDeltaR = ParticleUtility::dR(&inLep->P4, &matchGenPart->P4);
             // require deltaR matching
             if (currDeltaR < maxDeltaR && currDeltaR < bestDeltaR) {
                 foundMatch = true;

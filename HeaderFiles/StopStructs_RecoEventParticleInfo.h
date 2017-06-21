@@ -1,5 +1,7 @@
 // Structs used for containing event info about the reco particles
 #include "TVector2.h"
+#include "ParticleUtilityFunctions.h"
+
 using namespace std;
 typedef struct BasicEventInfo {
     // Contains very basic info -- weights, run number, event number, etc
@@ -783,7 +785,7 @@ typedef struct EventMT2Info {
         MT_BHTVec = -99.;
     }
     void SetMTLep(TLorentzVector * inLepton, float EventMET, float EventMETPhi, int whichMT = 1) {
-        //        float Angle = dPhi(inLepton->Phi(), EventMETPhi);
+        //        float Angle = ParticleUtility::dPhi(inLepton->Phi(), EventMETPhi);
         //        float MTSq = 2*EventMET*inLepton->Pt()*(1-TMath::Cos(Angle));
         TLorentzVector METvec; METvec.SetPtEtaPhiM(EventMET, 0., EventMETPhi, 0);
         switch (whichMT) {
@@ -802,7 +804,7 @@ typedef struct EventMT2Info {
     }
     
     void SetMTJet(TLorentzVector * inJet, float EventMET, float EventMETPhi) {
-        //        float Angle = dPhi(inJet->Phi(), EventMETPhi);
+        //        float Angle = ParticleUtility::dPhi(inJet->Phi(), EventMETPhi);
         //        float MTSq = 2*EventMET*inJet->Pt()*(1-TMath::Cos(Angle));
         TLorentzVector METvec; METvec.SetPtEtaPhiM(EventMET, 0., EventMETPhi, 0);
         //        cout << "inJet Pt " << inJet->Pt() << endl;
@@ -810,7 +812,7 @@ typedef struct EventMT2Info {
     }
     
     void SetMTBJet(TLorentzVector * inBJet, float EventMET, float EventMETPhi) {
-        //        float Angle = dPhi(inJet->Phi(), EventMETPhi);
+        //        float Angle = ParticleUtility::dPhi(inJet->Phi(), EventMETPhi);
         //        float MTSq = 2*EventMET*inJet->Pt()*(1-TMath::Cos(Angle));
         TLorentzVector METvec; METvec.SetPtEtaPhiM(EventMET, 0., EventMETPhi, 0);
         //        cout << "inJet Pt " << inJet->Pt() << endl;
@@ -829,7 +831,7 @@ typedef struct EventMT2Info {
         int caseMT2bb = inEJI->JetSelectorForMT2(&vecJetsMT2bb, &vecJetPartFlavor, levelVerbosity);
         if (vecJetsMT2bb.size() == 2) {
             EventMT2bb_ZMET = getMT2(vecJetsMT2bb[0], vecJetsMT2bb[1], ZMET.Pt(), ZMET.Phi(), testMass);
-            EventDeltaPhiMT2bb_ZMET_JetsUsed = dPhi(vecJetsMT2bb[0].Phi(), vecJetsMT2bb[1].Phi());
+            EventDeltaPhiMT2bb_ZMET_JetsUsed = ParticleUtility::dPhi(vecJetsMT2bb[0].Phi(), vecJetsMT2bb[1].Phi());
         }
         else {
             if (vecJetsMT2bb.size() > 2) {
@@ -968,8 +970,8 @@ typedef struct EventMT2Info {
                 EventMT2lblb = MT2lbCalculator(&vecLepMT2lb, &vecJetMT2lblb, EventMET, EventMETPhi, EventVecBLepsMT2lb, whichCheck, levelVerbosity, &vecJetPartFlavor, &vecLepPDGID);
             }
             
-            EventDeltaPhiMT2lblb_JetsUsed = dPhi(vecJetMT2lblb[0].Phi(), vecJetMT2lblb[1].Phi());
-            EventDeltaPhiMT2lblb_BLepsUsed = dPhi(EventVecBLepsMT2lb[0].Phi(), EventVecBLepsMT2lb[1].Phi());
+            EventDeltaPhiMT2lblb_JetsUsed = ParticleUtility::dPhi(vecJetMT2lblb[0].Phi(), vecJetMT2lblb[1].Phi());
+            EventDeltaPhiMT2lblb_BLepsUsed = ParticleUtility::dPhi(EventVecBLepsMT2lb[0].Phi(), EventVecBLepsMT2lb[1].Phi());
             
             EventMassBLep0_BLepsUsed = EventVecBLepsMT2lb[0].M();
             EventMassBLep1_BLepsUsed = EventVecBLepsMT2lb[1].M();
@@ -1306,9 +1308,9 @@ typedef struct EventDiStructureInfo {
     }
     void SetMETVars(EventLepInfo * inELI, EventMETInfo * inEMI) {
         for (int iLep = 0; iLep < numLeps; ++iLep) {
-            vecDP_LepMET[iLep].DPhiInputObjects = dPhi(inELI->vecEventLeps[iLep].BVC.Vec_Phi, inEMI->EventMETPhi);
+            vecDP_LepMET[iLep].DPhiInputObjects = ParticleUtility::dPhi(inELI->vecEventLeps[iLep].BVC.Vec_Phi, inEMI->EventMETPhi);
         }
-        DP_ZMET.DPhiInputObjects = dPhi(DP_DiLepton.BVC.Vec_Phi, inEMI->EventMETPhi);
+        DP_ZMET.DPhiInputObjects = ParticleUtility::dPhi(DP_DiLepton.BVC.Vec_Phi, inEMI->EventMETPhi);
     }
     void SetDiLepVals(EventDiStructureInfo * inEDSI) {
         DP_DiLepton = inEDSI->DP_DiLepton;

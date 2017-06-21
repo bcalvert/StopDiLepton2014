@@ -1,4 +1,5 @@
 // Structs for very basic reco-level particles -- leptons, jets, etc.
+#include "ParticleUtilityFunctions.h"
 
 using namespace std;
 typedef struct Lepton {
@@ -226,7 +227,7 @@ typedef struct DiParticle {
     void SetDPVals(TLorentzVector * inputVec1, TLorentzVector * inputVec2) {
         P4 = (*inputVec1 + *inputVec2);
         BVC.ExtractParams(&P4);
-        DPhiInputObjects = dPhi(inputVec1->Phi(), inputVec2->Phi());
+        DPhiInputObjects = ParticleUtility::dPhi(inputVec1->Phi(), inputVec2->Phi());
     }
 } DiParticle;
 
@@ -280,7 +281,7 @@ typedef struct SmearPFJet {
         bool foundMatch = false;
         int matchIndex = -1;
         for (unsigned int iJet = 0; iJet < inPFJetVec->size(); ++iJet) {
-            currDeltaR = deltaR(&intPFJet.P4, &inPFJetVec->at(iJet).P4);
+            currDeltaR = ParticleUtility::dR(&intPFJet.P4, &inPFJetVec->at(iJet).P4);
             if (currDeltaR < dRBest && currDeltaR < dRMin) {
                 dRBest = currDeltaR;
                 foundMatch = true;

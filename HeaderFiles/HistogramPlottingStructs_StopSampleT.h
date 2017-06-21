@@ -1,5 +1,5 @@
 // Will eventually contain the struct definition for the SampleT struct specific to the stop analysis
-
+#include "ParticleUtilityFunctions.h"
 typedef struct SampleT {
     TString histNameSuffix;
     SampCutInt cutDiLepType;
@@ -67,10 +67,10 @@ typedef struct SampleT {
         }
         switch (cutDPhiPhot0Jet0_Angle1.cutDir) {
             case -1:
-                eventPasses &= (dPhi(inEPI->vecEventPhotons[0].BVC.Vec_Phi, inEJI->vecEventJets[0].BVC.Vec_Phi) <= cutDPhiPhot0Jet0_Angle1.cutVarVal);
+                eventPasses &= (ParticleUtility::dPhi(inEPI->vecEventPhotons[0].BVC.Vec_Phi, inEJI->vecEventJets[0].BVC.Vec_Phi) <= cutDPhiPhot0Jet0_Angle1.cutVarVal);
                 break;
             case 1:
-                eventPasses &= (dPhi(inEPI->vecEventPhotons[0].BVC.Vec_Phi, inEJI->vecEventJets[0].BVC.Vec_Phi) >= cutDPhiPhot0Jet0_Angle1.cutVarVal);
+                eventPasses &= (ParticleUtility::dPhi(inEPI->vecEventPhotons[0].BVC.Vec_Phi, inEJI->vecEventJets[0].BVC.Vec_Phi) >= cutDPhiPhot0Jet0_Angle1.cutVarVal);
                 break;
             default:
                 cout << "issues with checking cutDPhiPhot0Jet0_Angle1.cutDir" << endl;
@@ -78,10 +78,10 @@ typedef struct SampleT {
         }
         switch (cutDPhiPhot0Jet0_Angle2.cutDir) {
             case -1:
-                eventPasses &= (dPhi(inEPI->vecEventPhotons[0].BVC.Vec_Phi, inEJI->vecEventJets[0].BVC.Vec_Phi) <= cutDPhiPhot0Jet0_Angle2.cutVarVal);
+                eventPasses &= (ParticleUtility::dPhi(inEPI->vecEventPhotons[0].BVC.Vec_Phi, inEJI->vecEventJets[0].BVC.Vec_Phi) <= cutDPhiPhot0Jet0_Angle2.cutVarVal);
                 break;
             case 1:
-                eventPasses &= (dPhi(inEPI->vecEventPhotons[0].BVC.Vec_Phi, inEJI->vecEventJets[0].BVC.Vec_Phi) >= cutDPhiPhot0Jet0_Angle2.cutVarVal);
+                eventPasses &= (ParticleUtility::dPhi(inEPI->vecEventPhotons[0].BVC.Vec_Phi, inEJI->vecEventJets[0].BVC.Vec_Phi) >= cutDPhiPhot0Jet0_Angle2.cutVarVal);
                 break;
             default:
                 cout << "issues with checking cutDPhiPhot0Jet0_Angle1.cutDir" << endl;

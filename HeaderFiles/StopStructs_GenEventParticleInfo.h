@@ -1,4 +1,5 @@
 // Structs that contain information about the event as a whole related to certain classes of generator particles
+#include "ParticleUtilityFunctions.h"
 
 typedef struct EventGenSUSYParticleInfo {
     // Structs that contain information about the event as a whole related to gen-level SUSY particles
@@ -583,15 +584,15 @@ struct EventGenMT2Info {
                     //pairings of 0 with 0 and 1 with 1 are the correct ones
                     BLep0_Incorr = GPLep0->P4 + GPB1->P4;
                     BLep1_Incorr = GPLep1->P4 + GPB0->P4;
-                    vecVecGenBLepDPhi[0][0] = dPhi(&GPLep0->P4, &GPB1->P4);
-                    vecVecGenBLepDPhi[0][1] = dPhi(&GPLep1->P4, &GPB0->P4);
+                    vecVecGenBLepDPhi[0][0] = ParticleUtility::dPhi(&GPLep0->P4, &GPB1->P4);
+                    vecVecGenBLepDPhi[0][1] = ParticleUtility::dPhi(&GPLep1->P4, &GPB0->P4);
                     vecVecGenBLepDEta[0][0] = GPLep0->P4.Eta() - GPB1->P4.Eta();
                     vecVecGenBLepDEta[0][1] = GPLep1->P4.Eta() - GPB0->P4.Eta();
                     
                     BLep0_Corr = GPLep0->P4 + GPB0->P4;
                     BLep1_Corr = GPLep1->P4 + GPB1->P4;
-                    vecVecGenBLepDPhi[1][0] = dPhi(&GPLep0->P4, &GPB0->P4);
-                    vecVecGenBLepDPhi[1][1] = dPhi(&GPLep1->P4, &GPB1->P4);
+                    vecVecGenBLepDPhi[1][0] = ParticleUtility::dPhi(&GPLep0->P4, &GPB0->P4);
+                    vecVecGenBLepDPhi[1][1] = ParticleUtility::dPhi(&GPLep1->P4, &GPB1->P4);
                     vecVecGenBLepDEta[1][0] = GPLep0->P4.Eta() - GPB0->P4.Eta();
                     vecVecGenBLepDEta[1][1] = GPLep1->P4.Eta() - GPB1->P4.Eta();
                 }
@@ -605,15 +606,15 @@ struct EventGenMT2Info {
                     //pairings of 0 with 1 and 1 with 0 are the correct ones
                     BLep0_Incorr = GPLep0->P4 + GPB0->P4;
                     BLep1_Incorr = GPLep1->P4 + GPB1->P4;
-                    vecVecGenBLepDPhi[0][0] = dPhi(&GPLep0->P4, &GPB0->P4);
-                    vecVecGenBLepDPhi[0][1] = dPhi(&GPLep1->P4, &GPB1->P4);
+                    vecVecGenBLepDPhi[0][0] = ParticleUtility::dPhi(&GPLep0->P4, &GPB0->P4);
+                    vecVecGenBLepDPhi[0][1] = ParticleUtility::dPhi(&GPLep1->P4, &GPB1->P4);
                     vecVecGenBLepDEta[0][0] = GPLep0->P4.Eta() - GPB0->P4.Eta();
                     vecVecGenBLepDEta[0][1] = GPLep1->P4.Eta() - GPB1->P4.Eta();
                     
                     BLep0_Corr = GPLep0->P4 + GPB1->P4;
                     BLep1_Corr = GPLep1->P4 + GPB0->P4;
-                    vecVecGenBLepDPhi[1][0] = dPhi(&GPLep0->P4, &GPB1->P4);
-                    vecVecGenBLepDPhi[1][1] = dPhi(&GPLep1->P4, &GPB0->P4);
+                    vecVecGenBLepDPhi[1][0] = ParticleUtility::dPhi(&GPLep0->P4, &GPB1->P4);
+                    vecVecGenBLepDPhi[1][1] = ParticleUtility::dPhi(&GPLep1->P4, &GPB0->P4);
                     vecVecGenBLepDEta[1][0] = GPLep0->P4.Eta() - GPB1->P4.Eta();
                     vecVecGenBLepDEta[1][1] = GPLep1->P4.Eta() - GPB0->P4.Eta();
                 }
@@ -622,8 +623,8 @@ struct EventGenMT2Info {
             vecVecGenBLepMass[0][1] = BLep1_Incorr.M();
             vecVecGenBLepMass[1][0] = BLep0_Corr.M();
             vecVecGenBLepMass[1][1] = BLep1_Corr.M();
-            vecDPhiGenBLeps[0] = dPhi(BLep0_Incorr.Phi(), BLep1_Incorr.Phi());
-            vecDPhiGenBLeps[1] = dPhi(BLep0_Corr.Phi(), BLep1_Corr.Phi());
+            vecDPhiGenBLeps[0] = ParticleUtility::dPhi(BLep0_Incorr.Phi(), BLep1_Incorr.Phi());
+            vecDPhiGenBLeps[1] = ParticleUtility::dPhi(BLep0_Corr.Phi(), BLep1_Corr.Phi());
             
             TotBLepMass = (BLep0_Corr + BLep1_Corr).M();
             vecGenMT2lb[0] = getMT2(BLep0_Incorr, BLep1_Incorr, genMET, genMETPhi);
