@@ -1,14 +1,21 @@
+#ifndef BASIC_PARTICLE_WRAPPER_H
+#define BASIC_PARTICLE_WRAPPER_H
+
 #include "TLorentzVector.h"
 #include "BasicVecComponents.h"
 
 class BasicParticleWrapper {
-public:
-	BasicParticleWrapper();
 private:
-	TLorentzVector m_VecP4;
-	BasicVecComponents m_BVC; ///< 
+	TLorentzVector m_VecP4; ///< Internal 4-vector representation
+	BasicVecComponents m_BVC; ///< Contains the vector components (Used for adding to TTrees)
+public:
+	BasicParticleWrapper() = default; ///< default constructor
+
+	friend bool operator<(const BasicParticleWrapper &a, const BasicParticleWrapper &b);
 };
 
+
+/*
 using namespace std;
 typedef struct GenJet{
     ///struct to contain relevant info for generator level jets
@@ -25,12 +32,7 @@ typedef struct GenJet{
         isBJet = false;
     }
 } GenJet;
-inline bool operator<(const GenJet &a, const GenJet &b)
-{
-    return (a.BVC.Vec_Pt < b.BVC.Vec_Pt);
-}
+*/
 
-inline bool operator>(const GenJet &a, const GenJet &b)
-{
-    return (a.BVC.Vec_Pt > b.BVC.Vec_Pt);
-}
+
+#endif // BASIC_PARTICLE_WRAPPER_H
