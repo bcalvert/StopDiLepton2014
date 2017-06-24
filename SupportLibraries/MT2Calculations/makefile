@@ -1,4 +1,4 @@
-CXX=/usr/bin/gcc
+CXX=gcc
 
 ROOTLIBS=`root-config --ldflags --libs` -Wl,--no-as-needed -lGenVector
 COMPFLAGS=`root-config --cflags` -Wall -Wextra -pedantic -Wno-vla -O2 -g -std=c++0x -DSTANDALONE_COMPILE
