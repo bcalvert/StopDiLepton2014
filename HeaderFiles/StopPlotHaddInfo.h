@@ -1,3 +1,5 @@
+#ifndef STOP_PLOT_HADD_INFO_H
+#define STOP_PLOT_HADD_INFO_H
 //Relevant things for hadding non-Legacy nTuple version
 
 #include <vector>
@@ -504,3 +506,6 @@ vector<TList *> * FileListVec(TString TTBarSystString, TString mainString, vecto
     }
     return outVec;
 }
+
+#endif // STOP_PLOT_HADD_INFO_H
+
