@@ -42,6 +42,29 @@ TString JointString(bool doAND, vector<TString> * inVecString) {
     return outStr;
 }
 
+void SetCanvases(vector<TCanvas *> * inVecCanvas, TString baseCanvName, bool dualPad, bool doLog) {
+    
+    int singCanvSize = 800;
+    
+    TString currCanvName = "";
+    
+    for (unsigned int iCanv = 0; iCanv < inVecCanvas->size(); ++iCanv) {
+        currCanvName = baseCanvName;
+        currCanvName += "_PATSY";
+        currCanvName += iCanv;
+        inVecCanvas->at(iCanv) = new TCanvas(currCanvName, currCanvName);
+        if (dualPad) {
+            BaseCanvasSetup(inVecCanvas->at(iCanv), doLog);
+        }
+        else {
+            inVecCanvas->at(iCanv)->SetLogy(doLog);
+            inVecCanvas->at(iCanv)->SetGridy(1);
+            inVecCanvas->at(iCanv)->SetLogx(doLog);
+            inVecCanvas->at(iCanv)->SetGridx(1);
+        }
+    }
+}
+
 void SetCanvases(vector<TCanvas *> * inVecCanvas, vector<TString> * inVecCanvasNames, bool dualPad, bool doLog) {
     
     int singCanvSize = 800;
@@ -115,6 +138,43 @@ int WhatTypeOfPunzi(TGraph * inPunzi) {
     return outType;
 }
 
+void FinalDrawGraph(TCanvas * inputCanvas, vector<TGraph *> * inputGraphVec, vector<TString> * inVecLegEntries, bool isEff) {
+    inputCanvas->cd(1);
+    double xposLatex, yposLatex;
+    xposLatex = 0.1;
+    yposLatex = 0.9;
+    
+    double x1, x2, y1, y2;
+    
+    x1 = 0.1;
+    x2 = 0.70;
+    y1 = 0.15;
+    y2 = 0.4;
+    
+    double x1Punzi[4] = {0.1, 0.35, 0.1, 0.35};
+    double x2Punzi[4] = {0.6, 0.85, 0.6, 0.85};
+    double y1Punzi[4] = {0.15, 0.15, 0.6, 0.6};
+    double y2Punzi[4] = {0.4, 0.4, 0.85, 0.85};
+    
+    if (!isEff) {
+        int typePunzi;
+        typePunzi = WhatTypeOfPunzi(inputGraphVec->at(0));
+        x1 = x1Punzi[typePunzi];
+        x2 = x2Punzi[typePunzi];
+        y1 = y1Punzi[typePunzi];
+        y2 = y2Punzi[typePunzi];
+    }
+    
+    TLegend * leg = new TLegend(x1, y1, x2, y2);
+    for (unsigned int iGraph = 0; iGraph < inputGraphVec->size(); ++iGraph) {
+        leg->AddEntry(inputGraphVec->at(iGraph), inVecLegEntries->at(iGraph), "p");
+    }
+    leg->Draw("same");
+    
+    //    inputCanvas->SaveAs(inputCanvas->GetName() + TString(".C"));
+    inputCanvas->SaveAs(inputCanvas->GetName() + TString(".pdf"));
+}
+
 void FinalDrawGraph(TCanvas * inputCanvas, vector<TGraph *> * inputGraphVec, vector<TString> * inVecLegEntries, TString latexStringSig, bool isEff) {
     inputCanvas->cd(1);
     double xposLatex, yposLatex;
@@ -181,9 +241,19 @@ void InitialDrawGraphsPunzi(TCanvas * inputCanvas, vector<TGraph *> * inputGraph
     TAxis * yAxis = inputGraphVec->at(0)->GetYaxis();
     
     yAxis->SetTitleOffset(1.0);
+    float currMin, currMax;
+    float absMin = inputGraphVec->at(0)->GetHistogram()->GetMinimum();
+    float absMax = inputGraphVec->at(0)->GetHistogram()->GetMaximum();
     for (int iGraph = 1; iGraph < (int) inputGraphVec->size(); ++iGraph) {
+        currMin = inputGraphVec->at(iGraph)->GetHistogram()->GetMinimum();
+        currMax = inputGraphVec->at(iGraph)->GetHistogram()->GetMaximum();
+        absMin = TMath::Min(absMin, currMin);
+        absMax = TMath::Max(absMax, currMax);
         inputGraphVec->at(iGraph)->Draw("PC same");
     }
+    yAxis->SetRangeUser(absMin, absMax);
+    inputCanvas->Update();
+    inputCanvas->Modified();
     /*
     inputCanvas->cd(2);
     
@@ -301,13 +371,14 @@ void SetIndicesROCCurves_DY(vector< vector<int> > * inVecVecInt) {
     vecIndex_DYKillers.push_back(1);
     vecIndex_DYKillers.push_back(2);
     vecIndex_DYKillers.push_back(3);
-    vecIndex_DYKillers.push_back(4);
+    //vecIndex_DYKillers.push_back(4);
     inVecVecInt->push_back(vecIndex_DYKillers);
 }
 
 TString SetFileString_DY(int whichSig) {
-    const int numSigs = 9;
-    TString strSigs[numSigs] = {"TTBar", "T2ttSuperHighMass", "T2ttHighMass", "T2ttLowMass", "T2bwHighMassx0.75", "T2bwHighMassx0.25", "T2bwLowMassx0.75", "T2bwLowMassx0.50", "T2bwLowMassx0.25"};
+    const int numSigs = 5;
+    TString strSigs[numSigs] = {"TTbar", "T2tt", "T2bwx0p25", "T2bwx0p50", "T2bwx0p75"};
+//    TString strSigs[numSigs] = {"TTBar", "T2ttSuperHighMass", "T2ttHighMass", "T2ttLowMass", "T2bwHighMassx0.75", "T2bwHighMassx0.25", "T2bwLowMassx0.75", "T2bwLowMassx0.50", "T2bwLowMassx0.25"};
     return strSigs[whichSig];
 }
 
@@ -363,7 +434,7 @@ void SetCanvasNamesPunziCurves_MT2lblb(vector<TString> * inVecString, TString ad
     inVecString->push_back(strMinMaxMass_MassDiff_ANDOR);
     inVecString->push_back(strMinDiffTopMass_MassDiff_ANDOR);
 }
-void SetIndicesROCCurves_MT2lblb(vector< vector<int> > * inVecVecInt) {
+void SetIndicesROCCurves_MT2lblb(vector< vector<int> > * inVecVecInt, bool doWCheck) {
     //group single guys together
     //0, 1, 2, 11
     
@@ -387,7 +458,12 @@ void SetIndicesROCCurves_MT2lblb(vector< vector<int> > * inVecVecInt) {
     vecIndex_SinglePlots.push_back(0);
     vecIndex_SinglePlots.push_back(1);
     vecIndex_SinglePlots.push_back(2);
-    vecIndex_SinglePlots.push_back(11);
+    if (doWCheck) {
+        vecIndex_SinglePlots.push_back(11);
+    }
+    else {
+        vecIndex_SinglePlots.push_back(3);
+    }
     inVecVecInt->push_back(vecIndex_SinglePlots);
     
     vector<int> vecIndex_MinMT2_ANDPlots(0);
@@ -426,6 +502,12 @@ void SetIndicesROCCurves_MT2lblb(vector< vector<int> > * inVecVecInt) {
 TString SetFileString_MT2lblb(int whichSig) {
     const int numSigs = 8;
     TString strSigs[numSigs] = {"T2ttSuperHighMass", "T2ttHighMass", "T2ttLowMass", "T2bwHighMassx0.75", "T2bwHighMassx0.25", "T2bwLowMassx0.75", "T2bwLowMassx0.50", "T2bwLowMassx0.25"};
+    return strSigs[whichSig];
+}
+
+TString SetFileString_MT2lblb_2(int whichSig) {
+    const int numSigs = 4;
+    TString strSigs[numSigs] = {"T2tt", "T2bw0p25", "T2bw0p50", "T2bw0p75"};
     return strSigs[whichSig];
 }
 

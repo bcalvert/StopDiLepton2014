@@ -114,11 +114,18 @@ typedef struct MuonEventPointers {
         }
         return muonPassCut;
     }
-    bool MuonPassCutStage1_MEP(int whichMu, float muonEta) {    
+    bool MuonPassCutStage1_MEP(int whichMu, float muonEta, int levelVerbosity = 0) {
         // function that says if muon passes cuts we put on it
                         
         bool muonPassCut;
         float muonEtaCut = 2.4;
+        
+        if (levelVerbosity) {
+            cout << "isGMPTMuon->at(whichMu)? " << isGMPTMuon->at(whichMu) << endl;
+            cout << "isPFMuon->at(whichMu)? " << isPFMuon->at(whichMu) << endl;
+            cout << "isGlobMuon->at(whichMu)? " << isGlobMuon->at(whichMu) << endl;
+            cout << "(fabs(muonEta) < muonEtaCut))? " << (fabs(muonEta) < muonEtaCut) << endl;
+        }
         
         if (!isGMPTMuon->at(whichMu) || !isPFMuon->at(whichMu) || !isGlobMuon->at(whichMu) || !(fabs(muonEta) < muonEtaCut)) {
             muonPassCut = false;
@@ -128,11 +135,20 @@ typedef struct MuonEventPointers {
         }
         return muonPassCut;
     }
-    bool MuonPassCutStage2_MEP(float muonD0, float muonDZ, int muonNumMatchStations, int muonNumValidPixHitsinTrack, int muonNumLayers) {
+    bool MuonPassCutStage2_MEP(float muonD0, float muonDZ, int muonNumMatchStations, int muonNumValidPixHitsinTrack, int muonNumLayers, int levelVerbosity = 0) {
         // function that says if muon passes cuts we put on it
         float muonD0Cut = 0.2; float muonDZCut = 0.5;
         int muonNumMatchStationsCut = 1, muonNumValidPixHitsinTrackCut = 0, muonNumLayersCut = 5;
         bool muonPassCut;
+        
+        if (levelVerbosity) {
+            cout << "(muonD0 < muonD0Cut)? " << (muonD0 < muonD0Cut) << endl;
+            cout << "(muonDZ < muonDZCut)? " << (muonDZ < muonDZCut) << endl;
+            cout << "(muonNumMatchStations > muonNumMatchStationsCut) " << (muonNumMatchStations > muonNumMatchStationsCut) << endl;
+            cout << "(muonNumLayers > muonNumLayersCut)? " << (muonNumLayers > muonNumLayersCut) << endl;
+            cout << "(muonNumValidPixHitsinTrack > muonNumValidPixHitsinTrackCut)? " << (muonNumValidPixHitsinTrack > muonNumValidPixHitsinTrackCut) << endl;
+        }
+        
         if (!(muonD0 < muonD0Cut) || !(muonDZ < muonDZCut) || !(muonNumMatchStations > muonNumMatchStationsCut) || !(muonNumLayers > muonNumLayersCut) || !(muonNumValidPixHitsinTrack > muonNumValidPixHitsinTrackCut)) {
             muonPassCut = false;
         }
@@ -194,21 +210,33 @@ typedef struct MuonEventPointers {
             cout << "isGlobMuon->at(i) " << isGlobMuon->at(whichMu) << endl;
         }
         if (keepLoose) {
+            if (levelVerbosity > 0) {
+                cout << "About to check if Muon at " << whichMu << " passes loose cuts " << endl;
+            }
             currMuonPassCutLoose = MuonPassCutStage0_MEP(currMuonRelPFIso, 0, levelVerbosity);
-            currMuonPassCutLoose &= MuonPassCutStage1_MEP(whichMu, currMuonEta);
-            currMuonPassCutLoose &= MuonPassCutStage2_MEP(currMuonD0, currMuonDZ, currMuonNumMatchStations, currMuonNumValidPixHitsinTrack, currMuonNumLayers);
+            if (levelVerbosity > 0) {
+                cout << "Muon passed loose cuts stage 0? " << currMuonPassCutLoose << endl;
+            }
+            currMuonPassCutLoose &= MuonPassCutStage1_MEP(whichMu, currMuonEta, levelVerbosity);
+            if (levelVerbosity > 0) {
+                cout << "Muon also passed loose cuts stage 1? " << currMuonPassCutLoose << endl;
+            }
+            currMuonPassCutLoose &= MuonPassCutStage2_MEP(currMuonD0, currMuonDZ, currMuonNumMatchStations, currMuonNumValidPixHitsinTrack, currMuonNumLayers, levelVerbosity);
+            if (levelVerbosity > 0) {
+                cout << "Muon also passed loose cuts stage 1 and 2? " << currMuonPassCutLoose << endl;
+            }
         }
         currMuonPassCutTight = MuonPassCutStage0_MEP(currMuonRelPFIso, 1, levelVerbosity);
         if (levelVerbosity > 0) {
             cout << "continuing for muon " << whichMu << endl;
             cout << "pass stage 0? " << currMuonPassCutTight << endl;
         }
-        currMuonPassCutTight &= MuonPassCutStage1_MEP(whichMu, currMuonEta);
+        currMuonPassCutTight &= MuonPassCutStage1_MEP(whichMu, currMuonEta, levelVerbosity);
         if (levelVerbosity > 0) {
             cout << "continuing for muon " << whichMu << endl;
             cout << "pass stage 1? " << currMuonPassCutTight << endl;
         }
-        currMuonPassCutTight &= MuonPassCutStage2_MEP(currMuonD0, currMuonDZ, currMuonNumMatchStations, currMuonNumValidPixHitsinTrack, currMuonNumLayers);
+        currMuonPassCutTight &= MuonPassCutStage2_MEP(currMuonD0, currMuonDZ, currMuonNumMatchStations, currMuonNumValidPixHitsinTrack, currMuonNumLayers, levelVerbosity);
         if (levelVerbosity > 0) {
             cout << "continuing for muon " << whichMu << endl;
             cout << "pass stage 1 & 2? " << currMuonPassCutTight << endl;
@@ -275,6 +303,9 @@ typedef struct ElectronEventPointers {
     std::vector<int> * ElecCharge;
     //ambiguity in which Electron Pt...rolling with PFElecPt...never mind ambiguity resolved    
     std::vector<bool> * isPFElectron, * passConvVeto;
+    
+    std::vector<float> * ElecTrackIso, * ElecECALIso, * ElecHCALIso;
+    
     unsigned int numElectrons;
     
     void InitializeVecs() {
@@ -303,6 +334,10 @@ typedef struct ElectronEventPointers {
         passConvVeto = new vector<bool>;
         ElecisEB = new vector<bool>; 
         ElecisEE = new vector<bool>;
+        
+        ElecTrackIso = new vector<float>;
+        ElecECALIso = new vector<float>;
+        ElecHCALIso = new vector<float>;
     }
     void SetElecP4(int whichEl, TLorentzVector * inP4) {
         inP4->SetPxPyPzE(ElecPx->at(whichEl), ElecPy->at(whichEl), ElecPz->at(whichEl), ElecEn->at(whichEl));
@@ -347,7 +382,7 @@ typedef struct ElectronEventPointers {
         }        
         return indexToUse;
     }
-    void SetElec(int whichEl, Lepton * inEl, float eventRhoIso, ElecCutInfo * inECITight, bool keepLoose = false, ElecCutInfo * inECILoose = 0, int levelVerbosity = 0, int whichSystCase = 0) {
+  void SetElec(int whichEl, Lepton * inEl, float eventRhoIso, ElecCutInfo * inECITight, bool keepLoose = false, ElecCutInfo * inECILoose = 0, int levelVerbosity = 0, int whichSystCase = 0) {
         TLorentzVector patsyVec;        
         bool currElecPassCutTight, currElecPassCutLoose = false;
         float currElecPt;
@@ -356,6 +391,9 @@ typedef struct ElectronEventPointers {
         float currElecIP, currElecDZ;
         float currElecDeltaPhiIn, currElecDeltaEtaIn, currElecSigIetaIeta, currElecHtoERatio;        
         float currElecSCEta;
+        
+        float currElecECALIso, currElecHCALIso, currElecTrackIso;
+        float currElecRelECALIso, currElecRelHCALIso, currElecRelTrackIso;
         int currElecNumMissHits;
         
         if (whichEl >= (int) numElectrons) {
@@ -402,7 +440,21 @@ typedef struct ElectronEventPointers {
         currElecDeltaEtaIn = ElecDeltaEtaIn->at(whichEl);
         currElecSigIetaIeta = ElecSigIetaIeta->at(whichEl); 
         currElecHtoERatio = ElecHtoERatio->at(whichEl);
-        currElecNumMissHits = ElecNumMissHits->at(whichEl); 
+        currElecNumMissHits = ElecNumMissHits->at(whichEl);
+        
+        currElecECALIso = ElecECALIso->at(whichEl);
+        float currElecECALIso_Max = TMath::Max(currElecECALIso - 1.0, 0.0);
+        float currElecECALIsoToUse = currElecECALIso;
+        if (fabs(currElecSCEta) < 1.479) {
+            currElecECALIsoToUse = currElecECALIso_Max;
+        }
+        currElecRelECALIso = currElecECALIsoToUse / currElecPt;
+        
+        currElecHCALIso = ElecHCALIso->at(whichEl);
+        currElecRelHCALIso = currElecHCALIso / currElecPt;
+
+        currElecTrackIso = ElecTrackIso->at(whichEl);
+        currElecRelTrackIso = currElecTrackIso / currElecPt;
         
         if (levelVerbosity > 0) {
             cout << "continuing for electron " << whichEl << endl;
@@ -416,22 +468,65 @@ typedef struct ElectronEventPointers {
             cout << "currElecSigIetaIeta " << currElecSigIetaIeta << endl;
             cout << "currElecHtoERatio " << currElecHtoERatio << endl;
             cout << "currElecNumMissHits " << currElecNumMissHits << endl;
+            
+            cout << "Loose ID Variables:" << endl;
+            cout << "currElecECALIso " << currElecECALIso << endl;
+            cout << "currElecECALIso_Max " << currElecECALIso_Max << endl;
+            cout << "currElecECALIsoToUse " << currElecECALIsoToUse << endl;
+            cout << "currElecHCALIso " << currElecHCALIso << endl;
+            cout << "currElecTrackIso " << currElecTrackIso << endl;
+            cout << "currElecRelECALIso " << currElecRelECALIso << endl;
+            cout << "currElecRelHCALIso " << currElecRelHCALIso << endl;
+            cout << "currElecRelTrackIso " << currElecRelTrackIso << endl;
         }
         
         if (keepLoose) {
-            currElecPassCutLoose = inECILoose->PassStage1(indexToUse, currElecDeltaEtaIn, currElecDeltaPhiIn, currElecSigIetaIeta, currElecHtoERatio);
-            currElecPassCutLoose &= inECILoose->PassStage2(indexToUse, currElecRelPFElecIso, currElecIP, currElecDZ, currElecSCEOverP, currElecECalE);
+            if (levelVerbosity > 0) {
+                cout << "about to check if the electron at " << whichEl << " passes loose cuts " << endl;
+            }
+            currElecPassCutLoose = inECILoose->PassStage1(indexToUse, currElecDeltaEtaIn, currElecDeltaPhiIn, currElecSigIetaIeta, currElecHtoERatio, levelVerbosity);
+            if (levelVerbosity > 0) {
+                cout << "For Loose ID, Electron passed tight cuts stage 1? " << currElecPassCutLoose << endl;
+            }
+            currElecPassCutLoose &= inECILoose->PassStage2(indexToUse, currElecRelPFElecIso, currElecIP, currElecDZ, currElecSCEOverP, currElecECalE, levelVerbosity);
+            if (levelVerbosity > 0) {
+                cout << "For Loose ID, Electron also passed tight cuts stage 1 and 2? " << currElecPassCutLoose << endl;
+                cout << "now about to check Trigger cuts for Loose ID" << endl;
+            }
+            currElecPassCutLoose &= inECILoose->PassLooseCutTrigger_Stage1(indexToUse, currElecDeltaEtaIn, currElecDeltaPhiIn, currElecSigIetaIeta, currElecHtoERatio, levelVerbosity);
+            if (levelVerbosity > 0) {
+                cout << "For Loose ID, Electron also passed loose ID trigger cuts stage 1? " << currElecPassCutLoose << endl;
+            }
+            currElecPassCutLoose &= inECILoose->PassLooseCutTrigger_Stage2(indexToUse, currElecRelECALIso, currElecRelHCALIso, currElecRelTrackIso, levelVerbosity);
+            if (levelVerbosity > 0) {
+                cout << "For Loose ID, Electron also passed loose ID trigger cuts stage 1 & 2? " << currElecPassCutLoose << endl;
+            }
         }
-        currElecPassCutTight = inECITight->PassStage1(indexToUse, currElecDeltaEtaIn, currElecDeltaPhiIn, currElecSigIetaIeta, currElecHtoERatio);
+        currElecPassCutTight = inECITight->PassStage1(indexToUse, currElecDeltaEtaIn, currElecDeltaPhiIn, currElecSigIetaIeta, currElecHtoERatio, levelVerbosity);
         if (levelVerbosity > 0) {
             cout << "continuing for electron " << whichEl << endl;
             cout << "pass stage 1? " << currElecPassCutTight << endl;
         }
-        currElecPassCutTight &= inECITight->PassStage2(indexToUse, currElecRelPFElecIso, currElecIP, currElecDZ, currElecSCEOverP, currElecECalE);
+        currElecPassCutTight &= inECITight->PassStage2(indexToUse, currElecRelPFElecIso, currElecIP, currElecDZ, currElecSCEOverP, currElecECalE, levelVerbosity);
         if (levelVerbosity > 0) {
             cout << "continuing for electron " << whichEl << endl;
             cout << "pass stage 1 & 2? " << currElecPassCutTight << endl;
         }
+        
+        if (keepLoose) {
+            if (levelVerbosity > 0) {
+                cout << "For Tight ID, about to run Trigger ID cuts" << endl;
+            }
+            currElecPassCutTight &= inECITight->PassLooseCutTrigger_Stage1(indexToUse, currElecDeltaEtaIn, currElecDeltaPhiIn, currElecSigIetaIeta, currElecHtoERatio, levelVerbosity);
+            if (levelVerbosity > 0) {
+                cout << "For Tight ID, Electron also passed loose ID trigger cuts stage 1? " << currElecPassCutTight << endl;
+            }
+            currElecPassCutTight &= inECITight->PassLooseCutTrigger_Stage2(indexToUse, currElecRelECALIso, currElecRelHCALIso, currElecRelTrackIso, levelVerbosity);
+            if (levelVerbosity > 0) {
+                cout << "For Tight ID, Electron also passed loose ID trigger cuts stage 1 & 2? " << currElecPassCutTight << endl;
+            }
+        }
+        
         if (currElecPassCutTight){
             inEl->P4 = patsyVec;
             inEl->PDGID = ElecCharge->at(whichEl) > 0 ? -11 : 11;
@@ -490,7 +585,7 @@ typedef struct ElectronEventPointers {
 typedef struct GenParticlePointers_St3 {
     // contains variables and functions related to the pointers relevant for our Status 3 Gen Particles
     
-    vector<float> * genPartSt3En, * genPartSt3Pt, * genPartSt3Eta, * genPartSt3Phi, * genPartSt3_firstMotherPt,;
+    vector<float> * genPartSt3En, * genPartSt3Pt, * genPartSt3Eta, * genPartSt3Phi, * genPartSt3_firstMotherPt;
     vector<int> * genPartSt3_i, * genPartSt3_firstMom, * genPartSt3_firstMotherPDGid,  * genPartSt3_pdgId;
     unsigned int numGenPartSt3;
     void InitializeVecs() {
@@ -556,6 +651,9 @@ typedef struct GenParticlePointers_St3 {
             inGPISt3->GP_Index = genPartSt3_i->at(indexGenParticle);
             inGPISt3->GP_FirstMom = genPartSt3_firstMom->at(indexGenParticle);
         }
+    }
+    void SetOutBranch(TTree * outTree, TString baseName) {
+        outTree->Branch(baseName + TString("_numGenSt3Parts"), &numGenPartSt3);
     }
     void SetBranchAddresses(TTree * inTree, TString baseName) {
         inTree->SetBranchAddress( baseName + TString("St3_pdgId"),       &genPartSt3_pdgId );
@@ -650,6 +748,10 @@ typedef struct GenParticlePointers_St1 {
 //            inGPISt1->ExtractNonKinParams();
         }
     }
+    void SetOutBranch(TTree * outTree, TString baseName) {
+        outTree->Branch(baseName + TString("_numGenSt1Parts"), &numGenPartSt1);
+    }
+    
     void SetBranchAddresses(TTree * inTree, TString baseName) {
         
         inTree->SetBranchAddress( baseName + TString("_PID"),     &genPartSt1_pdgId );
@@ -788,6 +890,11 @@ typedef struct GenQuarkEventPointers {
         }
         GPP_St1ToUse->SetGenParticleInfo_Full(indexGenParticle, inGPISt1);
     }
+    /*
+    void SetOutBranch(TTree * outTree) {
+        TString nameTop = "TGen"
+    }
+    */
 } GenQuarkEventPointers;
 
 typedef struct GenLeptonEventPointers {

@@ -79,6 +79,51 @@ inline void MetPhiCorrect_noType0(bool doData, float &MetX, float &MetY, int nVt
     MetY = MetY - CorrType1PFMETY_ReReco[c0] - nVtx * CorrType1PFMETY_ReReco[c1];
 }
 
+/*
+inline void CalcUnclusteredMET(vector<Lepton> * inputLepVec, vector<PFJet> * inputJetVec, float &UnclEnPt, float &UnclEnPtPhi, float origMET, float origMETPhi, bool doVerbosity = 0) {
+    TVector3 vecUnclEn;
+    vecUnclEn.SetPtEtaPhi(origMET, 0., origMETPhi);
+    vecUnclEn *= -1;
+    
+    TVector3 inputLepTotThreeVec; inputLepTotThreeVec.SetXYZ(0., 0., 0.);
+    TVector3 inputLepCurrThreeVec;
+    TVector3 inputJetTotThreeVec; inputJetTotThreeVec.SetXYZ(0., 0., 0.);
+    TVector3 inputJetCurrThreeVec;
+    
+    for (unsigned int iLep = 0; iLep < inputLepVec->size(); ++iLep) {
+        inputLepCurrThreeVec.SetXYZ(inputLepVec->at(iLep).BVC.Vec_Px, inputLepVec->at(iLep).BVC.Vec_Py, inputLepVec->at(iLep).BVC.Vec_Pz);
+        inputLepTotThreeVec = inputLepTotThreeVec + inputLepCurrThreeVec;
+    }
+    vecUnclEn = vecUnclEn + inputLepTotThreeVec;
+    
+    for (unsigned int iJet = 0; iJet < inputJetVec->size(); ++iJet) {
+        inputJetCurrThreeVec.SetXYZ(inputJetVec->at(iJet).BVC.Vec_Px, inputJetVec->at(iJet).BVC.Vec_Py, inputJetVec->at(iJet).BVC.Vec_Pz);
+        if (doVerbosity > 0) {
+            cout << "inputJetCurrThreeVec Pt " << inputJetCurrThreeVec.Pt() << endl;
+            cout << "inputJetCurrThreeVec Eta " << inputJetCurrThreeVec.Eta() << endl;
+            cout << "inputJetCurrThreeVec Phi " << inputJetCurrThreeVec.Phi() << endl;
+        }
+        inputJetTotThreeVec = inputJetTotThreeVec + inputJetCurrThreeVec;
+    }
+    vecUnclEn = vecUnclEn + inputJetTotThreeVec;
+    
+    UnclEnPt = vecUnclEn.Pt();
+    UnclEnPtPhi = vecUnclEn.Phi();
+    
+    cout << "origMET " << origMET << endl;
+    cout << "origMETPhi " << origMETPhi << endl;
+    cout << "UnclEnPt " << UnclEnPt << endl;
+    cout << "UnclEnPtPhi " << UnclEnPtPhi << endl;
+    
+    if (doVerbosity) {
+        cout << "origMET " << origMET << endl;
+        cout << "origMETPhi " << origMETPhi << endl;
+        cout << "UnclEnPt " << UnclEnPt << endl;
+        cout << "UnclEnPtPhi " << UnclEnPtPhi << endl;
+    }
+}
+*/
+
 inline void METSystShift(vector<TLorentzVector> * inputObjVec, vector<TLorentzVector> * shiftObjVec, float &newMET, float &newMETPhi, float origMET, float origMETPhi) {
     TVector3 vecMET;
     TVector3 inputObjTotThreeVec; inputObjTotThreeVec.SetPtEtaPhi(0., 0., 0.);
@@ -98,8 +143,8 @@ inline void METSystShift(vector<TLorentzVector> * inputObjVec, vector<TLorentzVe
         inputObjTotThreeVec = inputObjTotThreeVec + inputObjCurrThreeVec;
         shiftObjTotThreeVec = shiftObjTotThreeVec + shiftObjCurrThreeVec;
     }
-    vecMET = vecMET - inputObjTotThreeVec;
-    vecMET = vecMET + shiftObjTotThreeVec;
+    vecMET = vecMET + inputObjTotThreeVec;
+    vecMET = vecMET - shiftObjTotThreeVec;
     newMET = vecMET.Pt();
     newMETPhi = vecMET.Phi();
     return;
@@ -124,8 +169,8 @@ inline void METSystShift(vector<Lepton> * inputLepVec, vector<Lepton> * shiftLep
         inputLepTotThreeVec = inputLepTotThreeVec + inputLepCurrThreeVec;
         shiftLepTotThreeVec = shiftLepTotThreeVec + shiftLepCurrThreeVec;
     }
-    vecMET = vecMET - inputLepTotThreeVec;
-    vecMET = vecMET + shiftLepTotThreeVec;
+    vecMET = vecMET + inputLepTotThreeVec;
+    vecMET = vecMET - shiftLepTotThreeVec;
     newMET = vecMET.Pt();
     newMETPhi = vecMET.Phi();
     return;
@@ -158,8 +203,8 @@ inline void METSystShift(vector<PFJet> * inputJetVec, vector<PFJet> * shiftJetVe
         inputJetTotThreeVec = inputJetTotThreeVec + inputJetCurrThreeVec;
         shiftJetTotThreeVec = shiftJetTotThreeVec + shiftJetCurrThreeVec;
     }
-    vecMET = vecMET - inputJetTotThreeVec;
-    vecMET = vecMET + shiftJetTotThreeVec;
+    vecMET = vecMET + inputJetTotThreeVec;
+    vecMET = vecMET - shiftJetTotThreeVec;
     
     newMET = vecMET.Pt();
     newMETPhi = vecMET.Phi();
@@ -226,6 +271,7 @@ inline int CheckMT2lblbPairing(int whichPair, vector<int> * inputJetPartFlavor, 
     return outVal;
 }
 
+/*
 inline float MT2lbCalculator(vector<TLorentzVector> * vecLeps, vector<TLorentzVector> * vecJets, float MET, float METPhi, vector<TLorentzVector> &vecBLeps, int &corrPairVal, vector<int> * inputJetPartFlavor = 0, vector<int> * inputLepPDGIDs = 0) {
     float MT2lbPair1;
     float MT2lbPair2;
@@ -235,8 +281,8 @@ inline float MT2lbCalculator(vector<TLorentzVector> * vecLeps, vector<TLorentzVe
         cout << "vecLep size " << vecLeps->size() << endl;
         cout << "vecJet size " << vecJets->size() << endl;
     }
-    MT2lbPair1 = getMT2(vecLeps->at(0) + vecJets->at(0), vecLeps->at(1) + vecJets->at(1), MET, METPhi);
-    MT2lbPair2 = getMT2(vecLeps->at(0) + vecJets->at(1), vecLeps->at(1) + vecJets->at(0), MET, METPhi);
+    MT2lbPair1 = getMT2(vecLeps->at(0) + vecJets->at(0), vecLeps->at(1) + vecJets->at(1), MET, METPhi, false);
+    MT2lbPair2 = getMT2(vecLeps->at(0) + vecJets->at(1), vecLeps->at(1) + vecJets->at(0), MET, METPhi, false);
     if (MT2lbPair1 > MT2lbPair2) {
         vecBLeadLep = vecLeps->at(0) + vecJets->at(1);
         vecBSubLep = vecLeps->at(1) + vecJets->at(0);
@@ -261,3 +307,4 @@ inline float MT2lbCalculator(vector<TLorentzVector> * vecLeps, vector<TLorentzVe
     vecBLeps[1] = vecBSubLep;
     return TMath::Min(MT2lbPair1, MT2lbPair2);
 }
+ */

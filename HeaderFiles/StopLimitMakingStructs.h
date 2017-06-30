@@ -1,11 +1,27 @@
 #include "TH2F.h"
 #include "TLegend.h"
+#include "TROOT.h"
 //#include "TH2C.h"
 #include <vector>
 #include "LimitScriptHeaderFiles/LimitScripts_ParametersStruct.h"
 #include "LimitScriptHeaderFiles/LimitScripts_SUSYStruct.h"
+#include "TwoDeeGaussian.h"
+#include "../LimitSetting/ContourMaking/LocalAverage.C"
+
+#include "Math/QuantFuncMathCore.h"
+/*
+#include "RooStats/ProfileLikelihoodCalculator.h"
+#include "RooStats/LikelihoodInterval.h"
+#include "RooStats/LikelihoodIntervalPlot.h"
+#include "RooStats/HypoTestResult.h"
+#include "RooStats/RooStatsUtils.h"
+*/
 
 //Structures used when showing/making exclusion limit plots -- need to work on documentation
+
+inline Double_t PValueToSignificance(Double_t pvalue){
+    return ROOT::Math::normal_quantile_c(pvalue,1);
+}
 
 struct Point {
     float xCoord, yCoord;
@@ -22,7 +38,10 @@ struct LimitPlotShower {
     //h_SigStrengthLimitHist: TH2F containing the calculated limit on signal strength
     //h_SigExclHist: Boolean version of h_SigStrengthLimitHist where I require the value to be < 1
     //h_XSecLimHist: TH2F containing the calculated limit on the cross-section;
+    //h_SignifHist: TH2F containing the calculated significance of the excesses;
+    //h_PValueHist: TH2F containing the calculated p-value of the null-hypothesis;
     TH2F * h_SigStrengthLimitHist, * h_SigExclHist, * h_XSecLimHist;
+    TH2F * h_SignifHist, * h_PValueHist;
     vector<TH2F *> vecMT2CutHists;
     
     TGraph * limContour;
@@ -30,6 +49,151 @@ struct LimitPlotShower {
     TString nameLPS; //base name added into histograms
     
     int numMT2Hists;
+    float GetXSecLimMax() {
+        return h_XSecLimHist->GetMaximum();
+    }
+    TCanvas * DrawHist(int whichHist, bool doZeroNonExcl, int drawOption, TString addName = "") {
+        TH2F * histToDraw = NULL;
+        switch (whichHist) {
+            case 0:
+                histToDraw = h_SigStrengthLimitHist;
+                break;
+            case 1:
+                histToDraw = h_XSecLimHist;
+                break;
+            case 2:
+                histToDraw = h_XSecLimHist;
+                break;
+            default:
+                break;
+        }
+        
+        cout << "doZeroNonExcl " << doZeroNonExcl << endl;
+        if (doZeroNonExcl && whichHist == 0) {
+            cout << "doZeroNonExcl 2 " << doZeroNonExcl << endl;
+            ZeroNonExclPoints(histToDraw, 1, false);
+        }
+        
+        TString canvName = histToDraw->GetName();
+        canvName.Replace(canvName.Index("h_"), 2, "c_");
+        TCanvas * outCanv = new TCanvas(canvName, canvName);
+        if (drawOption == 0) {
+            histToDraw->Draw("colz");
+        }
+        else {
+            outCanv->cd()->SetPhi(250);
+            histToDraw->Draw("lego");
+        }
+        return outCanv;
+    }
+    void SetRangeUser(bool isStandard, int whichHist, float zLB = 0.0, float zUB = 1.5) {
+        TH2F * histToSet = NULL;
+        switch (whichHist) {
+            case 0:
+                histToSet = h_SigStrengthLimitHist;
+                break;
+            case 1:
+                histToSet = h_SigExclHist;
+                break;
+            case 2:
+                histToSet = h_XSecLimHist;
+                break;
+            default:
+                break;
+        }
+        if (isStandard) histToSet->GetYaxis()->SetRangeUser(0, 400);
+        histToSet->GetZaxis()->SetRangeUser(zLB, zUB);
+    }
+    void ReverseConstDeltaMHists() {
+        TH2F * currReverseDeltaMHist;
+        currReverseDeltaMHist = OutputHistReverseConstDeltM(h_SigStrengthLimitHist, 0);
+        h_SigStrengthLimitHist = currReverseDeltaMHist;
+        currReverseDeltaMHist = OutputHistReverseConstDeltM(h_XSecLimHist, 0);
+        h_XSecLimHist = currReverseDeltaMHist;
+        
+        for (unsigned int iMT2 = 0; iMT2 < vecMT2CutHists.size(); ++iMT2) {
+            currReverseDeltaMHist = OutputHistReverseConstDeltM(vecMT2CutHists[iMT2], 0);
+            vecMT2CutHists[iMT2] = currReverseDeltaMHist;
+        }
+    }
+    
+    void MakeConstDeltaMHists_Vers2(int whichChange, TString addName = "") {
+        /*
+        TAxis * yAxis = h_SigStrengthLimitHist->GetYaxis();
+        TAxis * xAxis = h_SigStrengthLimitHist->GetXaxis();
+        typedef pair<int, int> axisRange;
+        int minLSP = (int) (yAxis->GetBinCenter(1) + 0.5);
+        int maxLSP = (int) (yAxis->GetBinCenter(h_SigStrengthLimitHist->GetNbinsY()) + 0.5);
+        int minStop = (int) (xAxis->GetBinCenter(1) + 0.5);
+         int maxStop = (int) (xAxis->GetBinCenter(h_SigStrengthLimitHist->GetNbinsX()) + 0.5);
+         cout << "minLSP " << minLSP << endl;
+         cout << "maxLSP " << maxLSP << endl;
+         cout << "minStop " << minStop << endl;
+         cout << "maxStop " << maxStop << endl;
+         
+         axisRange axLSP(minLSP, maxLSP);
+         axisRange axStop(minStop, maxStop);
+         */
+        axisRange axLSP(0, 400);
+        axisRange axStop(100, 800);
+        TH2F * currConstDeltaMHist;
+        if (h_SigStrengthLimitHist) {
+            currConstDeltaMHist = OutputHistDeltaMChanges(h_SigStrengthLimitHist, 0, whichChange, &axLSP, &axStop, TString("_Test") + addName);
+            h_SigStrengthLimitHist = currConstDeltaMHist;
+        }
+        if (h_XSecLimHist) {
+            currConstDeltaMHist = OutputHistDeltaMChanges(h_XSecLimHist, 0, whichChange, &axLSP, &axStop, TString("_Test") + addName);
+            h_XSecLimHist = currConstDeltaMHist;
+        }
+        
+        for (unsigned int iMT2 = 0; iMT2 < vecMT2CutHists.size(); ++iMT2) {
+            if (vecMT2CutHists[iMT2]) {
+                currConstDeltaMHist = OutputHistDeltaMChanges(vecMT2CutHists[iMT2], 0, whichChange, &axLSP, &axStop, TString("_Test") + addName);
+                vecMT2CutHists[iMT2] = currConstDeltaMHist;
+            }
+        }
+        
+        if (h_SignifHist) {
+            currConstDeltaMHist = OutputHistDeltaMChanges(h_SignifHist, 0, whichChange, &axLSP, &axStop, TString("_Test") + addName);
+            h_SignifHist = currConstDeltaMHist;
+        }
+        
+        if (h_PValueHist) {
+            currConstDeltaMHist = OutputHistDeltaMChanges(h_PValueHist, 0, whichChange, &axLSP, &axStop, TString("_Test") + addName);
+            h_PValueHist = currConstDeltaMHist;
+        }
+    }
+    void MakeConstDeltaMHists(TString addName) {
+        TH2F * currConstDeltaMHist;
+        
+        if (h_SigStrengthLimitHist) {
+            currConstDeltaMHist = OutputHistConstDeltM(h_SigStrengthLimitHist, addName, 0);
+            h_SigStrengthLimitHist = currConstDeltaMHist;
+        }
+        
+        if (h_XSecLimHist) {
+            currConstDeltaMHist = OutputHistConstDeltM(h_XSecLimHist, addName, 0);
+            h_XSecLimHist = currConstDeltaMHist;
+        }
+        
+        for (unsigned int iMT2 = 0; iMT2 < vecMT2CutHists.size(); ++iMT2) {
+            if (vecMT2CutHists[iMT2]) {
+                currConstDeltaMHist = OutputHistConstDeltM(vecMT2CutHists[iMT2], addName, 0);
+                vecMT2CutHists[iMT2] = currConstDeltaMHist;
+            }
+        }
+        
+        if (h_SignifHist) {
+            currConstDeltaMHist = OutputHistConstDeltM(h_SignifHist, addName, 0);
+            h_SignifHist = currConstDeltaMHist;
+        }
+        
+        if (h_PValueHist) {
+            currConstDeltaMHist = OutputHistConstDeltM(h_PValueHist, addName, 0);
+            h_PValueHist = currConstDeltaMHist;
+        }
+    }
+    
     void DrawLimitAlongDeltaM(bool doLog) {
         TString baseCanvName = TString("c_LimConstDeltaM_") + nameLPS + TString("_DeltM");
         vector<TCanvas *> vecCanv;
@@ -77,7 +241,7 @@ struct LimitPlotShower {
         }
         
         TCanvas* c = new TCanvas(TString("c_") + tempName,"Contour List",0,0,600,600);
-
+        
         tempHist->SetContour(3);
         tempHist->SetContourLevel(0, 0); //value for your first level
         tempHist->SetContourLevel(1, 1.); //non-existing high level
@@ -106,7 +270,7 @@ struct LimitPlotShower {
         
         delete tempHist;
     }
-    
+
     void SetSigExclHists(bool doVerb = 0) {
         h_SigExclHist = (TH2F *) h_SigStrengthLimitHist->Clone(h_SigStrengthLimitHist->GetName() + TString("_Excl"));
         SetHistExclusion_2DSUSY(h_SigExclHist, doVerb);
@@ -135,6 +299,106 @@ struct LimitPlotShower {
             }
         }
     }
+    TString GetHistName(int whichHist) {
+        TString baseHistName = "h_SigStrengthLimitHist";
+        baseHistName += nameLPS;
+        if (whichHist == 1) {
+            return baseHistName + TString("_Excl");
+        }
+        else if (whichHist == 2) {
+            return baseHistName + TString("_XSecLimit");
+        }
+        else if (whichHist == 3) {
+            baseHistName = "h_Signif";
+            baseHistName += nameLPS;
+            return baseHistName;
+        }
+        else if (whichHist == 4) {
+            baseHistName = "h_PValue";
+            baseHistName += nameLPS;
+            return baseHistName;
+        }
+        return baseHistName;
+    }
+    
+    void LoadSignifHists(TFile * inputFile, TString addName = "", bool doVerb = false) {
+        TString nameSignifHist = GetHistName(3) + addName;
+        h_SignifHist = (TH2F *) inputFile->Get(nameSignifHist);
+        if (doVerb) {
+            cout << "tried to load " << nameSignifHist << "? " << (h_SignifHist != NULL) << endl;
+        }
+        TString namePValueHist = GetHistName(4) + addName;
+        h_PValueHist = (TH2F *) inputFile->Get(namePValueHist);
+        if (doVerb) {
+            cout << "tried to load " << namePValueHist << "? " << (h_PValueHist != NULL) << endl;
+        }
+    }
+    
+    void LoadHists(TFile * inputFile, bool getNoTruncate, TString addName = "", bool doVerb = false) {
+        TString nameSigStrengthLimitHist = GetHistName(0) + addName;
+        if (getNoTruncate) nameSigStrengthLimitHist += "_NoTruncation";
+        h_SigStrengthLimitHist = (TH2F *) inputFile->Get(nameSigStrengthLimitHist);
+        if (doVerb) {
+            cout << "tried to load " << nameSigStrengthLimitHist << "? " << (h_SigStrengthLimitHist != NULL) << endl;
+        }
+        TString nameSigExclHist = GetHistName(1) + addName;
+//        if (getNoTruncate) nameSigExclHist += "_NoTruncation";
+        h_SigExclHist = (TH2F *) inputFile->Get(nameSigExclHist);
+        if (doVerb) {
+            cout << "tried to load " << nameSigExclHist << "? " << (h_SigExclHist != NULL) << endl;
+        }
+        TString nameXSecLimHist = GetHistName(2) + addName;
+//        if (getNoTruncate) nameXSecLimHist += "_NoTruncation";
+        h_XSecLimHist = (TH2F *) inputFile->Get(nameXSecLimHist);
+        if (doVerb) {
+            cout << "tried to load " << nameXSecLimHist << "? " << (h_XSecLimHist != NULL) << endl;
+        }
+    }
+    
+    void SetHistNamesForSaving(TString addName = "") {
+        if (h_SigStrengthLimitHist) h_SigStrengthLimitHist->SetName(GetHistName(0) + addName);
+        if (h_SigExclHist) h_SigExclHist->SetName(GetHistName(1) + addName);
+        if (h_XSecLimHist) h_XSecLimHist->SetName(GetHistName(2) + addName);
+        if (h_SignifHist) h_SignifHist->SetName(GetHistName(3) + addName);
+        if (h_PValueHist) h_PValueHist->SetName(GetHistName(4) + addName);
+    }
+    
+    void SetSigExclHists(bool doVerb = 0) {
+        TString nameSigExcl = GetHistName(1);
+//        h_SigExclHist = (TH2F *) h_SigStrengthLimitHist->Clone(h_SigStrengthLimitHist->GetName() + TString("_Excl"));
+        h_SigExclHist = (TH2F *) h_SigStrengthLimitHist->Clone(nameSigExcl);
+        SetHistExclusion_2DSUSY(h_SigExclHist, doVerb);
+    }
+    void SetSignifHists(TString inputFileSignif, TString inputFilePValue, int binSize, bool doVerb = 0) {
+        TString addHistNameSigStrength[3] = {"", "OneSigUp", "OneSigDown"};
+        if (doVerb) {
+            cout << "nameLPS " << nameLPS << endl;
+        }
+        
+        TString baseHistName = GetHistName(4);
+        SignifHist(h_PValueHist, baseHistName, inputFilePValue, NULL, binSize, doVerb);
+        h_PValueHist->GetYaxis()->SetRangeUser(0 - (binSize * 0.5), 400);
+        baseHistName = GetHistName(3);
+        SignifHist(h_SignifHist, baseHistName, inputFileSignif, h_PValueHist, binSize, doVerb);
+        h_SignifHist->GetYaxis()->SetRangeUser(0 - (binSize * 0.5), 400);
+    }
+    void SetSignifFromPValue() {
+        int nBinsX = h_PValueHist->GetNbinsX();
+        int nBinsY = h_PValueHist->GetNbinsY();
+        
+        float currPValue, currSignif;
+        float currPValueUp;
+        for (int iBinX = 1; iBinX <= nBinsX; ++iBinX) {
+            for (int iBinY = 1; iBinY <= nBinsY; ++iBinY) {
+                if (iBinX < iBinY) continue;
+                currPValue = h_PValueHist->GetBinContent(iBinX, iBinY);
+                currPValueUp = currPValue - h_PValueHist->GetBinError(iBinX, iBinY);
+                currSignif = PValueToSignificance(currPValue);
+                h_SignifHist->SetBinContent(iBinX, iBinY, currSignif);
+                h_SignifHist->SetBinError(iBinX, iBinY, PValueToSignificance(currPValueUp));
+            }
+        }
+    }
     void SetHists(TString inputFile, int binSize, bool doVerb = 0) {
         numMT2Hists = 2;
         
@@ -146,18 +410,21 @@ struct LimitPlotShower {
             cout << "nameLPS " << nameLPS << endl;
         }
         
-        TString baseHistName = "h_SigStrengthLimitHist";
-        baseHistName += nameLPS;
+        TString baseHistName = GetHistName(0);  // "h_SigStrengthLimitHist";
+        //baseHistName += nameLPS;
         
         for (int iHist = 0; iHist < 2; ++iHist) {
             vecHistNames_MT2Cut.push_back(baseHistName + addHistNameMT2[iHist]);
         }
         LimitHist(h_SigStrengthLimitHist, &vecMT2CutHists, inputFile, baseHistName, &vecHistNames_MT2Cut, binSize, doVerb);
+        h_SigStrengthLimitHist->GetYaxis()->SetRangeUser(0 - binSize * 0.5, 400);
     }
     
-    void MakeXSectionLimitHists(TH1F * histXSection) {
-        h_XSecLimHist = (TH2F *) h_SigStrengthLimitHist->Clone(h_SigStrengthLimitHist->GetName() + TString("_XSecLimit"));
-
+    void MakeXSectionLimitHists(TH1F * histXSection, TString addName = "") {
+        TString nameSigXSec = GetHistName(2);
+//        h_XSecLimHist = (TH2F *) h_SigStrengthLimitHist->Clone(h_SigStrengthLimitHist->GetName() + TString("_XSecLimit"));
+        h_XSecLimHist = (TH2F *) h_SigStrengthLimitHist->Clone(nameSigXSec + addName);
+        
         int nBinsX = h_XSecLimHist->GetNbinsX();
         int nBinsY = h_XSecLimHist->GetNbinsY();
         float massStop, currXSection, currSigStrengthLim;
@@ -165,9 +432,25 @@ struct LimitPlotShower {
             massStop = h_SigStrengthLimitHist->GetXaxis()->GetBinCenter(iBinX);
             currXSection = histXSection->GetBinContent(histXSection->GetXaxis()->FindBin(massStop));
             for (int iBinY = 1; iBinY <= nBinsY; ++iBinY) {
-                currSigStrengthLim = h_XSecLimHist->GetBinContent(iBinX, iBinY);
+                currSigStrengthLim = h_SigStrengthLimitHist->GetBinContent(iBinX, iBinY);
                 currSigStrengthLim *= currXSection;
                 h_XSecLimHist->SetBinContent(iBinX, iBinY, currSigStrengthLim);
+            }
+        }
+    }
+    void MakeLimitStrengthHist(TH1F * histXSection, TString addName) {
+        h_SigStrengthLimitHist->SetName(h_SigStrengthLimitHist->GetName() + addName);
+        int nBinsX = h_XSecLimHist->GetNbinsX();
+        int nBinsY = h_XSecLimHist->GetNbinsY();
+        float massStop, currXSection, currXSecLim, currSigStrengthLim;
+        for (int iBinX = 1; iBinX <= nBinsX; ++iBinX) {
+            massStop = h_SigStrengthLimitHist->GetXaxis()->GetBinCenter(iBinX);
+            currXSection = histXSection->GetBinContent(histXSection->GetXaxis()->FindBin(massStop));
+            for (int iBinY = 1; iBinY <= nBinsY; ++iBinY) {
+                //NonConstDeltaM first
+                currXSecLim = h_XSecLimHist->GetBinContent(iBinX, iBinY);
+                currSigStrengthLim = currXSecLim / currXSection;
+                h_SigStrengthLimitHist->SetBinContent(iBinX, iBinY, currSigStrengthLim);
             }
         }
     }
@@ -183,6 +466,7 @@ struct LimitPlotShower {
         }
         for (unsigned int iCanv = 0; iCanv < numCanv; ++iCanv) {
             inVecCanvases->at(iCanv)->cd();
+            vecMT2CutHists[iCanv]->GetZaxis()->SetRangeUser(80, 120);
             vecMT2CutHists[iCanv]->Draw("colz text");
             inVecCanvases->at(iCanv)->SaveAs(outPath + inVecCanvases->at(iCanv)->GetName() + canvNameAppend);
         }
@@ -208,7 +492,30 @@ struct LimitPlotShower {
         }
         outCanv->SaveAs(outPath + outCanv->GetName() + canvNameAppend);
     }
-    void WriteToFile(TFile * outFile, int whichHist, bool createSigExclStuff = false) {
+    void WriteSignifToFile(TFile * outFile, bool doVerb = false) {
+        outFile->cd();
+        TH2F * histToWrite = h_SignifHist;
+        if (histToWrite != NULL) {
+            if (doVerb) {
+                cout << "histToWrite name " << histToWrite->GetName() << endl;
+            }
+            histToWrite->Write();
+        }
+        else {
+            cout << "histToWrite is NULL!" << endl;
+        }
+        histToWrite = h_PValueHist;
+        if (histToWrite != NULL) {
+            if (doVerb) {
+                cout << "histToWrite name " << histToWrite->GetName() << endl;
+            }
+            histToWrite->Write();
+        }
+        else {
+            cout << "histToWrite is NULL!" << endl;
+        }
+    }
+    void WriteToFile(TFile * outFile, int whichHist, bool createSigExclStuff = false, bool doVerb = false) {
         outFile->cd();
         TH2F * histToWrite;
         if (whichHist < 4) {
@@ -216,14 +523,14 @@ struct LimitPlotShower {
                 case 1:
                     histToWrite = h_SigStrengthLimitHist;
                     if (createSigExclStuff) {
-                        TH2F * h_SigStrengthLimitHistNoTruncate = (TH2F *) h_SigStrengthLimitHist->Clone(h_SigStrengthLimitHist->GetName() + TString("_NoTruncation"));
-                        ZeroNonExclPoints(h_SigStrengthLimitHist);
-                        h_SigStrengthLimitHist->GetZaxis()->SetRangeUser(0, 1.0);
+                        TH2F * h_SigStrengthLimitHistNoTruncate = (TH2F *) histToWrite->Clone(histToWrite->GetName() + TString("_NoTruncation"));
+                        ZeroNonExclPoints(histToWrite, 1, false);
+                        histToWrite->GetZaxis()->SetRangeUser(0, 1.0);
                         
-                        TH2F * h_SigStrengthLimitHist_StatErrShiftUp = ExclConsistencyHist(h_SigStrengthLimitHist, 1);
-                        TH2F * h_SigStrengthLimitHist_StatErrShiftDown = ExclConsistencyHist(h_SigStrengthLimitHist, -1);
-//                        h_SigStrengthLimitHist_StatErrShiftUp->Write();
-//                        h_SigStrengthLimitHist_StatErrShiftDown->Write();
+                        TH2F * h_SigStrengthLimitHist_StatErrShiftUp = ExclConsistencyHist(histToWrite, 1);
+                        TH2F * h_SigStrengthLimitHist_StatErrShiftDown = ExclConsistencyHist(histToWrite, -1);
+                        //                        h_SigStrengthLimitHist_StatErrShiftUp->Write();
+                        //                        h_SigStrengthLimitHist_StatErrShiftDown->Write();
                     }
                     break;
                 case 2:
@@ -237,6 +544,10 @@ struct LimitPlotShower {
             }
             
             if (histToWrite != NULL) {
+                if (doVerb) {
+                    cout << "whichHist " << whichHist << endl;
+                    cout << "histToWrite name " << histToWrite->GetName() << endl;
+                }
                 histToWrite->Write();
             }
             else {
@@ -277,12 +588,12 @@ struct LimitPlotComparer {
     
     TString nameDispAna1, nameDispAna2;
     
-
+    
     TString baseDirSuper, baseDirSub;
     TString fileNameSuper, fileNameSub;
     
     LimitPlotShower LPS_Super, LPS_Sub;
-
+    
     bool showMT2;
     
     void DefaultVarVals() {
@@ -292,10 +603,11 @@ struct LimitPlotComparer {
     }
     
     void SetFileNames(LimitParametersContainer * inLPCSuper, LimitParametersContainer * inLPCSub, SUSYT2LimitParams * inSUSYT2LPSuper, SUSYT2LimitParams * inSUSYT2LPSub, bool doVerb = 0) {
-
+        TString addName = "";
+        if (showMT2) addName = "Best";
         TString basePathCardSuper = BaseStringLimit_NameOrDir(inLPCSuper, inSUSYT2LPSuper, 0) + baseDirSuper;
         TString baseNameCardSuper = BaseStringLimit_NameOrDir(inLPCSuper, inSUSYT2LPSuper, 2);
-        fileNameSuper = basePathCardSuper + TString("Combined") + baseNameCardSuper + TString(".txt");
+        fileNameSuper = basePathCardSuper + TString("Combined") + addName + baseNameCardSuper + TString(".txt");
         if (doVerb) {
             cout << "fileNameSuper " << fileNameSuper << endl;
         }
@@ -303,7 +615,7 @@ struct LimitPlotComparer {
         
         TString basePathCardSub = BaseStringLimit_NameOrDir(inLPCSub, inSUSYT2LPSub, 0) + baseDirSub;
         TString baseNameCardSub = BaseStringLimit_NameOrDir(inLPCSub, inSUSYT2LPSub, 2);
-        fileNameSub = basePathCardSub + TString("Combined") + baseNameCardSub + TString(".txt");
+        fileNameSub = basePathCardSub + TString("Combined") + addName + baseNameCardSub + TString(".txt");
         if (doVerb) {
             cout << "fileNameSub " << fileNameSub << endl;
         }
@@ -335,7 +647,7 @@ struct LimitPlotComparer {
         TCanvas * outCanv = new TCanvas(canvName, canvName, 1600, 1200);
         gStyle->SetPaintTextFormat("4.2f");
         float maxRatio;
-
+        
         TH2F * h_LimRatioToUse_All, * h_LimRatioToUse_BothExcl, * h_LimRatioToUse_SupExcl, * h_LimRatioToUse_SubExcl;
         
         if (whichHist == 1) {
@@ -354,7 +666,7 @@ struct LimitPlotComparer {
         SetStyleHist(h_LimRatioToUse_BothExcl, 0);
         SetStyleHist(h_LimRatioToUse_SupExcl, 1);
         SetStyleHist(h_LimRatioToUse_SubExcl, 2);
-
+        
         if (doVerb) {
             cout << "About to draw the ratio hists " << endl;
         }
@@ -365,28 +677,28 @@ struct LimitPlotComparer {
         h_LimRatioToUse_SupExcl->GetZaxis()->SetRangeUser(0.0, maxRatio);
         h_LimRatioToUse_SubExcl->GetZaxis()->SetRangeUser(0.0, maxRatio);
         /*
-        switch (whichHist) {
-            case 1:
-                maxRatio = h_LimRatioToUse_All->GetMaximum();
-                maxRatio = TMath::Min((float)100, maxRatio);
-                h_LimRatioToUse_All->GetZaxis()->SetRangeUser(0.0, maxRatio);
-                h_LimRatioToUse_BothExcl->GetZaxis()->SetRangeUser(0.0, maxRatio);
-                h_LimRatioToUse_SupExcl->GetZaxis()->SetRangeUser(0.0, maxRatio);
-                h_LimRatioToUse_SubExcl->GetZaxis()->SetRangeUser(0.0, maxRatio);
-                break;
-            case 2:
-                maxRatio = h_LimRatioToUse_All->GetMaximum();
-                maxRatio = TMath::Min((float)100, maxRatio);
-                h_LimRatioToUse_All->SetMinimum(0.0);
-                h_LimRatioToUse_All->Print();
-                cout << "h_LimRatioToUse_All minimum " << h_LimRatioToUse_All->GetMinimum() << endl;
-                h_LimRatioToUse_BothExcl->SetMinimum(0.0);
-                h_LimRatioToUse_SupExcl->SetMinimum(0.0);
-                h_LimRatioToUse_SubExcl->SetMinimum(0.0);
-
-                break;
-        }
-        */
+         switch (whichHist) {
+         case 1:
+         maxRatio = h_LimRatioToUse_All->GetMaximum();
+         maxRatio = TMath::Min((float)100, maxRatio);
+         h_LimRatioToUse_All->GetZaxis()->SetRangeUser(0.0, maxRatio);
+         h_LimRatioToUse_BothExcl->GetZaxis()->SetRangeUser(0.0, maxRatio);
+         h_LimRatioToUse_SupExcl->GetZaxis()->SetRangeUser(0.0, maxRatio);
+         h_LimRatioToUse_SubExcl->GetZaxis()->SetRangeUser(0.0, maxRatio);
+         break;
+         case 2:
+         maxRatio = h_LimRatioToUse_All->GetMaximum();
+         maxRatio = TMath::Min((float)100, maxRatio);
+         h_LimRatioToUse_All->SetMinimum(0.0);
+         h_LimRatioToUse_All->Print();
+         cout << "h_LimRatioToUse_All minimum " << h_LimRatioToUse_All->GetMinimum() << endl;
+         h_LimRatioToUse_BothExcl->SetMinimum(0.0);
+         h_LimRatioToUse_SupExcl->SetMinimum(0.0);
+         h_LimRatioToUse_SubExcl->SetMinimum(0.0);
+         
+         break;
+         }
+         */
         
         SetBlackPlot(outCanv, h_LimRatioToUse_All);
         h_LimRatioToUse_All->Draw("text");
@@ -464,10 +776,298 @@ struct LimitPlotComparer {
     }
 };
 
-struct LimitScenarioContainer {
+struct SignifScenarioContainer {
     TFile * outFile;
+    TString addName;
+    
+    TString basePathSignif;
+    
     TString nameOutFile;
     TString nameOutPath;
+    
+    bool doZeroNonExcl;
+    
+    vector<TString> vecInputSignifFileNames_Exp;
+    vector<TString> vecInputPValueFileNames_Exp;
+    TString inputSignifFileName_Obs;
+    TString inputPValueFileName_Obs;
+    
+    vector<TString> vecGraphNames_Exp;
+    vector<TString> vecGraphNames_Obs;
+    
+    vector<LimitPlotShower> vecLPSExpected;
+    vector<LimitPlotShower> vecLPSObserved;
+    
+    unsigned int numLPSExp, numLPSObs;
+    
+    TCanvas * DrawHist(bool doObs, int whichSig, int whichHist, int drawOption, TString secondAddName = "") {
+        TCanvas * outCanv;
+        if (doObs) {
+            outCanv = vecLPSObserved[whichSig].DrawHist(whichHist, doZeroNonExcl, drawOption, addName + secondAddName);
+        }
+        else {
+            outCanv = vecLPSExpected[whichSig].DrawHist(whichHist, doZeroNonExcl, drawOption, addName + secondAddName);
+        }
+        return outCanv;
+    }
+    void DefaultVarVals(LimitParametersContainer * inLPC, SUSYT2LimitParams * inSUSYT2LP) {
+        
+        basePathSignif = "CombinedSignifs/";
+        nameOutPath = "ContourFiles/";
+        nameOutFile = "h_Signif";
+        
+        addName = "";
+        
+        numLPSExp = 3;
+        numLPSObs = 1;
+        
+        vecLPSExpected.resize(numLPSExp);
+        vecLPSObserved.resize(numLPSObs);
+        vecInputSignifFileNames_Exp.resize(numLPSExp);
+        vecInputPValueFileNames_Exp.resize(numLPSExp);
+        
+        TString arrStringGraphNameEnd[3] = {"", "M", "P"};
+        vecGraphNames_Exp.resize(numLPSExp);
+        vecGraphNames_Obs.resize(numLPSObs);
+        TString baseNameGraph = "graph_smoothed_";
+        for (unsigned int iSigExp = 0; iSigExp < numLPSExp; ++iSigExp) {
+            vecGraphNames_Exp[iSigExp] = baseNameGraph + TString("Exp") + arrStringGraphNameEnd[iSigExp];
+        }
+        for (unsigned int iSigObs = 0; iSigObs < numLPSObs; ++iSigObs) {
+            vecGraphNames_Obs[iSigObs] = baseNameGraph + TString("Obs") + arrStringGraphNameEnd[iSigObs];
+        }
+        
+        
+        TString baseNameLPS_Exp = "_LPS_Exp";
+        TString baseNameLPS_Obs = "_LPS_Obs";
+        TString addNameLPS[3] = {"", "_OneSigUp", "_OneSigDown"};
+        for (unsigned int iSigExp = 0; iSigExp < numLPSExp; ++iSigExp) {
+            vecLPSExpected[iSigExp].nameLPS = baseNameLPS_Exp + addNameLPS[iSigExp];
+        }
+        for (unsigned int iSigObs = 0; iSigObs < numLPSObs; ++iSigObs) {
+            vecLPSObserved[iSigObs].nameLPS = baseNameLPS_Obs + addNameLPS[iSigObs];
+        }
+        
+        vector<TString> vecBaseNameSignifCard(4);
+        vector<TString> vecBaseNamePValueCard(4);
+        vector<LimitParametersContainer> vecLPC(4);
+        for (unsigned int iLPC = 0; iLPC < vecLPC.size(); ++iLPC) {
+            if (iLPC > 0) {
+                vecLPC[iLPC] = vecLPC[0];
+            }
+            else {
+                vecLPC[iLPC] = *inLPC;
+            }
+            if (inLPC->useAsymLims && inLPC->isSignificance && iLPC > 0) {
+	      cout << "hack" << endl;
+                vecLPC[iLPC].isExpLim = 1;
+            }
+            else {
+                vecLPC[iLPC].isExpLim = iLPC;
+            }
+            vecLPC[iLPC].SetStrings();
+            
+            vecBaseNameSignifCard[iLPC] = BaseStringLimit_NameOrDir(&vecLPC[iLPC], inSUSYT2LP, 2);
+            vecBaseNamePValueCard[iLPC] = BaseStringLimit_NameOrDir(&vecLPC[iLPC], inSUSYT2LP, 2);
+            vecBaseNamePValueCard[iLPC].Replace(vecBaseNamePValueCard[iLPC].Index("Signif"), 6, "PValue");
+        }
+        TString basePathSignifCard = BaseStringLimit_NameOrDir(inLPC, inSUSYT2LP, 0) + basePathSignif;
+        
+        inputSignifFileName_Obs = basePathSignifCard + TString("Combined") + vecBaseNameSignifCard[0] + TString(".txt");
+        inputPValueFileName_Obs = basePathSignifCard + TString("Combined") + vecBaseNamePValueCard[0] + TString(".txt");
+        for (unsigned int iSigExp = 0; iSigExp < numLPSExp; ++iSigExp) {
+            vecInputSignifFileNames_Exp[iSigExp] = basePathSignifCard + TString("Combined") + vecBaseNameSignifCard[iSigExp + 1] + TString(".txt");
+            vecInputPValueFileNames_Exp[iSigExp] = basePathSignifCard + TString("Combined") + vecBaseNamePValueCard[iSigExp + 1] + TString(".txt");
+        }
+    }
+    void SetOutfile(LimitParametersContainer * inLPC, SUSYT2LimitParams * inSUSYT2LP, bool makeFile) {
+        System_MakeDir(nameOutPath);
+        
+        inLPC->isExpLim = 1;
+        inLPC->SetStrings();
+        nameOutFile += BaseStringLimit_NameOrDir(inLPC, inSUSYT2LP, 2);
+        nameOutFile.Replace(nameOutFile.Index("Exp_"), 4, "");
+        nameOutFile += ".root";
+        if (makeFile) {
+            outFile = new TFile(nameOutPath + nameOutFile, "RECREATE");
+            cout << "Saving histograms to " << nameOutPath + nameOutFile << endl;
+        }
+        else {
+            outFile = TFile::Open(nameOutPath + nameOutFile);
+            cout << "Loading histograms from " << nameOutPath + nameOutFile << endl;
+        }
+    }
+    void SetHists(SUSYMassLimitParams * inSUSYMLP, bool doVerb = 0) {
+        for (unsigned int iSig = 0; iSig < numLPSExp; ++iSig) {
+            if (doVerb) {
+                cout << "iSig " << iSig << endl;
+                cout << "about to set Expected hist" << endl;
+            }
+            vecLPSExpected[iSig].SetSignifHists(vecInputSignifFileNames_Exp[iSig], vecInputPValueFileNames_Exp[iSig], inSUSYMLP->binSize, doVerb);
+        }
+        for (unsigned int iSig = 0; iSig < numLPSObs; ++iSig) {
+            if (doVerb) {
+                cout << "iSig " << iSig << endl;
+                cout << "about to set Observed hist" << endl;
+            }
+            vecLPSObserved[iSig].SetSignifHists(inputSignifFileName_Obs, inputPValueFileName_Obs, inSUSYMLP->binSize, doVerb);
+        }
+    }
+    void SetHistsAsConstDeltaM(bool doVerb) {
+        for (unsigned int iSig = 0; iSig < numLPSExp; ++iSig) {
+            if (doVerb) {
+                cout << "doing const Delta M for vecLPSExpected[" << iSig <<"]" << endl;
+            }
+            vecLPSExpected[iSig].MakeConstDeltaMHists("");
+        }
+        for (unsigned int iSig = 0; iSig < numLPSObs; ++iSig) {
+            if (doVerb) {
+                cout << "doing const Delta M for vecLPSObserved[" << iSig <<"]" << endl;
+            }
+            vecLPSObserved[iSig].MakeConstDeltaMHists("");
+        }
+    }
+    void SetInputSignifVector(TH2F * &inputSignifHist, vector<TH2F *> * inVecInputExp, vector<TH2F *> * inVecInputObs) {
+        inVecInputExp->resize(0);
+        inVecInputObs->resize(0);
+        inputSignifHist = (TH2F *) vecLPSObserved[0].h_SignifHist->Clone();
+        for (unsigned int iSigExp = 0; iSigExp < numLPSExp; ++iSigExp) {
+            inVecInputExp->push_back((TH2F *) vecLPSExpected[iSigExp].h_SignifHist->Clone());
+        }
+        for (unsigned int iSigObs = 0; iSigObs < numLPSObs; ++iSigObs) {
+            inVecInputObs->push_back((TH2F *) vecLPSObserved[iSigObs].h_SignifHist->Clone());
+        }
+    }
+    void SmoothSignifConstDeltM_Optimal(Smoother * inSmoother, bool doVerbosity = false) {
+        TH2F * currSmoothHist;
+        for (unsigned int iSigExp = 0; iSigExp < numLPSExp; ++iSigExp) {
+            vecLPSExpected[iSigExp].MakeConstDeltaMHists_Vers2(1);
+            currSmoothHist = inSmoother->GenerateOptimalSmoothedMap(vecLPSExpected[iSigExp].h_PValueHist, doVerbosity);
+            vecLPSExpected[iSigExp].h_PValueHist = (TH2F *) currSmoothHist->Clone(currSmoothHist->GetName());
+            vecLPSExpected[iSigExp].SetSignifFromPValue();
+            vecLPSExpected[iSigExp].MakeConstDeltaMHists_Vers2(-1);
+        }
+        for (unsigned int iSigObs = 0; iSigObs < numLPSObs; ++iSigObs) {
+            vecLPSObserved[iSigObs].MakeConstDeltaMHists_Vers2(1);
+            currSmoothHist = inSmoother->GenerateOptimalSmoothedMap(vecLPSObserved[iSigObs].h_PValueHist, doVerbosity);
+            vecLPSObserved[iSigObs].h_PValueHist = (TH2F *) currSmoothHist->Clone(currSmoothHist->GetName());
+            vecLPSObserved[iSigObs].SetSignifFromPValue();
+            vecLPSObserved[iSigObs].MakeConstDeltaMHists_Vers2(-1);
+        }
+    }
+    void SmoothSigStrengthConstDeltM(TH2F * inputKernel, TString addName, TString addNameSmoothing) {
+        float thresh = 1E-4;
+        TH2F * currSmoothHist;
+        bool doLogNormal = false;
+        for (unsigned int iSig = 0; iSig < numLPSExp; ++iSig) {
+            vecLPSExpected[iSig].MakeConstDeltaMHists(addName);
+            cout << "about to smooth the signal strength limit in vecLPSExpected[" << iSig << "]" << endl;
+            currSmoothHist = KernelAveragedHistogram(vecLPSExpected[iSig].h_SigStrengthLimitHist, inputKernel, doLogNormal, addNameSmoothing, thresh);
+            //            cout << "currSmoothHist name " << currSmoothHist->GetName() << endl;
+            vecLPSExpected[iSig].h_SigStrengthLimitHist = currSmoothHist;
+            cout << "vecLPSExpected[iSig].h_SigStrengthLimitHist name " << vecLPSExpected[iSig].h_SigStrengthLimitHist->GetName() << endl;
+            vecLPSExpected[iSig].ReverseConstDeltaMHists();
+            cout << "vecLPSExpected[iSig].h_SigStrengthLimitHist name " << vecLPSExpected[iSig].h_SigStrengthLimitHist->GetName() << endl;
+        }
+        if (numLPSObs > 0) {
+            vecLPSObserved[0].MakeConstDeltaMHists(addName);
+            cout << "about to smooth the observed signal strength limit " << endl;
+            currSmoothHist = KernelAveragedHistogram(vecLPSObserved[0].h_SigStrengthLimitHist, inputKernel, doLogNormal, addNameSmoothing, thresh);
+            vecLPSObserved[0].h_SigStrengthLimitHist = currSmoothHist;
+            vecLPSObserved[0].ReverseConstDeltaMHists();
+            if (numLPSObs > 1) {
+                vecLPSObserved[1].h_SigStrengthLimitHist = vecLPSObserved[0].h_SigStrengthLimitHist;
+                if (numLPSObs > 2) {
+                    vecLPSObserved[2].h_SigStrengthLimitHist = vecLPSObserved[0].h_SigStrengthLimitHist;
+                }
+            }
+        }
+    }
+    void SmoothXSectionConstDeltM(TH2F * inputKernel, TString addName, TString addNameSmoothing) {
+        float thresh = 1E-4;
+        TH2F * currSmoothHist;
+        bool doLogNormal = true;
+        for (unsigned int iSig = 0; iSig < numLPSExp; ++iSig) {
+            vecLPSExpected[iSig].MakeConstDeltaMHists(addName);
+            cout << "about to smooth the xsection limit in vecLPSExpected[" << iSig << "]" << endl;
+            currSmoothHist = KernelAveragedHistogram(vecLPSExpected[iSig].h_XSecLimHist, inputKernel, doLogNormal, addNameSmoothing, thresh);
+            //            cout << "currSmoothHist name " << currSmoothHist->GetName() << endl;
+            vecLPSExpected[iSig].h_XSecLimHist = currSmoothHist;
+            cout << "vecLPSExpected[iSig].h_XSecLimHist name " << vecLPSExpected[iSig].h_XSecLimHist->GetName() << endl;
+            vecLPSExpected[iSig].ReverseConstDeltaMHists();
+            cout << "vecLPSExpected[iSig].h_XSecLimHist name " << vecLPSExpected[iSig].h_XSecLimHist->GetName() << endl;
+        }
+        if (numLPSObs > 0) {
+            vecLPSObserved[0].MakeConstDeltaMHists(addName);
+            cout << "about to smooth the observed xsection limit " << endl;
+            currSmoothHist = KernelAveragedHistogram(vecLPSObserved[0].h_XSecLimHist, inputKernel, doLogNormal, addNameSmoothing, thresh);
+            vecLPSObserved[0].h_XSecLimHist = currSmoothHist;
+            vecLPSObserved[0].ReverseConstDeltaMHists();
+            if (numLPSObs > 1) {
+                vecLPSObserved[1].h_XSecLimHist = vecLPSObserved[0].h_XSecLimHist;
+                if (numLPSObs > 2) {
+                    vecLPSObserved[2].h_XSecLimHist = vecLPSObserved[0].h_XSecLimHist;
+                }
+            }
+        }
+    }
+    void LoadSignifHists(TFile * inputFile, bool doVerb = false) {
+        for (unsigned int iSig = 0; iSig < numLPSExp; ++iSig) {
+            vecLPSExpected[iSig].LoadSignifHists(inputFile, addName, doVerb);
+        }
+        for (unsigned int iSig = 0; iSig < numLPSObs; ++iSig) {
+            vecLPSObserved[iSig].LoadSignifHists(inputFile, addName, doVerb);
+        }
+    }
+    void WriteFile(bool writeContours, TFile * extOutFile = NULL, bool closeFile = true, bool doVerb = false) {
+        TFile * fileToWriteTo = extOutFile ? extOutFile : outFile;
+        if (doVerb) {
+            cout << "addName " << endl;
+        }
+        for (unsigned int iSig = 0; iSig < numLPSExp; ++iSig) {
+            vecLPSExpected[iSig].SetHistNamesForSaving(addName);
+            vecLPSExpected[iSig].WriteSignifToFile(fileToWriteTo, doVerb);
+        }
+        for (unsigned int iSig = 0; iSig < numLPSObs; ++iSig) {
+            vecLPSObserved[iSig].SetHistNamesForSaving(addName);
+            vecLPSObserved[iSig].WriteSignifToFile(fileToWriteTo, doVerb);
+        }
+        if (closeFile) {
+            fileToWriteTo->Write();
+            fileToWriteTo->Close();
+        }
+    }
+    void SetParamsFromCommandLine(int argc, char* argv[]) {
+        for (int iSSCParam = 0; iSSCParam < argc; ++iSSCParam) {
+            if (strncmp (argv[iSSCParam],"-inExp", 6) == 0) {
+                cout << "format is ExpectedCV, ExpectedOneSigUp, ExpectedOneSigDown" << endl;
+                vecInputSignifFileNames_Exp.resize(0);
+                for (int iSig = 1; iSig <= 3; ++iSig) {
+                    vecInputSignifFileNames_Exp.push_back(TString(argv[iSSCParam + iSig]));
+                }
+            }
+            else if (strncmp (argv[iSSCParam],"-inObs", 6) == 0) {
+                inputSignifFileName_Obs = TString(argv[iSSCParam + 1]);
+                inputPValueFileName_Obs = TString(argv[iSSCParam + 2]);
+            }
+            else if (strncmp (argv[iSSCParam],"-sigPath", 8) == 0) {
+                basePathSignif = TString(argv[iSSCParam + 1]);
+                basePathSignif += "/";
+            }
+        }
+    }
+};
+
+struct LimitScenarioContainer {
+    TFile * outFile;
+    TString addName;
+    
+    TString basePathLimit;
+    
+    TString nameOutFile;
+    TString nameOutPath;
+    
+    bool doZeroNonExcl;
     
     vector<TString> vecInputFileNames_Exp;
     TString inputFileName_Obs;
@@ -477,30 +1077,94 @@ struct LimitScenarioContainer {
     
     vector<LimitPlotShower> vecLPSExpected;
     vector<LimitPlotShower> vecLPSObserved;
-    void DefaultVarVals(LimitParametersContainer * inLPC, SUSYT2LimitParams * inSUSYT2LP) {
+    
+    unsigned int numLPSExp, numLPSObs;
+    
+    float GetMaxXSecLimit(bool doObs, int whichSig) {
+        if (doObs) {
+            return vecLPSObserved[whichSig].GetXSecLimMax();
+        }
+        else {
+            return vecLPSExpected[whichSig].GetXSecLimMax();
+        }
+    }
+    
+    void SetInputVector(TH2F * &inputHistXSection, vector<TH2F *> * inVecInputExp, vector<TH2F *> * inVecInputObs) {
+        inVecInputExp->resize(0);
+        inVecInputObs->resize(0);
+        inputHistXSection = (TH2F *) vecLPSExpected[0].h_XSecLimHist->Clone();
+        for (unsigned int iSigExp = 0; iSigExp < numLPSExp; ++iSigExp) {
+            inVecInputExp->push_back((TH2F *) vecLPSExpected[iSigExp].h_SigStrengthLimitHist->Clone());
+        }
+        for (unsigned int iSigObs = 0; iSigObs < numLPSObs; ++iSigObs) {
+            inVecInputObs->push_back((TH2F *) vecLPSObserved[iSigObs].h_SigStrengthLimitHist->Clone());
+        }
+    }
+    
+    TCanvas * DrawHist(bool doObs, int whichSig, int whichHist, int drawOption, TString secondAddName = "") {
+        TCanvas * outCanv;
+        if (doObs) {
+            outCanv = vecLPSObserved[whichSig].DrawHist(whichHist, doZeroNonExcl, drawOption, addName + secondAddName);
+        }
+        else {
+            outCanv = vecLPSExpected[whichSig].DrawHist(whichHist, doZeroNonExcl, drawOption, addName + secondAddName);
+        }
+        return outCanv;
+    }
+    void PrepHists(bool isStandard, bool doObs, int whichSig, float maxXSecLimit, float maxExcl = 1.0) {
+        if (doObs) {
+            vecLPSObserved[whichSig].SetRangeUser(isStandard, 0, 1E-3, maxExcl);
+            vecLPSObserved[whichSig].SetRangeUser(isStandard, 2, 1E-3, maxXSecLimit);
+        }
+        else {
+            vecLPSExpected[whichSig].SetRangeUser(isStandard, 0, 1E-3, maxExcl);
+            vecLPSExpected[whichSig].SetRangeUser(isStandard, 2, 1E-3, maxXSecLimit);
+        }
+    }
+    void DefaultVarVals(LimitParametersContainer * inLPC, SUSYT2LimitParams * inSUSYT2LP, bool checkNominality = true) {
+        
+        basePathLimit = "CombinedLimits/";
         nameOutPath = "ContourFiles/";
         nameOutFile = "h_SigStrength";
         
-        const int numLPS = 3;
-        vecLPSExpected.resize(numLPS);
-        vecLPSObserved.resize(numLPS);
-        vecInputFileNames_Exp.resize(numLPS);
+        addName = "";
         
-        TString arrStringGraphNameEnd[numLPS] = {"", "M", "P"};
-        vecGraphNames_Exp.resize(numLPS);
-        vecGraphNames_Obs.resize(numLPS);
-        TString baseNameGraph = "graph_smoothed_";
-        for (int iSig = 0; iSig < numLPS; ++iSig) {
-            vecGraphNames_Exp[iSig] = baseNameGraph + TString("Exp") + arrStringGraphNameEnd[iSig];
-            vecGraphNames_Obs[iSig] = baseNameGraph + TString("Obs") + arrStringGraphNameEnd[iSig];
+        numLPSExp = 3;
+        numLPSObs = 3;
+        
+        if (checkNominality) {
+            bool doAll = inSUSYT2LP->IsNominalScenario();
+            
+            if (!doAll) {
+                numLPSExp = 1;
+                numLPSObs = 3;
+            }
         }
+        
+        vecLPSExpected.resize(numLPSExp);
+        vecLPSObserved.resize(numLPSObs);
+        vecInputFileNames_Exp.resize(numLPSExp);
+        
+        TString arrStringGraphNameEnd[3] = {"", "M", "P"};
+        vecGraphNames_Exp.resize(numLPSExp);
+        vecGraphNames_Obs.resize(numLPSObs);
+        TString baseNameGraph = "graph_smoothed_";
+        for (unsigned int iSigExp = 0; iSigExp < numLPSExp; ++iSigExp) {
+            vecGraphNames_Exp[iSigExp] = baseNameGraph + TString("Exp") + arrStringGraphNameEnd[iSigExp];
+        }
+        for (unsigned int iSigObs = 0; iSigObs < numLPSObs; ++iSigObs) {
+            vecGraphNames_Obs[iSigObs] = baseNameGraph + TString("Obs") + arrStringGraphNameEnd[iSigObs];
+        }
+
         
         TString baseNameLPS_Exp = "_LPS_Exp";
         TString baseNameLPS_Obs = "_LPS_Obs";
-        TString addNameLPS[numLPS] = {"", "_OneSigUp", "_OneSigDown"};
-        for (unsigned int iSig = 0; iSig < numLPS; ++iSig) {
-            vecLPSExpected[iSig].nameLPS = baseNameLPS_Exp + addNameLPS[iSig];
-            vecLPSObserved[iSig].nameLPS = baseNameLPS_Obs + addNameLPS[iSig];
+        TString addNameLPS[3] = {"", "_OneSigUp", "_OneSigDown"};
+        for (unsigned int iSigExp = 0; iSigExp < numLPSExp; ++iSigExp) {
+            vecLPSExpected[iSigExp].nameLPS = baseNameLPS_Exp + addNameLPS[iSigExp];
+        }
+        for (unsigned int iSigObs = 0; iSigObs < numLPSObs; ++iSigObs) {
+            vecLPSObserved[iSigObs].nameLPS = baseNameLPS_Obs + addNameLPS[iSigObs];
         }
         
         vector<TString> vecBaseNameLimCard(4);
@@ -517,14 +1181,14 @@ struct LimitScenarioContainer {
             
             vecBaseNameLimCard[iLPC] = BaseStringLimit_NameOrDir(&vecLPC[iLPC], inSUSYT2LP, 2);
         }
-        TString basePathLimCard = BaseStringLimit_NameOrDir(inLPC, inSUSYT2LP, 0) + TString("CombinedLimits/");
+        TString basePathLimCard = BaseStringLimit_NameOrDir(inLPC, inSUSYT2LP, 0) + basePathLimit;
         
         inputFileName_Obs = basePathLimCard + TString("Combined") + vecBaseNameLimCard[0] + TString(".txt");
-        for (int iExp = 0; iExp < numLPS; ++iExp) {
-            vecInputFileNames_Exp[iExp] = basePathLimCard + TString("Combined") + vecBaseNameLimCard[iExp + 1] + TString(".txt");
+        for (unsigned int iSigExp = 0; iSigExp < numLPSExp; ++iSigExp) {
+            vecInputFileNames_Exp[iSigExp] = basePathLimCard + TString("Combined") + vecBaseNameLimCard[iSigExp + 1] + TString(".txt");
         }
     }
-    void SetOutfile(LimitParametersContainer * inLPC, SUSYT2LimitParams * inSUSYT2LP) {
+    void SetOutfile(LimitParametersContainer * inLPC, SUSYT2LimitParams * inSUSYT2LP, bool makeFile) {
         System_MakeDir(nameOutPath);
         
         inLPC->isExpLim = 1;
@@ -532,67 +1196,254 @@ struct LimitScenarioContainer {
         nameOutFile += BaseStringLimit_NameOrDir(inLPC, inSUSYT2LP, 2);
         nameOutFile.Replace(nameOutFile.Index("Exp_"), 4, "");
         nameOutFile += ".root";
-        outFile = new TFile(nameOutPath + nameOutFile, "RECREATE");
-        cout << "Saving histograms to " << nameOutFile << endl;
+        if (makeFile) {
+            outFile = new TFile(nameOutPath + nameOutFile, "RECREATE");
+            cout << "Saving histograms to " << nameOutPath + nameOutFile << endl;
+        }
+        else {
+            outFile = TFile::Open(nameOutPath + nameOutFile);
+            cout << "Loading histograms from " << nameOutPath + nameOutFile << endl;
+        }
     }
-    void SetHists(TH1F * inputHistXSection, SUSYMassLimitParams * inSUSYMLP, int whichAddtlPlots, bool doVerb = 0) {
-        unsigned int numLPS = vecLPSExpected.size();
-        for (unsigned int iSig = 0; iSig < numLPS; ++iSig) {
+    void SetHists(TH1F * inputHistXSection, SUSYMassLimitParams * inSUSYMLP, int whichAddtlPlots, bool doZeroNonExclPoints, bool doVerb = 0) {
+        for (unsigned int iSig = 0; iSig < numLPSExp; ++iSig) {
             if (doVerb) {
                 cout << "iSig " << iSig << endl;
                 cout << "about to set Expected hist" << endl;
             }
             vecLPSExpected[iSig].SetHists(vecInputFileNames_Exp[iSig], inSUSYMLP->binSize, doVerb);
+        }
+        for (unsigned int iSig = 0; iSig < numLPSObs; ++iSig) {
             if (doVerb) {
+                cout << "iSig " << iSig << endl;
                 cout << "about to set Observed hist" << endl;
             }
             vecLPSObserved[iSig].SetHists(inputFileName_Obs, inSUSYMLP->binSize, doVerb);
         }
-        if (doVerb) {
-            cout << "about to scale up Observed hist" << endl;
-        }
-        vecLPSObserved[1].ScaleSigStrengthHist(inputHistXSection, 1);
-        if (doVerb) {
-            cout << "about to scale down Observed hist" << endl;
-        }
-        vecLPSObserved[2].ScaleSigStrengthHist(inputHistXSection, -1);
-        if (doVerb) {
-            cout << "about to make Expected XSection Limit Hist" << endl;
-        }
-        vecLPSExpected[0].MakeXSectionLimitHists(inputHistXSection);
-        if (whichAddtlPlots == 0) {
-            for (unsigned int iSig = 0; iSig < numLPS; ++iSig) {
-                if (doVerb) {
-                    cout << "iSig " << iSig << endl;
-                    cout << "about to set Expected Limit Contour" << endl;
-                }
-                vecLPSExpected[iSig].SetOutContour(vecGraphNames_Exp[iSig], doVerb);
-                if (doVerb) {
-                    cout << "about to set Observed Limit Contour" << endl;
-                }
-                vecLPSObserved[iSig].SetOutContour(vecGraphNames_Obs[iSig], doVerb);
-            }
-        }
-        else {
+        
+        if (doZeroNonExclPoints) {
             if (doVerb) {
-                cout << "going to try drawing 1D lim graphs" << endl;
+                cout << "about to zero out non-excluded points" << endl;
             }
-            vecLPSExpected[0].DrawLimitAlongDeltaM(false);
-            TCanvas * test = new TCanvas("test", "test", 800, 800);
-            vecLPSExpected[0].h_SigStrengthLimitHist->Draw("colz");
+            for (unsigned int iSig = 0; iSig < numLPSExp; ++iSig) {
+                ZeroNonExclPoints(vecLPSExpected[iSig].h_SigStrengthLimitHist, 1E3, false);
+            }
+            for (unsigned int iSig = 0; iSig < numLPSObs; ++iSig) {
+                ZeroNonExclPoints(vecLPSObserved[iSig].h_SigStrengthLimitHist, 1E3, false);
+            }
+        }
+        
+        if (numLPSObs > 0) {
+            if (doVerb) {
+                cout << "about to scale up Observed hist" << endl;
+            }
+            vecLPSObserved[1].ScaleSigStrengthHist(inputHistXSection, 1);
+            if (doVerb) {
+                cout << "about to scale down Observed hist" << endl;
+            }
+            vecLPSObserved[2].ScaleSigStrengthHist(inputHistXSection, -1);
+            
+        }
+        if (doVerb) {
+            cout << "about to make XSection Limit Hist" << endl;
+        }
+        for (unsigned int iSig = 0; iSig < numLPSExp; ++iSig) {
+            vecLPSExpected[iSig].MakeXSectionLimitHists(inputHistXSection);
+        }
+        for (unsigned int iSig = 0; iSig < numLPSObs; ++iSig) {
+            vecLPSObserved[iSig].MakeXSectionLimitHists(inputHistXSection);
+        }
+        if (whichAddtlPlots >= 0) {
+            if (whichAddtlPlots == 0) {
+                for (unsigned int iSig = 0; iSig < numLPSExp; ++iSig) {
+                    if (doVerb) {
+                        cout << "iSig " << iSig << endl;
+                        cout << "about to set Expected Limit Contour" << endl;
+                    }
+                    vecLPSExpected[iSig].SetOutContour(vecGraphNames_Exp[iSig], doVerb);
+                }
+                for (unsigned int iSig = 0; iSig < numLPSObs; ++iSig) {
+                    if (doVerb) {
+                        cout << "iSig " << iSig << endl;
+                        cout << "about to set Observed Limit Contour" << endl;
+                    }
+                    vecLPSObserved[iSig].SetOutContour(vecGraphNames_Obs[iSig], doVerb);
+                }
+            }
+            else {
+                if (doVerb) {
+                    cout << "going to try drawing 1D lim graphs" << endl;
+                }
+                vecLPSExpected[0].DrawLimitAlongDeltaM(false);
+                TCanvas * test = new TCanvas("test", "test", 800, 800);
+                vecLPSExpected[0].h_SigStrengthLimitHist->Draw("colz");
+            }
         }
     }
-    void WriteFile() {
-        for (unsigned int iSig = 0; iSig < vecLPSExpected.size(); ++iSig) {
-            vecLPSExpected[iSig].WriteToFile(outFile, 1, true);
-            vecLPSObserved[iSig].WriteToFile(outFile, 1, true);
-            
-            vecLPSExpected[iSig].WriteToFile(outFile, 4);
-            vecLPSObserved[iSig].WriteToFile(outFile, 4);
+    void CheckObsScaling() {
+        cout << "bin 12:2 " << endl;
+        for (unsigned int iSig = 0; iSig < numLPSObs; ++iSig) {
+            cout << "Obs -- " << iSig << ": " << vecLPSObserved[iSig].h_SigStrengthLimitHist->GetBinContent(12,2) << endl;
         }
-        vecLPSExpected[0].WriteToFile(outFile, 3);
-        outFile->Write();
-        outFile->Close();
+    }
+    void MakeXSectionLimitHists(TH1F * inputHistXSection, TString limAddName) {
+        CheckObsScaling();
+        TString currName = vecLPSObserved[0].h_SigStrengthLimitHist->GetName();
+        TString addNameLPS[3] = {"", "_OneSigUp", "_OneSigDown"};
+        if (numLPSObs > 0) {
+            vecLPSObserved[1].h_SigStrengthLimitHist->SetName(currName + addNameLPS[1] + limAddName);
+            vecLPSObserved[2].h_SigStrengthLimitHist->SetName(currName + addNameLPS[2] + limAddName);
+            vecLPSObserved[1].ScaleSigStrengthHist(inputHistXSection, 1);
+            vecLPSObserved[2].ScaleSigStrengthHist(inputHistXSection, -1);
+        }
+        CheckObsScaling();
+        for (unsigned int iSig = 0; iSig < numLPSExp; ++iSig) {
+            vecLPSExpected[iSig].MakeXSectionLimitHists(inputHistXSection, limAddName);
+        }
+        for (unsigned int iSig = 0; iSig < numLPSObs; ++iSig) {
+            vecLPSObserved[iSig].MakeXSectionLimitHists(inputHistXSection, limAddName);
+        }
+    }
+    void MakeLimitStrengthHists(TH1F * inputHistXSection, TString limAddName) {
+        for (unsigned int iSig = 0; iSig < numLPSExp; ++iSig) {
+            vecLPSExpected[iSig].MakeLimitStrengthHist(inputHistXSection, limAddName);
+        }
+        for (unsigned int iSig = 0; iSig < numLPSObs; ++iSig) {
+            vecLPSObserved[iSig].MakeLimitStrengthHist(inputHistXSection, limAddName);
+        }
+        if (numLPSObs > 0) {
+            vecLPSObserved[1].ScaleSigStrengthHist(inputHistXSection, 1);
+            vecLPSObserved[2].ScaleSigStrengthHist(inputHistXSection, -1);
+        }
+    }
+    void SetHistsAsConstDeltaM(bool doVerb) {
+        for (unsigned int iSig = 0; iSig < numLPSExp; ++iSig) {
+            if (doVerb) {
+                cout << "doing const Delta M for vecLPSExpected[" << iSig <<"]" << endl;
+            }
+            vecLPSExpected[iSig].MakeConstDeltaMHists("");
+        }
+        for (unsigned int iSig = 0; iSig < numLPSObs; ++iSig) {
+            if (doVerb) {
+                cout << "doing const Delta M for vecLPSObserved[" << iSig <<"]" << endl;
+            }
+            vecLPSObserved[iSig].MakeConstDeltaMHists("");
+        }
+    }
+    void SmoothSigStrengthConstDeltM_Optimal(Smoother * inSmoother, bool doVerbosity = false) {
+        TH2F * currSmoothHist;
+        for (unsigned int iSigExp = 0; iSigExp < numLPSExp; ++iSigExp) {
+            vecLPSExpected[iSigExp].MakeConstDeltaMHists_Vers2(1);
+            currSmoothHist = inSmoother->GenerateOptimalSmoothedMap(vecLPSExpected[iSigExp].h_SigStrengthLimitHist, doVerbosity);
+            vecLPSExpected[iSigExp].h_SigStrengthLimitHist = (TH2F *) currSmoothHist->Clone(currSmoothHist->GetName());
+            vecLPSExpected[iSigExp].MakeConstDeltaMHists_Vers2(-1);
+        }
+        for (unsigned int iSigObs = 0; iSigObs < numLPSObs; ++iSigObs) {
+            TString baseName = vecLPSObserved[0].h_SigStrengthLimitHist->GetName();
+            int lengthBaseName = baseName.Length();
+            if (iSigObs == 0) {
+                vecLPSObserved[iSigObs].MakeConstDeltaMHists_Vers2(1);
+                currSmoothHist = inSmoother->GenerateOptimalSmoothedMap(vecLPSObserved[iSigObs].h_SigStrengthLimitHist, doVerbosity);
+                vecLPSObserved[iSigObs].h_SigStrengthLimitHist = (TH2F *) currSmoothHist->Clone(currSmoothHist->GetName());
+                vecLPSObserved[iSigObs].MakeConstDeltaMHists_Vers2(-1);
+            }
+            else {
+                TString currName = vecLPSObserved[0].h_SigStrengthLimitHist->GetName();
+                currName.Replace(currName.Index(baseName), lengthBaseName, "");
+                TString currName2 = vecLPSObserved[iSigObs].h_SigStrengthLimitHist->GetName();
+                vecLPSObserved[iSigObs].h_SigStrengthLimitHist = (TH2F *) vecLPSObserved[0].h_SigStrengthLimitHist->Clone(currName2 + currName);
+            }
+        }
+    }
+    void SmoothSigStrengthConstDeltM(TH2F * inputKernel, TString addName, TString addNameSmoothing) {
+        float thresh = 1E-4;
+        TH2F * currSmoothHist;
+        bool doLogNormal = false;
+        for (unsigned int iSig = 0; iSig < numLPSExp; ++iSig) {
+            vecLPSExpected[iSig].MakeConstDeltaMHists(addName);
+            cout << "about to smooth the signal strength limit in vecLPSExpected[" << iSig << "]" << endl;
+            currSmoothHist = KernelAveragedHistogram(vecLPSExpected[iSig].h_SigStrengthLimitHist, inputKernel, doLogNormal, addNameSmoothing, thresh);
+            //            cout << "currSmoothHist name " << currSmoothHist->GetName() << endl;
+            vecLPSExpected[iSig].h_SigStrengthLimitHist = currSmoothHist;
+            cout << "vecLPSExpected[iSig].h_SigStrengthLimitHist name " << vecLPSExpected[iSig].h_SigStrengthLimitHist->GetName() << endl;
+            vecLPSExpected[iSig].ReverseConstDeltaMHists();
+            cout << "vecLPSExpected[iSig].h_SigStrengthLimitHist name " << vecLPSExpected[iSig].h_SigStrengthLimitHist->GetName() << endl;
+        }
+        if (numLPSObs > 0) {
+            vecLPSObserved[0].MakeConstDeltaMHists(addName);
+            cout << "about to smooth the observed signal strength limit " << endl;
+            currSmoothHist = KernelAveragedHistogram(vecLPSObserved[0].h_SigStrengthLimitHist, inputKernel, doLogNormal, addNameSmoothing, thresh);
+            vecLPSObserved[0].h_SigStrengthLimitHist = currSmoothHist;
+            vecLPSObserved[0].ReverseConstDeltaMHists();
+            if (numLPSObs > 1) {
+                vecLPSObserved[1].h_SigStrengthLimitHist = vecLPSObserved[0].h_SigStrengthLimitHist;
+                if (numLPSObs > 2) {
+                    vecLPSObserved[2].h_SigStrengthLimitHist = vecLPSObserved[0].h_SigStrengthLimitHist;
+                }
+            }
+        }
+    }
+    void SmoothXSectionConstDeltM(TH2F * inputKernel, TString addName, TString addNameSmoothing) {
+        float thresh = 1E-4;
+        TH2F * currSmoothHist;
+        bool doLogNormal = true;
+        for (unsigned int iSig = 0; iSig < numLPSExp; ++iSig) {
+            vecLPSExpected[iSig].MakeConstDeltaMHists(addName);
+            cout << "about to smooth the xsection limit in vecLPSExpected[" << iSig << "]" << endl;
+            currSmoothHist = KernelAveragedHistogram(vecLPSExpected[iSig].h_XSecLimHist, inputKernel, doLogNormal, addNameSmoothing, thresh);
+//            cout << "currSmoothHist name " << currSmoothHist->GetName() << endl;
+            vecLPSExpected[iSig].h_XSecLimHist = currSmoothHist;
+            cout << "vecLPSExpected[iSig].h_XSecLimHist name " << vecLPSExpected[iSig].h_XSecLimHist->GetName() << endl;
+            vecLPSExpected[iSig].ReverseConstDeltaMHists();
+            cout << "vecLPSExpected[iSig].h_XSecLimHist name " << vecLPSExpected[iSig].h_XSecLimHist->GetName() << endl;
+        }
+        if (numLPSObs > 0) {
+            vecLPSObserved[0].MakeConstDeltaMHists(addName);
+            cout << "about to smooth the observed xsection limit " << endl;
+            currSmoothHist = KernelAveragedHistogram(vecLPSObserved[0].h_XSecLimHist, inputKernel, doLogNormal, addNameSmoothing, thresh);
+            vecLPSObserved[0].h_XSecLimHist = currSmoothHist;
+            vecLPSObserved[0].ReverseConstDeltaMHists();
+            if (numLPSObs > 1) {
+                vecLPSObserved[1].h_XSecLimHist = vecLPSObserved[0].h_XSecLimHist;
+                if (numLPSObs > 2) {
+                    vecLPSObserved[2].h_XSecLimHist = vecLPSObserved[0].h_XSecLimHist;
+                }
+            }
+        }
+    }
+    void LoadHists(TFile * inputFile, bool getNoTruncate, bool doVerb = false) {
+        for (unsigned int iSig = 0; iSig < numLPSExp; ++iSig) {
+            vecLPSExpected[iSig].LoadHists(inputFile, getNoTruncate, addName, doVerb);
+        }
+        for (unsigned int iSig = 0; iSig < numLPSObs; ++iSig) {
+            vecLPSObserved[iSig].LoadHists(inputFile, getNoTruncate, addName, doVerb);
+        }
+    }
+    void WriteFile(bool writeContours, TFile * extOutFile = NULL, bool closeFile = true, bool doVerb = false) {
+        TFile * fileToWriteTo = extOutFile ? extOutFile : outFile;
+        if (doVerb) {
+            cout << "addName " << endl;
+        }
+        for (unsigned int iSig = 0; iSig < numLPSExp; ++iSig) {
+            vecLPSExpected[iSig].SetHistNamesForSaving(addName);
+            vecLPSExpected[iSig].WriteToFile(fileToWriteTo, 1, true, doVerb);
+            vecLPSExpected[iSig].WriteToFile(fileToWriteTo, 3, false, doVerb);
+            if (writeContours) {
+                vecLPSExpected[iSig].WriteToFile(fileToWriteTo, 4, false, doVerb);
+            }
+        }
+        for (unsigned int iSig = 0; iSig < numLPSObs; ++iSig) {
+            vecLPSObserved[iSig].SetHistNamesForSaving(addName);
+            vecLPSObserved[iSig].WriteToFile(fileToWriteTo, 1, true, doVerb);
+            vecLPSObserved[iSig].WriteToFile(fileToWriteTo, 3, false, doVerb);
+            if (writeContours) {
+                vecLPSObserved[iSig].WriteToFile(fileToWriteTo, 4, false, doVerb);
+            }
+        }
+        if (closeFile) {
+            fileToWriteTo->Write();
+            fileToWriteTo->Close();
+        }
     }
     void SetParamsFromCommandLine(int argc, char* argv[]) {
         for (int iLSCParam = 0; iLSCParam < argc; ++iLSCParam) {
@@ -606,6 +1457,177 @@ struct LimitScenarioContainer {
             else if (strncmp (argv[iLSCParam],"-inObs", 6) == 0) {
                 inputFileName_Obs = TString(argv[iLSCParam + 1]);
             }
+            else if (strncmp (argv[iLSCParam],"-limPath", 8) == 0) {
+                basePathLimit = TString(argv[iLSCParam + 1]);
+                basePathLimit += "/";
+            }
         }
     }
 };
+
+struct LimitScenarioSmoother_Back {
+    LimitScenarioContainer LSC_Unsmoothed;
+    vector<LimitScenarioContainer> vecLSC_Smoothed;
+    
+    vector<float> vecSigX, vecSigY;
+    vector<TString> vecAddName, vecSmoothName;
+    vector<TH2F *> vecKernels;
+    
+    void PrepHists(bool isStandard, bool doObs, int whichSig, float maxExcl = 1.0) {
+        vector<float> vecMaxXSecLimit;
+        vecMaxXSecLimit.push_back(LSC_Unsmoothed.GetMaxXSecLimit(doObs, whichSig));
+        for (unsigned int iSig = 0; iSig < vecLSC_Smoothed.size(); ++iSig) {
+            vecMaxXSecLimit.push_back(vecLSC_Smoothed[iSig].GetMaxXSecLimit(doObs, whichSig));
+        }
+        sort(vecMaxXSecLimit.begin(), vecMaxXSecLimit.end());
+        float maxXSecLimit = vecMaxXSecLimit[vecMaxXSecLimit.size() - 1];
+        LSC_Unsmoothed.PrepHists(isStandard, doObs, whichSig, maxXSecLimit, maxExcl);
+        for (unsigned int iSig = 0; iSig < vecLSC_Smoothed.size(); ++iSig) {
+            vecLSC_Smoothed[iSig].PrepHists(isStandard, doObs, whichSig, maxXSecLimit, maxExcl);
+        }
+    }
+    
+    void SetZeroNonExcl(bool whichVal) {
+        LSC_Unsmoothed.doZeroNonExcl = whichVal;
+        for (unsigned int iSig = 0; iSig < vecLSC_Smoothed.size(); ++iSig) {
+            vecLSC_Smoothed[iSig].doZeroNonExcl = whichVal;
+        }
+    }
+    
+    void DrawLatex(TCanvas * inputCanvas, int whichSmooth) {
+        TString strSmooth = !whichSmooth ? "No Smoothing" : "Gaussian Kernel: ";
+        if (whichSmooth) {
+            strSmooth += "(#sigma_{x}:#sigma_{y}) [GeV] = (";
+            strSmooth += vecSigX[whichSmooth - 1];
+            strSmooth += ":";
+            strSmooth += vecSigY[whichSmooth - 1];
+            strSmooth += ")";
+        }
+        inputCanvas->cd();
+        TLatex a;
+        a.SetNDC();
+        a.SetTextSize(0.03);
+        a.DrawLatex(0.15, 0.88, strSmooth.Data());
+    }
+    void DrawHist(bool doObs, int whichSig, int whichHist, int whichSmooth, int drawOption, TString addNameCanv) {
+        TCanvas * outCanv;
+        if (whichSmooth) {
+            outCanv = vecLSC_Smoothed[whichSmooth - 1].DrawHist(doObs, whichSig, whichHist, drawOption, vecSmoothName[whichSmooth - 1]);
+        }
+        else {
+            outCanv = LSC_Unsmoothed.DrawHist(doObs, whichSig, whichHist, drawOption, "");
+        }
+        DrawLatex(outCanv, whichSmooth);
+        outCanv->SaveAs(outCanv->GetName() + addNameCanv + TString(".pdf"));
+    }
+    
+    void SetHistsAsConstDeltaM(bool doVerb) {
+        if (doVerb) {
+            cout << "doing ConstDeltaM for unsmoothed " << endl;
+        }
+        LSC_Unsmoothed.SetHistsAsConstDeltaM(doVerb);
+        for (unsigned int iSig = 0; iSig < vecLSC_Smoothed.size(); ++iSig) {
+            if (doVerb) {
+                cout << "doing ConstDeltaM for vecLSC_Smoothed[" << iSig << "]" << endl;
+            }
+            vecLSC_Smoothed[iSig].SetHistsAsConstDeltaM(doVerb);
+        }
+    }
+    
+    void LoadHists(TFile * inputFile, bool getNoTruncate, bool doVerb = false) {
+        LSC_Unsmoothed.LoadHists(inputFile, getNoTruncate, doVerb);
+        for (unsigned int iSig = 0; iSig < vecLSC_Smoothed.size(); ++iSig) {
+            vecLSC_Smoothed[iSig].LoadHists(inputFile, getNoTruncate, doVerb);
+        }
+    }
+    
+    void DefaultVarVals() {
+        
+        const int numSigs = 20;
+        //float sigXVals[numSigs] = {15, 25, 25, 45, 45, 35, 10, 15, 15, 0.5};
+        //float sigYVals[numSigs] = {15, 15, 10, 25, 10,  5,  5, 10,  5, 0.5};
+        float sigXVals[numSigs] = {15, 25, 25, 45, 45, 35, 10, 15, 15, 0.5, 15, 25, 25, 45, 45, 35, 10, 15, 15, 0.5};
+        float sigYVals[numSigs] = {15, 15, 10, 25, 10,  5,  5, 10,  5, 0.5, 15, 15, 10, 25, 10,  5,  5, 10,  5, 0.5};
+        
+        TString nameAdd[numSigs];
+        TString nameSmooth[numSigs];
+        for (int iAddName = 0; iAddName < numSigs; ++iAddName) {
+            nameAdd[iAddName] = "_Smooth";
+            if (iAddName < numSigs / 2) nameAdd[iAddName] += "XSec";
+            nameAdd[iAddName] += iAddName + 1;
+            
+            nameSmooth[iAddName] = "_2D";
+            if (iAddName < numSigs / 2) nameSmooth[iAddName] += "XSec";
+            nameSmooth[iAddName] += "X";
+            nameSmooth[iAddName] += sigXVals[iAddName];
+            nameSmooth[iAddName] += "Y";
+            nameSmooth[iAddName] += sigYVals[iAddName];
+        }
+        //TString nameSmooth[numSigs] = {"_2DBoth15", "_2DX25Y15", "_2DX25Y10", "_2DX45Y25", "_2DX45Y10", "_2DX10Y5", "_2DX15Y10", "_2DX15Y5", "_NoSmooth"};
+         
+        /*
+        const int numSigs = 1;
+        float sigXVals[numSigs] = {45};
+        float sigYVals[numSigs] = {25};
+        TString nameAdd[numSigs] = {"_Smooth4"};
+        TString nameSmooth[numSigs] = {"_2DHighXMedY"};
+        */
+        vecSigX.resize(0);
+        vecSigX.assign(sigXVals, sigXVals + numSigs);
+        vecSigY.resize(0);
+        vecSigY.assign(sigYVals, sigYVals + numSigs);
+        
+        vecAddName.resize(0);
+        vecAddName.assign(nameAdd, nameAdd + numSigs);
+        
+        vecSmoothName.resize(0);
+        vecSmoothName.assign(nameSmooth, nameSmooth + numSigs);
+        
+        for (int iSig = 0; iSig < numSigs; ++iSig) {
+            vecKernels.push_back(TwoDeeGaussianKernel(vecSigX[iSig], vecSigY[iSig]));
+        }
+        vecLSC_Smoothed.resize(numSigs);
+    }
+    void SetLSCVec(TH1F * inputHistXSection, bool doSmoothing = true) {
+        for (unsigned int iLSC = 0; iLSC < vecLSC_Smoothed.size(); ++iLSC) {
+            cout << "iLSC " << iLSC << endl;
+            vecLSC_Smoothed[iLSC] = LSC_Unsmoothed;
+            vecLSC_Smoothed[iLSC].addName = vecSmoothName[iLSC];
+            if (doSmoothing) {
+                if (iLSC >= vecLSC_Smoothed.size() / 2) {
+                    vecLSC_Smoothed[iLSC].SmoothSigStrengthConstDeltM(vecKernels[iLSC], vecAddName[iLSC], vecSmoothName[iLSC]);
+                    vecLSC_Smoothed[iLSC].MakeXSectionLimitHists(inputHistXSection, vecAddName[iLSC] + vecSmoothName[iLSC]);
+                }
+                else {
+                    vecLSC_Smoothed[iLSC].SmoothXSectionConstDeltM(vecKernels[iLSC], vecAddName[iLSC], vecSmoothName[iLSC]);
+                    vecLSC_Smoothed[iLSC].MakeLimitStrengthHists(inputHistXSection, vecAddName[iLSC] + vecSmoothName[iLSC]);
+                }
+            }
+        }
+    }
+    void WriteFile(TFile * extOutFile = NULL, bool doVerb = false) {
+        for (unsigned int iLSC = 0; iLSC < vecLSC_Smoothed.size(); ++iLSC) {
+            vecLSC_Smoothed[iLSC].WriteFile(false, extOutFile, false, doVerb);
+        }
+        LSC_Unsmoothed.WriteFile(false, extOutFile, true, doVerb);
+    }
+    
+    void SetParamsFromCommandLine(int argc, char* argv[]) {
+        /*
+        for (int iLSSParam = 0; iLSSParam < argc; ++iLSSParam) {
+            if (strncmp (argv[iLSSParam],"-sigX", 5) == 0) {
+                vecInputFileNames_Exp.resize(0);
+                for (int iSig = 1; iSig <= 3; ++iSig) {
+                    vecInputFileNames_Exp.push_back(TString(argv[iLSSParam + iSig]));
+                }
+            }
+            else if (strncmp (argv[iLSSParam],"-inObs", 6) == 0) {
+                inputFileName_Obs = TString(argv[iLSSParam + 1]);
+            }
+        }
+        */
+    }
+};
+
+
+

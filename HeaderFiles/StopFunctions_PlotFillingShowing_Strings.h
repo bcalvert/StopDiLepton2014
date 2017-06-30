@@ -25,6 +25,22 @@ inline TString SystString_v4(int whichSyst = 0) {
     return outString;
 }
 
+inline TString SystString_FakeLep(int whichSyst = 0) {
+    TString suffixSyst[4] = {"", "FakeLepStat", "FakeLepFakeRateSyst", "FakeLepPromptRateSyst"};
+    TString outString = "";
+    if (whichSyst == 0) {
+        return outString;
+    }
+    else {
+        outString = "_";
+        outString += suffixSyst[abs(whichSyst)];
+        outString += "Shift";
+        if (whichSyst < 0) outString += "Down";
+        else if (whichSyst > 0) outString += "Up";
+    }
+    return outString;
+}
+
 
 inline TString GetStringLead(int whichPos, bool isLabelString) {
     if (whichPos < 0 || whichPos > 2) {
@@ -188,6 +204,8 @@ inline void SetStringKey_StSMap_IndObjects(labelMap &mapVartoLabel, int typeObj,
     mapVartoLabel[stringSmear + stringLead + stringObj + "Pt"] = stringLeadLabel + stringSmearLabel + stringObjLabel + TString("p_{T} [GeV]");
     mapVartoLabel[stringSmear + stringLead + stringObj + "En"] = stringLeadLabel + stringSmearLabel + stringObjLabel + TString("Energy [GeV]");
     mapVartoLabel[stringSmear + stringLead + stringObj + "Eta"] = stringLeadLabel + stringSmearLabel + stringObjLabel + TString("#eta");
+    mapVartoLabel[stringSmear + stringLead + stringObj + "InvMass"] =  stringLeadLabel + stringSmearLabel + stringObjLabel + TString("Inv. Mass [GeV]");
+    mapVartoLabel[stringSmear + "Max" + stringObj + "InvMass"] =  "Max" + stringSmearLabel + stringObjLabel + TString("Inv. Mass [GeV]");
 }
 
 inline void SetStringKey_StSMap_DiObjects(labelMap &mapVartoLabel, int typeObj, bool isSmear) {
@@ -195,6 +213,8 @@ inline void SetStringKey_StSMap_DiObjects(labelMap &mapVartoLabel, int typeObj, 
     TString stringSmearLabel = GetStringSmear(isSmear, true);
     TString stringObj = GetStringIndObj(typeObj, false);
     TString stringObjLabel = GetStringIndObj(typeObj, true);
+    
+    if (typeObj == 0) mapVartoLabel["qT"] = TString("q_{T} [GeV]");
     
     mapVartoLabel[stringSmear + "Di" + stringObj + "Pt"] =  stringSmearLabel + "Di" + stringObjLabel + TString("p_{T} [GeV]");
     mapVartoLabel[stringSmear + "Di" + stringObj + "InvMass"] =  stringSmearLabel + "Di" + stringObjLabel + TString("Inv. Mass [GeV]");
@@ -208,8 +228,15 @@ inline void SetStringKey_StSMap_MET(labelMap &mapVartoLabel, bool isSmear) {
     
     TString stringMT2ll = "M_{T2}(ll)";
     TString stringMT2lblb = "M_{T2}(lb)(lb)";
+    TString stringMT2lblb_ZeroBLepMass = "M^{m(b,l)=0}_{T2}(lb)(lb)";
     TString stringMT2bb_ZMET = "M_{T2}^{#slash{W}}(bb)";
     TString stringKT2_Top = "#kappa_{T2}^{top}";
+    
+    TString stringMETSig1DHack = "#slash{E}^{2}_{T} / H_{T}";
+    TString stringMETSig2DHack = "(#slash{E}_{#parallel} / #sigma_{#slash{E}_{#parallel}}) #oplus (#slash{E}_{#perp} / #sigma_{#slash{E}_{#perp}})";
+    TString stringMETSig2DHack_Par = "#slash{E}_{#parallel} / #sigma_{#slash{E}_{#parallel}}";
+    TString stringMETSig2DHack_Perp = "#slash{E}_{#perp} / #sigma_{#slash{E}_{#perp}}";
+    TString stringMETSig2DTrue = "#slash{E}_{T} Sig";
     
     mapVartoLabel["RawMETSig"]    = "RawMET Significance";
     
@@ -220,6 +247,7 @@ inline void SetStringKey_StSMap_MET(labelMap &mapVartoLabel, bool isSmear) {
     mapVartoLabel[stringSmear + "MT2ll110"]     = stringSmearLabel + stringMT2ll + " > 110 GeV";
     mapVartoLabel[stringSmear + "MT2ll120"]     = stringSmearLabel + stringMT2ll + " > 120 GeV";
     mapVartoLabel[stringSmear + "MT2lblb"]      = stringSmearLabel + stringMT2lblb + " [GeV]";
+    mapVartoLabel[stringSmear + "MT2lblb_ZeroBLepMass"]      = stringSmearLabel + stringMT2lblb_ZeroBLepMass + " [GeV]";
     mapVartoLabel[stringSmear + "MT2bb_ZMET"]   = stringSmearLabel + stringMT2bb_ZMET + " [GeV]";
     mapVartoLabel[stringSmear + "KT2_Top"]   = stringSmearLabel + stringKT2_Top + " [GeV]";
     
@@ -227,23 +255,58 @@ inline void SetStringKey_StSMap_MET(labelMap &mapVartoLabel, bool isSmear) {
     mapVartoLabel[stringSmear + "METX"]         = stringSmearLabel + "#slash{E}_{x} [GeV]";
     mapVartoLabel[stringSmear + "METY"]         = stringSmearLabel + "#slash{E}_{y} [GeV]";
     mapVartoLabel[stringSmear + "METPhi"]       = stringSmearLabel + "#slash{E}_{T} #phi [rad]";
+    mapVartoLabel[stringSmear + "TTBarPt"]      = stringSmearLabel + " t#bar{t} p_{T} [GeV]";
     
     mapVartoLabel[stringSmear + "UPar"]         = stringSmearLabel + "u_{#parallel} [GeV]";
     mapVartoLabel[stringSmear + "UParPlusqT"]   = stringSmearLabel + "u_{#parallel} + q_{T}^{Z} [GeV]";
+    mapVartoLabel[stringSmear + "UParDivqT"]   = stringSmearLabel +  "-#frac{u_{#parallel}}{q_{T}^{Z}}";
     mapVartoLabel[stringSmear + "UPerp"]        = stringSmearLabel + "u_{#perp}  [GeV]";
     mapVartoLabel["SumEt"] = "#Sigma E_{T} [GeV]";
     mapVartoLabel["SumEtSubqT"] = "#Sigma E_{T} - q_{T}^{Z} [GeV]";
+    
+    mapVartoLabel[stringSmear + "METSig1DHack"] = stringSmearLabel + stringMETSig1DHack;
+    mapVartoLabel[stringSmear + "METSig1DHack_AllJets"] = stringSmearLabel + stringMETSig1DHack;
+    
+    mapVartoLabel[stringSmear + "METSig2DHack"] = stringSmearLabel + stringMETSig2DHack;
+    mapVartoLabel[stringSmear + "METSig2DHack_AllJets"] = stringSmearLabel + stringMETSig2DHack;
+    mapVartoLabel[stringSmear + "METSig2DHackFull"] = stringSmearLabel + stringMETSig2DHack;
+    
+    mapVartoLabel[stringSmear + "METSig2DHack_Par"] = stringSmearLabel + stringMETSig2DHack_Par;
+    mapVartoLabel[stringSmear + "METSig2DHack_Par_AllJets"] = stringSmearLabel + stringMETSig2DHack_Par;
+    mapVartoLabel[stringSmear + "METSig2DHack_ParFull"] = stringSmearLabel + stringMETSig2DHack_Par;
+    
+    mapVartoLabel[stringSmear + "METSig2DHack_Perp"] = stringSmearLabel + stringMETSig2DHack_Perp;
+    mapVartoLabel[stringSmear + "METSig2DHack_Perp_AllJets"] = stringSmearLabel + stringMETSig2DHack_Perp;
+    mapVartoLabel[stringSmear + "METSig2DHack_PerpFull"] = stringSmearLabel + stringMETSig2DHack_Perp;
+    
+    mapVartoLabel[stringSmear + "METSig2DTrue"] = stringSmearLabel + stringMETSig2DTrue;
+    
 }
 
 inline void SetStringKey_StSMap_Basic(labelMap &mapVartoLabel, bool isSmear) {
     TString stringSmear = GetStringSmear(isSmear, false);    
     TString stringSmearLabel = GetStringSmear(isSmear, true);
+    
+    TString stringHadResPar = "#sigma^{had}_{#parallel} [GeV]";
+    TString stringHadResPerp = "#sigma^{had}_{#perp} [GeV]";
+    
     mapVartoLabel["nVtx"] = "N_{vtx}^{reco}";
     mapVartoLabel[stringSmear + "NJets"] = TString("N_{") + stringSmearLabel + TString("jets}");
     mapVartoLabel[stringSmear + "NBJets"] = TString("N_{") + stringSmearLabel + TString("b-jets}");
     mapVartoLabel[stringSmear + "HT"] = "H_{T} [GeV]";
+    mapVartoLabel[stringSmear + "HT_AllJets"] = "H_{T} [GeV]";
     
     mapVartoLabel[stringSmear + "VecHT"] = "#vec{H}_{T} [GeV]";
+    
+    mapVartoLabel[stringSmear + "HadResPar"] = stringSmearLabel + stringHadResPar;
+    mapVartoLabel[stringSmear + "HadResPerp"] = stringSmearLabel + stringHadResPerp;
+    
+    mapVartoLabel[stringSmear + "HadResPar_AllJets"] = stringSmearLabel + stringHadResPar;
+    mapVartoLabel[stringSmear + "HadResPerp_AllJets"] = stringSmearLabel + stringHadResPerp;
+    
+    mapVartoLabel[stringSmear + "HadResParFull"] = stringSmearLabel + stringHadResPar;
+    mapVartoLabel[stringSmear + "HadResPerpFull"] = stringSmearLabel + stringHadResPerp;
+
 }
 inline void SetStringKey_StSMap_DPhis(labelMap &mapVartoLabel) {
     
@@ -286,7 +349,7 @@ inline void SetStringKey_StSMap_DPhis(labelMap &mapVartoLabel) {
 inline void SetStringKey_StSMap_Composite(labelMap &mapVartoLabel) {
     SetStringKey_StSMap_Misc(mapVartoLabel);
     SetStringKey_StSMap_DPhis(mapVartoLabel);
-    int numObjs = 3;        
+    int numObjs = 4;
     SetStringKey_StSMap_Leptons(mapVartoLabel, true);
     SetStringKey_StSMap_Leptons(mapVartoLabel, false);
     for (int iSmear = 0; iSmear < 2; ++iSmear) {

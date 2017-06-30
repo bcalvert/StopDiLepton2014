@@ -10,7 +10,7 @@ inline void SetPassCutMap(passCutMap &inputCutMap, vector<SampleT> * subSampVec,
     
     float cutMT2ll = 80.;
     float cutMT2bb_ZMET = 170.;
-    float cutMT2lblb = 150.;
+    float cutMT2lblb = 170;
     
     for (unsigned int iSS = 0; iSS < subSampVec->size(); ++iSS) {
         inputCutMap[subSampVec->at(iSS).histNameSuffix] = false;
@@ -41,11 +41,71 @@ inline void SetPassCutMap(passCutMap &inputCutMap, vector<SampleT> * subSampVec,
             if (!(subSampVec->at(iSS).doZVeto < 0 || inESPI->addELI->EventDiLepinZMass != subSampVec->at(iSS).doZVeto)) continue;
         }
         if (subSampVec->at(iSS).histNameSuffix.Contains("FullCut")) {
+            if (doVerbosity) {
+                cout << "inESPI->addEMI->MET_EMT2I.EventMT2ll " << inESPI->addEMI->MET_EMT2I.EventMT2ll << endl;
+                cout << "inESPI->addEMI->MET_EMT2I.EventMT2lblb " << inESPI->addEMI->MET_EMT2I.EventMT2lblb << endl;
+                cout << "inESPI->addEMI->MET_EMT2I.EventMT2bb_ZMET " << inESPI->addEMI->MET_EMT2I.EventMT2bb_ZMET << endl;
+                cout << "subSampVec->at(iSS).histNameSuffix "<< subSampVec->at(iSS).histNameSuffix << endl;
+            }
+            
             if (subSampVec->at(iSS).histNameSuffix.Contains("TTBarControl")) {
-                if (inESPI->addEMI->MET_EMT2I.EventMT2ll > cutMT2ll || inESPI->addEMI->MET_EMT2I.EventMT2lblb > cutMT2lblb || inESPI->addEMI->MET_EMT2I.EventMT2bb_ZMET > cutMT2bb_ZMET) continue;
+                if (inESPI->addEMI->MET_EMT2I.EventMT2ll > cutMT2ll || inESPI->addEMI->MET_EMT2I.EventMT2lblb > cutMT2lblb || inESPI->addEMI->MET_EMT2I.EventMT2bb_ZMET > cutMT2bb_ZMET) {
+                    if (doVerbosity) {
+                        cout << "continuing because event is not in control region " << endl;
+                    }
+                    continue;
+                }
             }
             else if (subSampVec->at(iSS).histNameSuffix.Contains("Signal")) {
-                if (inESPI->addEMI->MET_EMT2I.EventMT2ll < cutMT2ll && inESPI->addEMI->MET_EMT2I.EventMT2lblb < cutMT2lblb && inESPI->addEMI->MET_EMT2I.EventMT2bb_ZMET < cutMT2bb_ZMET) continue;
+                if (inESPI->addEMI->MET_EMT2I.EventMT2ll < cutMT2ll && inESPI->addEMI->MET_EMT2I.EventMT2lblb < cutMT2lblb && inESPI->addEMI->MET_EMT2I.EventMT2bb_ZMET < cutMT2bb_ZMET) {
+                    if (doVerbosity) {
+                        cout << "continuing because event is not in signal region " << endl;
+                    }
+                    continue;
+                }
+            }
+            else if (subSampVec->at(iSS).histNameSuffix.Contains("METSig1D")) {
+                float cutValMETSig1D = 80;
+                
+                float METSig1DHack_AllJets = TMath::Power(inESPI->addEMI->EventMET / TMath::Sqrt(inESPI->addEJI->EventHT_AllJets), 2);
+                if (inESPI->addELI->EventDiLepType != 2 && METSig1DHack_AllJets < cutValMETSig1D) {
+                    if (doVerbosity) {
+                        cout << "continuing because event has low 1D MET Significance " << endl;
+                        cout << "METSig1DHack_AllJets " << METSig1DHack_AllJets << endl;
+                    }
+                    continue;
+                }
+            }
+            else if (subSampVec->at(iSS).histNameSuffix.Contains("METSig2D")) {
+                float cutValMETSig2D = 160;
+                //cout << "inESPI->addEDSI->DP_DiLepton.BVC.Vec_Pt " << inESPI->addEDSI->DP_DiLepton.BVC.Vec_Pt << endl;
+                float resoMET2DHack_Par_AllJets = inESPI->addEJI->EventHadResParGauss_AllJets;
+                float resoMET2DHack_Perp_AllJets = inESPI->addEJI->EventHadResPerpGauss_AllJets;
+                
+                float METSig2DHack_Par_AllJets = (inESPI->addEMI->MET_ERI.recoilUPar + inESPI->addEDSI->DP_DiLepton.BVC.Vec_Pt) / resoMET2DHack_Par_AllJets;
+                float METSig2DHack_Perp_AllJets = inESPI->addEMI->MET_ERI.recoilUPerp / resoMET2DHack_Perp_AllJets;
+                
+                float METSig2DHack_AllJets = TMath::Power(METSig2DHack_Perp_AllJets, 2) + TMath::Power(METSig2DHack_Par_AllJets, 2);
+                
+                if (inESPI->addELI->EventDiLepType != 2 && METSig2DHack_AllJets < cutValMETSig2D) {
+                    if (doVerbosity) {
+                        cout << "continuing because event has low 2D MET Significance " << endl;
+                        cout << "METSig2DHack_AllJets " << METSig2DHack_AllJets << endl;
+                    }
+                    continue;
+                }
+            }
+            else if (subSampVec->at(iSS).histNameSuffix.Contains("METSigTrue")) {
+                float cutValMETSig2DTrue = 160;
+                float METSig2DTrue = inESPI->addEMI->EventMETSigTrue;
+                
+                if (inESPI->addELI->EventDiLepType != 2 && METSig2DTrue < cutValMETSig2DTrue) {
+                    if (doVerbosity) {
+                        cout << "continuing because event has low True MET Significance " << endl;
+                        cout << "METSig2DTrue " << METSig2DTrue << endl;
+                    }
+                    continue;
+                }
             }
         }
         if (doVerbosity) cout << "test 5" << endl;
@@ -68,6 +128,13 @@ inline void SetPassCutMap(passCutMap &inputCutMap, vector<SampleT> * subSampVec,
         }
         if (subSampVec->at(iSS).histNameSuffix.Contains("ZCR")) {
             if (inESPI->addEJI->EventNBtagJets > 0) continue;
+        }
+        if (subSampVec->at(iSS).histNameSuffix.Contains("LowBLepMass")) {
+            if (inESPI->addEJI->EventNJets < 2) continue;
+            if (inESPI->addEMI->MET_EMT2I.EventMassBLep0_BLepsUsed > 200 || inESPI->addEMI->MET_EMT2I.EventMassBLep1_BLepsUsed > 200) continue;
+            if (subSampVec->at(iSS).histNameSuffix.Contains("LowBLepMass170")) {
+                if (inESPI->addEMI->MET_EMT2I.EventMassBLep0_BLepsUsed > 170 || inESPI->addEMI->MET_EMT2I.EventMassBLep1_BLepsUsed > 170) continue;
+            }
         }
         if (doVerbosity) cout << "test 9" << endl;
         if (subSampVec->at(iSS).histNameSuffix.Contains("_0Jets") && inESPI->addEJI->EventNJets != 0) continue;
@@ -94,6 +161,7 @@ inline void SetPassCutMap(passCutMap &inputCutMap, vector<SampleT> * subSampVec,
     }    
 }
 inline void HistogramFill(passCutMap * inputCutMap, StV_Map * inStVM, vector<SampleT> * subSampVec, vector<HistogramT> * HistTVec, HMap_1D * inputHMap1D, HMap_2D * inputHMap2D, HMap_3D * inputHMap3D, EventStructPointerInfo * inESPI, int numDims = 1, TString stringSystCheck = "", bool doVerbosity = false) {
+    
     float fillWeight;
     StV_Map::iterator xIter;
     StV_Map::iterator yIter;
@@ -168,6 +236,7 @@ inline void HistogramFill(passCutMap * inputCutMap, StV_Map * inStVM, vector<Sam
                     }
                     //Check to see if should be blinded data
                     if (subSampVec->at(iSS).blindDataChannel && inESPI->addBEI->blindData && inESPI->addBEI->doData) {
+                        //cout << "going to check if blinded" << endl;
                         if (HistTVec->at(iHT).HistContainsStringAsAxisVar("MT2ll", numDims) && inESPI->addEMI->MET_EMT2I.EventMT2ll > MT2llCut) continue;
                         if (HistTVec->at(iHT).HistContainsStringAsAxisVar("MT2lb", numDims) && inESPI->addEMI->MET_EMT2I.EventMT2lblb > MT2lbCut) continue;                        
                     }
@@ -230,14 +299,15 @@ inline void HistogramFill(passCutMap * inputCutMap, StV_Map * inStVM, vector<Sam
     }
 }
 
-inline void SetupMapsAndFillHistograms(StV_Map &inStVM, passCutMap &inPCM, vector<SampleT> * subSampVec, EventStructPointerInfo * inESPI, EventPileUpInfo * inEPI, vector< vector<HistogramT> *> * inVecVecHistT, HMap_1D * inputHMap1D, HMap_2D * inputHMap2D, HMap_3D * inputHMap3D, float METSig_Raw, int systDimStop, int whichSyst = 0, bool isSmear = false, int whichDiLepTypeGlobal = -1, bool doVerbosity = false) {
-    
-    int numSpaceDimensions = 3;
+inline void SetupMapsAndFillHistograms(StV_Map &inStVM, passCutMap &inPCM, vector<SampleT> * subSampVec, EventStructPointerInfo * inESPI, EventPileUpInfo * inEPI, vector< vector<HistogramT> *> * inVecVecHistT, HMap_1D * inputHMap1D, HMap_2D * inputHMap2D, HMap_3D * inputHMap3D, float METSig_Raw, int numSpaceDimensions, int systDimStop, int whichSyst = 0, bool isData = false, bool isSmear = false, int whichDiLepTypeGlobal = -1, bool doVerbosity = false) {
     bool hasMoreThan2Leps = inESPI->addELI->HasMoreThanNLeps();
     
     TString systStringCheck = "";    
-    if (whichSyst != 0) {
+    if (whichSyst != 0 && !isData) {
         systStringCheck = SystString_v4(whichSyst);
+    }
+    else if (whichSyst != 0 && isData) {
+        systStringCheck = SystString_FakeLep(whichSyst);
     }
     
     /// Set up Event Variables Map
@@ -264,5 +334,76 @@ inline void SetupMapsAndFillHistograms(StV_Map &inStVM, passCutMap &inPCM, vecto
         HistogramFill(&inPCM, &inStVM, subSampVec, inVecVecHistT->at(iDim), inputHMap1D, inputHMap2D, inputHMap3D, inESPI, iDim + 1, systStringCheck, doVerbosity);
     }
 }
+
+
+
+TString SystString_PDF(int whichSyst) {
+    int numCT10 = 25;
+    int numMSTW = 23;
+    int numNNPDF = 50;
+    TString baseNameCT10 = "CT10EV";
+    TString baseNameMSTW = "MSTWEV";
+    TString baseNameNNPDF = "NNPDFEV";
+    
+    TString baseString = "";
+    if (abs(whichSyst) == 1) {
+        baseString = "genRecoilRW";
+    }
+    else if (abs(whichSyst) > 1 && abs(whichSyst) <= numCT10 + 1) {
+        baseString = baseNameCT10;
+        baseString += abs(whichSyst) - 1;
+    }
+    else if (abs(whichSyst) > 1 + numCT10 && abs(whichSyst) <= numCT10 + numMSTW + 1) {
+        baseString = baseNameMSTW;
+        baseString += abs(whichSyst) - 1 - numCT10;
+    }
+    else if (abs(whichSyst) > 1 + numCT10 + numMSTW && abs(whichSyst) <= numCT10 + numMSTW + numNNPDF + 1) {
+        baseString = baseNameNNPDF;
+        baseString += abs(whichSyst) - 1 - numCT10 - numMSTW;
+    }
+    if (whichSyst < 0) {
+        baseString += "ShiftDown";
+    }
+    else {
+        baseString += "ShiftUp";
+    }
+    return baseString;
+}
+
+inline void SetupMapsAndFillHistograms_PDF(StV_Map &inStVM, passCutMap &inPCM, vector<SampleT> * subSampVec, EventStructPointerInfo * inESPI, EventPileUpInfo * inEPI, vector< vector<HistogramT> *> * inVecVecHistT, HMap_1D * inputHMap1D, HMap_2D * inputHMap2D, HMap_3D * inputHMap3D, float METSig_Raw, int systDimStop, int whichSyst = 0, bool isData = false, bool isSmear = false, int whichDiLepTypeGlobal = -1, bool doVerbosity = false) {
+    
+    int numSpaceDimensions = 3;
+    bool hasMoreThan2Leps = inESPI->addELI->HasMoreThanNLeps();
+    
+    TString systStringCheck = "";
+    if (whichSyst != 0 && !isData) {
+        systStringCheck = SystString_PDF(whichSyst);
+    }
+    
+    /// Set up Event Variables Map
+    SetStringKey_StFMap(inStVM, inESPI, inEPI, METSig_Raw);
+    if (doVerbosity) {
+        TString verboseString = isSmear ? "Smeared " : "";
+        verboseString += whichSyst == 0 ? "centVal" : systStringCheck;
+        cout << "going to print out the StVMap contents " << endl;
+        for (StV_Map::iterator xIter = inStVM.begin(); xIter != inStVM.end(); ++xIter) {
+            cout << verboseString << " xIter first " << xIter->first << endl;
+            cout << verboseString << " xIter second " << xIter->second << endl;
+        }
+    }
+    if (doVerbosity) {
+        cout << "whichDiLepTypeGlobal? " << whichDiLepTypeGlobal << endl;
+        cout << "event type: " << inESPI->addELI->EventDiLepType << endl;
+    }
+    /// Set up Event Passes Sub-cuts Map
+    SetPassCutMap(inPCM, subSampVec, inESPI, whichDiLepTypeGlobal, hasMoreThan2Leps, doVerbosity);
+    
+    /// Fill histograms
+    for (int iDim = 0; iDim < numSpaceDimensions; ++iDim) {
+        if (whichSyst != 0 && iDim >= systDimStop) continue;
+        HistogramFill(&inPCM, &inStVM, subSampVec, inVecVecHistT->at(iDim), inputHMap1D, inputHMap2D, inputHMap3D, inESPI, iDim + 1, systStringCheck, doVerbosity);
+    }
+}
+
 
 

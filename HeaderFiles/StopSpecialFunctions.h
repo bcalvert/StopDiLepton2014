@@ -1,11 +1,10 @@
 // function used for calculating MT2 with given input TLorentzVectors, and a MET value
 #include "TLorentzVector.h"
 #include "../PlotMakingCode/mt2bisect.h"
+namespace MT2 {
+  float    getMT2(TLorentzVector, TLorentzVector, float, float, float);
 
-float    getMT2(TLorentzVector, TLorentzVector, float, float, float);
-
-
-inline float getMT2(TLorentzVector lept1, TLorentzVector lept2, float theMET, float theMETphi, bool useMassless, float inputTestMass = 0){
+  float getMT2(TLorentzVector lept1, TLorentzVector lept2, float theMET, float theMETphi, bool useMassless, float inputTestMass = 0) {
     // Calculate MT2 variable for two leptons and missing energy, assuming zero testmass
     double pa[3];
     double pb[3];
@@ -25,8 +24,8 @@ inline float getMT2(TLorentzVector lept1, TLorentzVector lept2, float theMET, fl
     
     
     if (useMassless) {
-        pa[0] = 0.;
-        pb[0] = 0;
+      pa[0] = 0.;
+      pb[0] = 0;
     }
     else {
         pa[0] = lept1.M();
@@ -40,9 +39,9 @@ inline float getMT2(TLorentzVector lept1, TLorentzVector lept2, float theMET, fl
     double MT2 = MT2bisect->get_mt2();
     delete MT2bisect;
     return MT2;
-}
+  }
 
-inline float getMT2MN(TLorentzVector lept1, TLorentzVector lept2, float theMET, float theMETphi, bool useMassless, float inputMass){
+  float getMT2MN(TLorentzVector lept1, TLorentzVector lept2, float theMET, float theMETphi, bool useMassless, float inputMass){
     // Calculate MT2 variable for two leptons and missing energy, assuming zero testmass
     double pa[3];
     double pb[3];
@@ -76,4 +75,5 @@ inline float getMT2MN(TLorentzVector lept1, TLorentzVector lept2, float theMET, 
     double MT2 = MT2bisect->get_mt2();
     delete MT2bisect;
     return MT2;
+  } 
 }

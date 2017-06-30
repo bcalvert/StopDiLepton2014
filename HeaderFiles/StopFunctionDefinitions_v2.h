@@ -1999,6 +1999,7 @@ inline void SetMETSmearHistMap(strInt_Map &inputHistSmearMap) {
     
     inputHistSmearMap["T2tt"] = TTBarIndex;
     inputHistSmearMap["T2bw"] = TTBarIndex;
+    inputHistSmearMap["T2tb"] = TTBarIndex;
     
     inputHistSmearMap["TTbar_Powheg"]           = TTBarIndex;
     inputHistSmearMap["TTbar_Madgraph"]         = TTBarIndex;
@@ -2064,6 +2065,7 @@ inline void SetGenRWMap(strInt_Map &inputGenRWMap) {
     
     inputGenRWMap["T2tt"] = SUSYIndex;
     inputGenRWMap["T2bw"] = SUSYIndex;
+    inputGenRWMap["T2tb"] = SUSYIndex;
     
     inputGenRWMap["TTbar_Powheg"]           = TTBarIndex;
     inputGenRWMap["TTbar_Madgraph"]         = TTBarIndex;

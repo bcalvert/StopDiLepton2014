@@ -14,6 +14,9 @@ typedef struct SignalRunSettings {
     float CharginoMassFracDiffThresh;
     bool isT2tt, isT2ttFineBin, isTightBin;
     
+    bool isT2tb;
+    int cutT2tbDecayType;
+    
     TString stringSRS;
     
     void DefaultVarVals() {
@@ -21,7 +24,7 @@ typedef struct SignalRunSettings {
         
         grabStopMass = -1;
         grabChi0Mass = -1;
-        grabCharginoMassFrac = 0.0; 
+        grabCharginoMassFrac = 0.0;
         stopPolPercentRight = -1;
         
         doMassCutSkim = 0;
@@ -33,8 +36,10 @@ typedef struct SignalRunSettings {
         massDiffThresh = 5;
         CharginoMassFracDiffThresh = 0.125;
         isT2tt = false;
+        isT2tb = false;
         isT2ttFineBin = false;
         isTightBin = false;
+        cutT2tbDecayType = 1;
         
         stringSRS = "";
     }
@@ -43,11 +48,15 @@ typedef struct SignalRunSettings {
         stringSRS = "";
         if (whichType == 2) {
             if (isSignal) {
+                if (isT2tb) {
+                    stringSRS += "_T2tbDecayType";
+                    stringSRS += cutT2tbDecayType;
+                }
                 stringSRS += "_SignalStop";
                 stringSRS += grabStopMass;
                 stringSRS += "_Chi0";
                 stringSRS += grabChi0Mass;
-                if (grabCharginoMassFrac >= 0) {                        
+                if (grabCharginoMassFrac >= 0) {
                     stringSRS += "_Chargino";
                     stringSRS += grabCharginoMassFrac;
                 }
@@ -85,7 +94,7 @@ typedef struct RunRangeLimits {
         }
         else if (doSpecRunEvent) {
             stringRRL += "_specRunEvent";
-        }        
+        }
         if (isLimStats) {
             stringRRL += "_isLimStats_";
             stringRRL += nEvents;
@@ -104,10 +113,10 @@ typedef struct PlotSaveInfoVars {
     
     bool useOldNTuple;
     bool useSpecialMET;
-
+    
     bool makeGenJetCheck;
     
-
+    
     void DefaultVarVals() {
         grabOutDir      = 0;      // whether or not to use the file: "outputSavePath.txt" for where to save output
         outputSavePathString = "outputSavePath";
@@ -120,8 +129,8 @@ typedef struct PlotSaveInfoVars {
         
         useOldNTuple = 1;
         useSpecialMET = 0;
-
-	makeGenJetCheck = 0;
+        
+        makeGenJetCheck = 0;
     }
 } PlotSaveInfoVars;
 
@@ -129,19 +138,21 @@ typedef struct SampMakingVariables {
     // but also contains parameters about running on the event -- doing PURW-ing?, doing Data?, etc.
     
     TString stringSMV;
-
+    
     //// general settings that will vary
     int whichDiLepType;
-
+    
     // plot making settings
     int subLepPtCut;
+    
+    bool saveExtraInfo;
     
     
     bool  doData, doBlindData; // data specific booleans
     
     //general booleans that should basically always be on -- not necessarily MC or data specific
     bool doPURW, doPhiCorr;
-      
+    
     ////MC specific variables
     // MC specific booleans
     bool doBookSyst, doGenRecoil, doOfficialSmear, doDropFakes;
@@ -175,7 +186,9 @@ typedef struct SampMakingVariables {
         whichDiLepType = -1;
         
         subLepPtCut      = 10;    // Sets the pT cut used for subLepPtCut
-
+        
+        saveExtraInfo = false;
+        
         
         doPURW = 1;     // run pile up reweighting
         doPhiCorr = 1;  // whether to do the MetPhi asymmetry correction
@@ -184,10 +197,14 @@ typedef struct SampMakingVariables {
         
         stringSMV = "";
     }
+    void SetBEIValues(bool &doDataBEI, bool &doBlindDataBEI) {
+        doDataBEI = doData;
+        doBlindDataBEI = doBlindData;
+    }
     void SetSMVString(int whichType) {
         TString stringDiLep[3] = {"_MuMu", "_EE", "_EMu"};
         
-        stringSMV = "";        
+        stringSMV = "";
         if (whichType == 2) {
             if (doData && !estFakeLep) {
                 stringSMV += doBlindData ? "MT2Leq80" : "_NOTBLIND";
@@ -195,7 +212,7 @@ typedef struct SampMakingVariables {
         }
         stringSMV += "_Oviedo";
         if (!doPURW && !doData) {
-            stringSMV += "_NoPURW";   
+            stringSMV += "_NoPURW";
         }
         if (typeJetSmear != 1) {
             stringSMV += "_JetsSmeared_";
@@ -207,7 +224,7 @@ typedef struct SampMakingVariables {
             stringSMV += "_wSS";
             stringSMV+= whichSSType;
         }
-	if (whichType == 1 && (!doBookSyst && !doData)) stringSMV += "_noSyst";
+        if (whichType == 1 && (!doBookSyst && !doData)) stringSMV += "_noSyst";
         if (whichType == 2) {
             if (!doBookSyst && (!doData || (doData && estFakeLep))) stringSMV += "_noSyst";
             if (doOfficialSmear) stringSMV += "_OfficialSmear";
@@ -228,6 +245,9 @@ typedef struct SampMakingVariables {
                 stringSMV += "_FakeLepDD";
             }
         }
+        if (saveExtraInfo) {
+            stringSMV += "_SkimExtraInfo";
+        }
     }
     TString SampString(int sampType) {
         TString outString = "";
@@ -237,7 +257,7 @@ typedef struct SampMakingVariables {
             outString += ".root";
         }
         else if (sampType < 0) {
-             outString += "_Output.root";
+            outString += "_Output.root";
         }
         else {
             switch(sampType) {
@@ -265,7 +285,7 @@ typedef struct SampMakingVariables {
     TString TTBarSaveString() {
         return "FIXME";
     }
-    void SetVals(int argc, char * argv[]) {        
+    void SetVals(int argc, char * argv[]) {
         for (int k = 0; k < argc; ++k) {
             if (strncmp (argv[k],"typeJetSmear", 12) == 0) {
                 typeJetSmear = strtol(argv[k+1], NULL, 10);
@@ -275,14 +295,17 @@ typedef struct SampMakingVariables {
                 typeJetSmear = strtol(argv[k+1], NULL, 10);
             }
             else if (strncmp (argv[k],"noPhiCorr", 9) == 0) {
-                doPhiCorr = 0;   
-            }        
+                doPhiCorr = 0;
+            }
             else if (strncmp (argv[k],"doOfficialSmear", 9) == 0) {
                 doOfficialSmear = 1;
             }
+            else if (strncmp (argv[k],"saveExtraInfo", 13) == 0) {
+                saveExtraInfo = 1;
+            }
             else if (strncmp (argv[k],"wTTbarGen", 9) == 0) {
                 whichTTbarGen = strtol(argv[k+1], NULL, 10 );
-            }           
+            }
             else if (strncmp (argv[k],"noExcSamps", 10) == 0) {
                 doExcSamps = 0;
             }
@@ -290,13 +313,13 @@ typedef struct SampMakingVariables {
                 doDropFakes = 1;
             }
             else if (strncmp (argv[k],"noPURW", 6) == 0) {
-                doPURW = 0;           
+                doPURW = 0;
             }
             else if (strncmp (argv[k],"noBookSyst", 10) == 0) {
                 doBookSyst = 0;
             }
             else if (strncmp (argv[k],"noGenRecRW", 10) == 0) {
-//                cout << "genRecoil is on! " << endl;
+                //                cout << "genRecoil is on! " << endl;
                 doGenRecoil = 0;
             }
             else if (strncmp (argv[k],"typeDiLep", 9) == 0) {
@@ -306,9 +329,9 @@ typedef struct SampMakingVariables {
                 doBlindData = 0;
                 cout << "RELEASING THE KRAKEN!!! " << endl;
                 cout << "http://www.youtube.com/watch?v=gb2zIR2rvRQ " << endl;
-            }       
+            }
             else if (strncmp (argv[k],"subLepPt", 8) == 0) {
-                subLepPtCut = strtol(argv[k+1], NULL, 10);   
+                subLepPtCut = strtol(argv[k+1], NULL, 10);
             }
             else if (strncmp (argv[k],"keepLL", 6) == 0) {
                 keepLooseLeps = 1;
@@ -317,11 +340,14 @@ typedef struct SampMakingVariables {
                 estFakeLep = 1;
                 keepLooseLeps = 1;
                 doBlindData = 0;
-                cout << "not saving systematics on fake lepton for now!! " << endl;
-                doBookSyst = 0;
+                //                cout << "not saving systematics on fake lepton for now!! " << endl;
+                doBookSyst = 1;
             }
             else if (strncmp (argv[k], "isSig", 5) == 0) {
                 whichSSType = 2;
+            }
+            else if (strncmp (argv[k], "isSig_Skim", 10) == 0) {
+                whichSSType = -1;
             }
             else if (strncmp (argv[k], "whichSS", 7) == 0) {
                 whichSSType = strtol(argv[k+1], NULL, 10);
@@ -343,18 +369,22 @@ typedef struct PlotMakingRunParams {
         RRL.DefaultVarVals();
         SRS.DefaultVarVals();
         SMV.DefaultVarVals();
-    }    
-    void SetVals(int argc, char * argv[]) {        
+    }
+    void SetVals(int argc, char * argv[]) {
         for (int k = 0; k < argc; ++k) {
             cout << "argv[k] for k = " << k << " is: " << argv[k] << endl;
             
-            if (strncmp (argv[k],"-i", 2) == 0) { 
+            if (strncmp (argv[k],"-i", 2) == 0) {
                 PSIV.fInName = TString(argv[k+1]);
                 if (PSIV.fInName.Contains("MuEG") || PSIV.fInName.Contains("DoubleMu") || PSIV.fInName.Contains("DoubleEl") || PSIV.fInName.Contains("run2012")) {
                     cout << "Running on Data" << endl;
                     SMV.doData = 1;
                     SMV.doBookSyst = 0;
-                }                
+                }
+                else {
+                    SMV.doData = 0;
+                    SMV.doBlindData = 0;
+                }
             }
             else if (strncmp (argv[k],"doVerbosity_Skim", 16) == 0) {
                 PSIV.doVerbosity = 1;
@@ -362,26 +392,26 @@ typedef struct PlotMakingRunParams {
                 PSIV.levelJetVerbosity = strtol(argv[k+2], NULL, 10);
             }
             else if (strncmp (argv[k],"-sInd", 5) == 0) {
-                RRL.startPoint = strtol(argv[k+1], NULL, 10);           
+                RRL.startPoint = strtol(argv[k+1], NULL, 10);
             }
             else if (strncmp (argv[k],"pEvNum", 6) == 0) {
                 PSIV.printEventNum = 1;
             }
             else if (strncmp (argv[k],"doMassCut", 9) == 0) {
                 SRS.doMassCutSkim = 1;
-                SRS.genStopMassCut = strtol(argv[k+1], NULL, 10);   
-                SRS.genChi0MassCut = strtol(argv[k+2], NULL, 10);   
-                SRS.genCharginoMassCut = strtol(argv[k+3], NULL, 10);   
-            } 
+                SRS.genStopMassCut = strtol(argv[k+1], NULL, 10);
+                SRS.genChi0MassCut = strtol(argv[k+2], NULL, 10);
+                SRS.genCharginoMassCut = strtol(argv[k+3], NULL, 10);
+            }
             else if (strncmp (argv[k],"doVerbosity", 11) == 0) {
-                PSIV.doVerbosity = 1;   
+                PSIV.doVerbosity = 1;
             }
             else if (strncmp (argv[k],"doPlotVerbosity", 15) == 0) {
-                PSIV.doVerbosity_Plots = 1;   
+                PSIV.doVerbosity_Plots = 1;
             }
             else if (strncmp (argv[k],"gOutDir", 7) == 0) {
                 PSIV.grabOutDir = 1;
-            }        
+            }
             else if (strncmp (argv[k], "OutDirName", 10) == 0) {
                 PSIV.outputSavePathString = TString(argv[k+1]);
             }
@@ -395,8 +425,8 @@ typedef struct PlotMakingRunParams {
                 RRL.doSpecRun = 1;
                 RRL.whichRun = strtol(argv[k+1], NULL, 10);
             }
-            else if (strncmp (argv[k],"isSig_Skim", 10) == 0) {
-                SRS.isSignal = 1;               
+            else if (strncmp (argv[k], "isSig_Skim", 10) == 0) {
+                SRS.isSignal = 1;
             }
             else if (strncmp (argv[k],"isTightBin", 10) == 0) {
                 SRS.isTightBin = 1;
@@ -410,6 +440,9 @@ typedef struct PlotMakingRunParams {
                 SRS.stopPolPercentRight = strtol(argv[k+4], NULL, 10);
                 cout << "Looking for StopMass: " << SRS.grabStopMass << ", Chi0Mass: " << SRS.grabChi0Mass << ", and CharginoMassFrac: " << SRS.grabCharginoMassFrac << endl;
                 cout << "as well, looking for stop polarization " << SRS.stopPolPercentRight << endl;
+            }
+            else if (strncmp (argv[k],"typeDecay_T2tb", 14) == 0) {
+                SRS.cutT2tbDecayType = strtol(argv[k+2], NULL, 10);
             }
             else if (strncmp (argv[k],"limStats", 8) == 0) {
                 RRL.isLimStats = 1;

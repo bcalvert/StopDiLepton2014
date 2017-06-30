@@ -8,6 +8,12 @@ typedef struct ElecCutInfo {
     vector<float> vecCutDelta0, vecCutDeltaZ;
     vector<float> vecCutDeltaEP, vecCutRelIso;
     vector<float> vecCutMissHits;
+    
+// Look Here for Trigger ID definitions: https://twiki.cern.ch/twiki/bin/viewauth/CMS/EgammaCutBasedIdentification#Tight_Trigger_ID
+    vector<float> vecCutDeltaEtaIn_Trigger, vecCutDeltaPhiIn_Trigger;
+    vector<float> vecCutSigIetaIeta_Trigger, vecCutHOverE_Trigger;
+    vector<float> vecCutRelIsoECAL_Trigger, vecCutRelIsoHCAL_Trigger, vecCutRelIsoTrack_Trigger;
+    
     void SetElecCutVars(int cutStrength) {
         // cutStrength 0: Loose, 1: Medium, 2: Tight
         float cutDeltEtaBarrel[3] = {0.007, 0.004, 0.004};        
@@ -65,6 +71,61 @@ typedef struct ElecCutInfo {
         vecCutMissHits.resize(2);
         vecCutMissHits[0] = cutMissHitsBarrel[cutStrength];
         vecCutMissHits[1] = cutMissHitsEndcap[cutStrength];
+        
+        
+        //Numbers for Trigger ID
+        
+        
+        
+        float cutDeltEtaBarrel_Trigger = 0.007;
+        float cutDeltEtaEndcap_Trigger = 0.009;
+
+        float cutDeltPhiBarrel_Trigger = 0.15;
+        float cutDeltPhiEndcap_Trigger = 0.10;
+        
+        
+        float cutSigIetaIetaBarrel_Trigger = 0.01;
+        float cutSigIetaIetaEndcap_Trigger = 0.03;
+
+        float cutHOverEBarrel_Trigger = 0.12;
+        float cutHOverEEndcap_Trigger = 0.10;
+        
+        float cutRelECALIsoBarrel_Trigger = 0.2;
+        float cutRelECALIsoEndcap_Trigger = 0.2;
+        
+        float cutRelHCALIsoBarrel_Trigger = 0.2;
+        float cutRelHCALIsoEndcap_Trigger = 0.2;
+
+        float cutRelTrackIsoBarrel_Trigger = 0.2;
+        float cutRelTrackIsoEndcap_Trigger = 0.2;
+        
+        vecCutDeltaEtaIn_Trigger.resize(2);
+        vecCutDeltaEtaIn_Trigger[0] = cutDeltEtaBarrel_Trigger;
+        vecCutDeltaEtaIn_Trigger[1] = cutDeltEtaEndcap_Trigger;
+        
+        vecCutDeltaPhiIn_Trigger.resize(2);
+        vecCutDeltaPhiIn_Trigger[0] = cutDeltPhiBarrel_Trigger;
+        vecCutDeltaPhiIn_Trigger[1] = cutDeltPhiEndcap_Trigger;
+        
+        vecCutSigIetaIeta_Trigger.resize(2);
+        vecCutSigIetaIeta_Trigger[0] = cutSigIetaIetaBarrel_Trigger;
+        vecCutSigIetaIeta_Trigger[1] = cutSigIetaIetaEndcap_Trigger;
+        
+        vecCutHOverE_Trigger.resize(2);
+        vecCutHOverE_Trigger[0] = cutHOverEBarrel_Trigger;
+        vecCutHOverE_Trigger[1] = cutHOverEEndcap_Trigger;
+        
+        vecCutRelIsoECAL_Trigger.resize(2);
+        vecCutRelIsoECAL_Trigger[0] = cutRelECALIsoBarrel_Trigger;
+        vecCutRelIsoECAL_Trigger[1] = cutRelECALIsoEndcap_Trigger;
+        
+        vecCutRelIsoHCAL_Trigger.resize(2);
+        vecCutRelIsoHCAL_Trigger[0] = cutRelHCALIsoBarrel_Trigger;
+        vecCutRelIsoHCAL_Trigger[1] = cutRelHCALIsoEndcap_Trigger;
+        
+        vecCutRelIsoTrack_Trigger.resize(2);
+        vecCutRelIsoTrack_Trigger[0] = cutRelTrackIsoBarrel_Trigger;
+        vecCutRelIsoTrack_Trigger[1] = cutRelTrackIsoEndcap_Trigger;
     }
     void DefaultCutVarVals() {
         SetElecCutVars(1);
@@ -72,8 +133,23 @@ typedef struct ElecCutInfo {
     void SetAsFakeLepECI() {
         SetElecCutVars(0);
     }
-    bool PassStage1(int indexToUse, float elecDEtaIn, float elecDPhiIn, float elecSigIetaIeta, float elecHtoE) {
+    bool PassStage1(int indexToUse, float elecDEtaIn, float elecDPhiIn, float elecSigIetaIeta, float elecHtoE, int levelVerbosity = 0) {
         bool passCuts;
+        if (levelVerbosity) {
+            cout << "indexToUse " << indexToUse << endl;
+            cout << endl;
+            cout << "fabs(elecDEtaIn) " << fabs(elecDEtaIn) << endl;
+            cout << "vecCutDeltaEtaIn[indexToUse] " << vecCutDeltaEtaIn[indexToUse] << endl;
+            cout << endl;
+            cout << "fabs(elecDPhiIn) " << fabs(elecDPhiIn) << endl;
+            cout << "vecCutDeltaPhiIn[indexToUse] " << vecCutDeltaPhiIn[indexToUse] << endl;
+            cout << endl;
+            cout << "elecSigIetaIeta " << elecSigIetaIeta << endl;
+            cout << "vecCutSigIetaIeta[indexToUse] " << vecCutSigIetaIeta[indexToUse] << endl;
+            cout << endl;
+            cout << "elecHtoE " << elecHtoE << endl;
+            cout << "vecCutHOverE[indexToUse] " << vecCutHOverE[indexToUse] << endl;
+        }
         if (fabs(elecDEtaIn) < vecCutDeltaEtaIn[indexToUse] && fabs(elecDPhiIn) < vecCutDeltaPhiIn[indexToUse] && elecSigIetaIeta < vecCutSigIetaIeta[indexToUse] && elecHtoE < vecCutHOverE[indexToUse]) {
             passCuts = true;
         }
@@ -82,9 +158,23 @@ typedef struct ElecCutInfo {
         }
         return passCuts;
     }
-    
-    bool PassStage2(int indexToUse, float elecRelIso, float elecD0, float elecDZ, float elecEtoP, float elecEn) {
+    bool PassStage2(int indexToUse, float elecRelIso, float elecD0, float elecDZ, float elecEtoP, float elecEn, int levelVerbosity = 0) {
         bool passCuts;
+        if (levelVerbosity) {
+            cout << "indexToUse " << indexToUse << endl;
+            cout << endl;
+            cout << "fabs(elecD0) " << fabs(elecD0) << endl;
+            cout << "vecCutDelta0[indexToUse] " << vecCutDelta0[indexToUse] << endl;
+            cout << endl;
+            cout << "fabs(elecDZ) " << fabs(elecDZ) << endl;
+            cout << "vecCutDeltaZ[indexToUse] " << vecCutDeltaZ[indexToUse] << endl;
+            cout << endl;
+            cout << "fabs((1 - elecEtoP)/elecEn) " << fabs((1 - elecEtoP)/elecEn) << endl;
+            cout << "vecCutDeltaEP " << vecCutDeltaEP[indexToUse] << endl;
+            cout << endl;
+            cout << "elecRelIso " << elecRelIso << endl;
+            cout << "vecCutRelIso[indexToUse] " << vecCutRelIso[indexToUse] << endl;
+        }
         if (fabs(elecD0) < vecCutDelta0[indexToUse] && fabs(elecDZ) < vecCutDeltaZ[indexToUse] && fabs((1 - elecEtoP)/elecEn) < vecCutDeltaEP[indexToUse] && elecRelIso < vecCutRelIso[indexToUse]) {
             passCuts = true;
         }
@@ -92,7 +182,55 @@ typedef struct ElecCutInfo {
             passCuts = false;
         }
         return passCuts;
-    }    
+    }
+    
+    bool PassLooseCutTrigger_Stage1(int indexToUse, float elecDEtaIn, float elecDPhiIn, float elecSigIetaIeta, float elecHtoE, int levelVerbosity = 0) {
+        bool passCuts;
+        if (levelVerbosity) {
+            cout << "indexToUse " << indexToUse << endl;
+            cout << endl;
+            cout << "fabs(elecDEtaIn) " << fabs(elecDEtaIn) << endl;
+            cout << "vecCutDeltaEtaIn_Trigger[indexToUse] " << vecCutDeltaEtaIn_Trigger[indexToUse] << endl;
+            cout << endl;
+            cout << "fabs(elecDPhiIn) " << fabs(elecDPhiIn) << endl;
+            cout << "vecCutDeltaPhiIn_Trigger[indexToUse] " << vecCutDeltaPhiIn_Trigger[indexToUse] << endl;
+            cout << endl;
+            cout << "elecSigIetaIeta " << elecSigIetaIeta << endl;
+            cout << "vecCutSigIetaIeta_Trigger[indexToUse] " << vecCutSigIetaIeta_Trigger[indexToUse] << endl;
+            cout << endl;
+            cout << "elecHtoE " << elecHtoE << endl;
+            cout << "vecCutHOverE_Trigger[indexToUse] " << vecCutHOverE_Trigger[indexToUse] << endl;
+        }
+        if (fabs(elecDEtaIn) < vecCutDeltaEtaIn_Trigger[indexToUse] && fabs(elecDPhiIn) < vecCutDeltaPhiIn_Trigger[indexToUse] && elecSigIetaIeta < vecCutSigIetaIeta_Trigger[indexToUse] && elecHtoE < vecCutHOverE_Trigger[indexToUse]) {
+            passCuts = true;
+        }
+        else {
+            passCuts = false;
+        }
+        return passCuts;
+    }
+    bool PassLooseCutTrigger_Stage2(int indexToUse, float elecRelIsoECAL, float elecRelIsoHCAL, float elecRelIsoTrack, int levelVerbosity = 0) {
+        bool passCuts;
+        if (levelVerbosity) {
+            cout << "indexToUse " << indexToUse << endl;
+            cout << endl;
+            cout << "elecRelIsoECAL " << elecRelIsoECAL << endl;
+            cout << "vecCutRelIsoECAL_Trigger " << vecCutRelIsoECAL_Trigger[indexToUse] << endl;
+            cout << endl;
+            cout << "elecRelIsoHCAL " << elecRelIsoHCAL << endl;
+            cout << "vecCutRelIsoHCAL_Trigger " << vecCutRelIsoHCAL_Trigger[indexToUse] << endl;
+            cout << endl;
+            cout << "elecRelIsoTrack " << elecRelIsoTrack << endl;
+            cout << "vecCutRelIsoTrack_Trigger " << vecCutRelIsoTrack_Trigger[indexToUse] << endl;
+        }
+        if (elecRelIsoECAL < vecCutRelIsoECAL_Trigger[indexToUse] && elecRelIsoHCAL < vecCutRelIsoHCAL_Trigger[indexToUse] && elecRelIsoTrack < vecCutRelIsoTrack_Trigger[indexToUse]) {
+            passCuts = true;
+        }
+        else {
+            passCuts = false;
+        }
+        return passCuts;
+    }
 } ElecCutInfo;
 
 typedef struct JetCutInfo {

@@ -972,13 +972,15 @@ typedef struct IndSamplePlotInfo {
     
     
     
-    void GrabHistSyst(TString baseHistGrabName, vector<TString> * vecSystNameAppends, bool doVerbosity = false) {
+    void GrabHistSyst(TString baseHistGrabName, vector<TString> * vecSystNameAppends, bool doVerbosity = false, bool addShift = true) {
         TString grabName;
         for (unsigned int iSyst = 0; iSyst < vecSystNameAppends->size(); ++iSyst) {
             grabName = baseHistGrabName;
             grabName = CorrGrabName(grabName, sampleType);
             grabName += vecSystNameAppends->at(iSyst);
-            grabName += "Shift";
+            if (addShift) {
+                grabName += "Shift";
+            }
             if (vecShouldGrabSyst[iSyst]) {
                 
                 if (doVerbosity) {
@@ -1022,7 +1024,7 @@ typedef struct IndSamplePlotInfo {
             }
         }
     }
-    void GrabHistSyst(vector<TString> * vecBaseHistGrabNames, vector<TString> * vecSystNameAppends, bool doVerbosity = false) {
+    void GrabHistSyst(vector<TString> * vecBaseHistGrabNames, vector<TString> * vecSystNameAppends, bool doVerbosity = false, bool addShift = true) {
         TH1 * currHistSystUp, * currHistSystDown;
         TString grabName;
         for (unsigned int iSyst = 0; iSyst < vecSystNameAppends->size(); ++iSyst) {
@@ -1033,7 +1035,9 @@ typedef struct IndSamplePlotInfo {
                     grabName = vecBaseHistGrabNames->at(iSamp);
                     grabName = CorrGrabName(grabName, sampleType);
                     grabName += vecSystNameAppends->at(iSyst);
-                    grabName += "Shift";
+                    if (addShift) {
+                        grabName += "Shift";
+                    }
                     
                     if (doVerbosity) {
                         cout << "for file " << inputFile->GetName() << endl;
@@ -1544,14 +1548,14 @@ typedef struct HistogramDisplayStructs {
             vecISPI_asLoaded[iISPI].GrabHist(vecGrabNames, doVerbosity);
         }
     }
-    void GrabSystValues(TString baseHistGrabName, vector<TString> * vecSystNameAppends, bool doVerbosity = false) {
+    void GrabSystValues(TString baseHistGrabName, vector<TString> * vecSystNameAppends, bool doVerbosity = false, bool addShift = true) {
         for (unsigned int iISPI = 0; iISPI < vecISPI_asLoaded.size(); ++iISPI) {
-            vecISPI_asLoaded[iISPI].GrabHistSyst(baseHistGrabName, vecSystNameAppends, doVerbosity);
+            vecISPI_asLoaded[iISPI].GrabHistSyst(baseHistGrabName, vecSystNameAppends, doVerbosity, addShift);
         }
     }
-    void GrabSystValues(vector<TString> * vecBaseHistGrabNames, vector<TString> * vecSystNameAppends, bool doVerbosity = false) {
+    void GrabSystValues(vector<TString> * vecBaseHistGrabNames, vector<TString> * vecSystNameAppends, bool doVerbosity = false, bool addShift = true) {
         for (unsigned int iISPI = 0; iISPI < vecISPI_asLoaded.size(); ++iISPI) {
-            vecISPI_asLoaded[iISPI].GrabHistSyst(vecBaseHistGrabNames, vecSystNameAppends, doVerbosity);
+            vecISPI_asLoaded[iISPI].GrabHistSyst(vecBaseHistGrabNames, vecSystNameAppends, doVerbosity, addShift);
         }
     }
     void DoProjection(vector<indMCParams> * vecIndMCParams, AxisProjInfo * inAPI, HistDisplayParams * inHDP, TString compName, bool doVerbosity = false) {

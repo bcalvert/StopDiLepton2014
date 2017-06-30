@@ -1,6 +1,6 @@
 #include <iostream>
 #include <fstream>
-//#include <vector>                                                                                   
+//#include <vector>
 #include <cmath>
 #include <sstream>
 #include <vector>
@@ -14,10 +14,20 @@ using namespace std;
 #include "TPaveStats.h"
 #include "TCanvas.h"
 
+#include "Math/ProbFuncMathCore.h"
+
+
 //Functions used when making the limit plots -- need to work on this
 
-int RatioExclusionStatus(int inBinNew, int inBinOld) {
+int RatioExclusionStatus(float inBinNew, float inBinOld, bool doVerb = false) {
     int onlyExcNew = -1;
+    
+    if (doVerb) {
+        cout << "inBinNew " << inBinNew << endl;
+        cout << "excluded inBinNew? " << (inBinNew <= 1) << endl;
+        cout << "inBinOld " << inBinOld << endl;
+        cout << "excluded inBinOld? " << (inBinOld <= 1) << endl;
+    }
     
     if (inBinNew <= 1) {
         if (inBinOld <= 1) {
@@ -40,14 +50,14 @@ int RatioExclusionStatus(int inBinNew, int inBinOld) {
 }
 
 
-float BinRatioLimit(float inBinNew, float inBinOld, int &onlyExcNew) {
+float BinRatioLimit(float inBinNew, float inBinOld, int &onlyExcNew, bool doVerb = false) {
     float outRatio = -1;
     float thresh = 9998.;
     float smallThresh = 1E-5;
     if (inBinOld > thresh && inBinNew < thresh) {
-//        outRatio = 1E3;
-//        outRatio = -1;
-//        onlyExcNew = 2;
+        //        outRatio = 1E3;
+        //        outRatio = -1;
+        //        onlyExcNew = 2;
         outRatio = 500;
     }
     else if (inBinOld < smallThresh || inBinNew < smallThresh) {
@@ -58,10 +68,10 @@ float BinRatioLimit(float inBinNew, float inBinOld, int &onlyExcNew) {
     else {
         outRatio = inBinOld / inBinNew;
     }
-    onlyExcNew = RatioExclusionStatus(inBinNew, inBinOld);
+    onlyExcNew = RatioExclusionStatus(inBinNew, inBinOld, doVerb);
     return outRatio;
 }
-void ZeroNonExclPoints(TH2F * inputSigStrengthHist) {
+void ZeroNonExclPoints(TH2F * inputSigStrengthHist, float thresh = 1, bool resetZeros = true) {
     int nBinsX = inputSigStrengthHist->GetNbinsX();
     int nBinsY = inputSigStrengthHist->GetNbinsY();
     float currBinContent = 0.0, currBinErr = 0.0;
@@ -70,18 +80,20 @@ void ZeroNonExclPoints(TH2F * inputSigStrengthHist) {
             if (iBinY > iBinX) continue;
             currBinContent = inputSigStrengthHist->GetBinContent(iBinX, iBinY);
             currBinErr = inputSigStrengthHist->GetBinError(iBinX, iBinY);
-            if (currBinContent > 1) {
-                currBinContent = -9999;
+            if (currBinContent > thresh) {
+                currBinContent = -1E-6;
                 inputSigStrengthHist->SetBinContent(iBinX, iBinY, currBinContent);
             }
-            else if (currBinContent < 1E-6) {
+            else if (resetZeros && currBinContent < 1E-6) {
                 currBinContent = 0.99999999;
                 currBinErr = currBinContent;
                 inputSigStrengthHist->SetBinContent(iBinX, iBinY, currBinContent);
                 inputSigStrengthHist->SetBinError(iBinX, iBinY, currBinContent);
             }
+            
         }
     }
+    inputSigStrengthHist->GetZaxis()->SetRangeUser(0.0, inputSigStrengthHist->GetMaximum()*1.1);
 }
 TH2F * ExclConsistencyHist(TH2F * inputSigStrengthHist, int howManySig = 0) {
     TString cloneName = inputSigStrengthHist->GetName() + TString("_ExclConsistencyShift");
@@ -113,17 +125,17 @@ TH2F * ExclConsistencyHist(TH2F * inputSigStrengthHist, int howManySig = 0) {
             }
             globalMin = TMath::Min(globalMin, currBinExclConsist);
             /*
-            cout << "cloneName " << cloneName << endl;
-            cout << "iBinX " << iBinX << endl;
-            cout << "iBinY " << iBinY << endl;
-            cout << "currBinExclConsist " << currBinExclConsist << endl;
-            cout << "globalMin " << globalMin << endl;
-            */
+             cout << "cloneName " << cloneName << endl;
+             cout << "iBinX " << iBinX << endl;
+             cout << "iBinY " << iBinY << endl;
+             cout << "currBinExclConsist " << currBinExclConsist << endl;
+             cout << "globalMin " << globalMin << endl;
+             */
             outHist->SetBinContent(iBinX, iBinY, currBinExclConsist);
         }
     }
     outHist->GetZaxis()->SetRangeUser(TMath::Max(globalMin, threshTruncate), howManySig);
-//    outHist->GetZaxis()->SetRangeUser(-5, howManySig);
+    //    outHist->GetZaxis()->SetRangeUser(-5, howManySig);
     return outHist;
 }
 
@@ -190,7 +202,7 @@ TH2F * OutputHistConstDeltM(TH2F * inputLimHist, int whichVers) {
 
 TH2F * LimitRatioHist(TH2F * inHistNew, TH2F * inHistOld, TString outHistName, int whichKind = -1, bool doVerb = 0) {
     TH2F * outHist = (TH2F *) inHistNew->Clone(outHistName);
-
+    
     int nBinsX = inHistNew->GetNbinsX();
     int nBinsY = inHistNew->GetNbinsY();
     
@@ -215,8 +227,10 @@ TH2F * LimitRatioHist(TH2F * inHistNew, TH2F * inHistOld, TString outHistName, i
                 currBinOld = inHistOld->GetBinContent(iBinX, iBinY);
                 
                 if (doVerb) {
-                    cout << "New iBinX:iBinY " << iBinX << ":" << iBinY << " is " << currBinNew << endl;
-                    cout << "Old iBinX:iBinY " << iBinX << ":" << iBinY << " is " << currBinOld << endl;
+                    //                    cout << "New iBinX:iBinY " << iBinX << ":" << iBinY << " is " << currBinNew << endl;
+                    //                    cout << "Old iBinX:iBinY " << iBinX << ":" << iBinY << " is " << currBinOld << endl;
+                    cout << "New currMassStop:currMassLSP " << currMassStop << ":" << currMassLSP << " is " << currBinNew << endl;
+                    cout << "Old currMassStop:currMassLSP " << currMassStop << ":" << currMassLSP << " is " << currBinOld << endl;
                 }
                 currRatio = BinRatioLimit(currBinNew, currBinOld, onlyExcNew);
                 if (whichKind == -1 || whichKind == onlyExcNew) {
@@ -252,11 +266,13 @@ void SetLimRatio(TH2F * inHistRatio, TH2F * inHistNew, TH2F * inHistOld, int whi
                 currBinNew = inHistNew->GetBinContent(iBinX, iBinY);
                 currBinOld = inHistOld->GetBinContent(iBinX, iBinY);
                 
-                onlyExcNew = RatioExclusionStatus(currBinNew, currBinOld);
+                onlyExcNew = RatioExclusionStatus(currBinNew, currBinOld, doVerb);
                 
                 if (doVerb) {
-                    cout << "New iBinX:iBinY " << iBinX << ":" << iBinY << " is " << currBinNew << endl;
-                    cout << "Old iBinX:iBinY " << iBinX << ":" << iBinY << " is " << currBinOld << endl;
+//                    cout << "New iBinX:iBinY " << iBinX << ":" << iBinY << " is " << currBinNew << endl;
+//                    cout << "Old iBinX:iBinY " << iBinX << ":" << iBinY << " is " << currBinOld << endl;
+                    cout << "New currMassStop:currMassLSP " << currMassStop << ":" << currMassLSP << " is " << currBinNew << endl;
+                    cout << "Old currMassStop:currMassLSP " << currMassStop << ":" << currMassLSP << " is " << currBinOld << endl;
                 }
                 
                 if (whichKind != -1 && whichKind != onlyExcNew) {
@@ -270,7 +286,7 @@ void SetLimRatio(TH2F * inHistRatio, TH2F * inHistNew, TH2F * inHistOld, int whi
     }
 }
 TH2F * LimitRatioHist_vers2(TH2F * inHistNew, TH2F * inHistOld, TString addHistName = "", bool doConsistency = false, int whichKind = -1, bool doVerb = 0) {
-
+    
     TH2F * outLimRatioHist = TwoDeeRatio(inHistOld, inHistNew, addHistName, doConsistency);
     SetLimRatio(outLimRatioHist, inHistNew, inHistOld, whichKind, doVerb);
     
@@ -303,6 +319,129 @@ TGraphErrors * GrabDeltaMLimit(TH2F * inputLimHist, int deltaM, bool doLog) {
         outGraph->SetPointError(iX, 0, currBinErr);
     }
     return outGraph;
+}
+
+void SignifHist(TH2F * &inputSignifHist, TString inputNameSignifHist, TString inputFile, TH2F * inputPValueHist = NULL, int binSize = 25, bool doVerb = 0) {
+    //Function to read the text file containing either significance of p-value results
+    //Assumption is that text files are in format StopMass:LSPMass:CVQuantity:OneSigUpQuantity:OneSigDownQuantity:-1:-1
+    //As well, for frequentist significances/p-values the OneSigUp/OneSigDown limits are the *uncertainty on the calculation*
+    //while for Asymptotic they are the actual *uncertainty on the limit*
+    //So for Frequentist limits you need access as well to files containing OneSigUp/OneSigDown limits
+    
+    float thresh = 9998;
+    float cvSignif;
+    
+    if (doVerb) cout << "going to try to open inputFile " << inputFile << endl;
+    
+    vector<float> vecStopMass, vecLSPMass;
+    vector<float> vecSignif, vecSignifOneSigUp, vecSignifOneSigDown;
+    
+    ifstream inputFileStream(inputFile);
+    if (!inputFileStream) {
+        cout << "file: " << inputFile << " doesn't exist apparently!" << endl;
+        return;
+    }
+    string line, field;
+    int lineCounter = 0;
+    int fieldCounter;
+    while (!(inputFileStream.eof())) {
+        lineCounter++;
+        getline(inputFileStream, line);
+        stringstream ss( line );
+        fieldCounter = 0;
+        while (std::getline(ss, field, ':' )) {
+            stringstream fs ( field );
+            float currField = 0.0;
+            if (TString(fs.str()).Contains("inf")) {
+                currField = -9999;
+            }
+            else {
+                fs >> currField;
+            }
+            if (doVerb) {
+                cout << "For line: " << lineCounter << " and Field # " << fieldCounter << ", currField is " << currField << endl;
+            }
+            switch (fieldCounter) {
+                case 0:
+                    vecStopMass.push_back(currField);
+                    break;
+                case 1:
+                    vecLSPMass.push_back(currField);
+                    break;
+                case 2:
+                    vecSignif.push_back(currField);
+                    cvSignif = currField;
+                    break;
+                case 3:
+                    if (cvSignif > thresh) {
+                        currField = cvSignif;
+                    }
+                    vecSignifOneSigUp.push_back(currField);
+                    break;
+                case 4:
+                    if (cvSignif > thresh) {
+                        currField = cvSignif;
+                    }
+                    vecSignifOneSigDown.push_back(currField);
+                    break;
+                case 5:
+                    //vecMT2llCut.push_back(currField);
+                    break;
+                case 6:
+                    //vecMT2lblbCut.push_back(currField);
+                    break;
+                default:
+                    cout << "way too many fields " << fieldCounter << endl;
+                    break;
+            }
+            fieldCounter++;
+        }
+    }
+    int nStopMass = 1 + (800 - 100) / binSize;
+    int nLSPMass = 1 + (700 - 0) / binSize;
+    float stopMassLB = 100 - (binSize * 0.5);
+    float stopMassUB = 800 + (binSize * 0.5);
+    float LSPMassLB = 0 - (binSize * 0.5);
+    float LSPMassUB = 700 + (binSize * 0.5);
+    
+    inputSignifHist = new TH2F(inputNameSignifHist, "; M_{stop} [GeV]; M_{LSP} [GeV]", nStopMass, stopMassLB, stopMassUB, nLSPMass, LSPMassLB, LSPMassUB);
+    
+    int binX, binY;
+    for (unsigned int iPoint = 0; iPoint < vecStopMass.size(); ++iPoint) {
+        binX = inputSignifHist->GetXaxis()->FindBin(vecStopMass[iPoint]);
+        binY = inputSignifHist->GetYaxis()->FindBin(vecLSPMass[iPoint]);
+        if (vecSignif[iPoint] < -9000) {
+            if (inputPValueHist) {
+                if (inputPValueHist->GetBinContent(binX, binY) < 1E-6) {
+                    inputSignifHist->SetBinContent(binX, binY, 5);
+                    inputSignifHist->SetBinContent(binX, binY, 7);
+                    inputSignifHist->SetBinError(binX, binY, 1);
+                }
+                else {
+                    cout << "don't know what to do for binX:binY " << binX << ":" << binY << endl;
+                }
+            }
+            else {
+                cout << "don't know what to do for binX:binY " << binX << ":" << binY << endl;
+            }
+        }
+        else if (inputPValueHist == NULL) {
+            if (vecSignif[iPoint] < 1E-9) {
+                float arbValue =  ROOT::Math::gaussian_cdf_c(7, 1, 0);
+//                float arbValue =  gaussian_cdf_c(7, 1, 0);
+                inputSignifHist->SetBinContent(binX, binY, arbValue);
+                inputSignifHist->SetBinError(binX, binY, 0.066 * arbValue);
+            }
+            else {
+                inputSignifHist->SetBinContent(binX, binY, vecSignif[iPoint]);
+                inputSignifHist->SetBinError(binX, binY, TMath::Abs(vecSignifOneSigDown[iPoint] - vecSignif[iPoint]));
+            }
+        }
+        else {
+            inputSignifHist->SetBinContent(binX, binY, vecSignif[iPoint]);
+            inputSignifHist->SetBinError(binX, binY, TMath::Abs(vecSignifOneSigDown[iPoint] - vecSignif[iPoint]));
+        }
+    }
 }
 
 
@@ -494,10 +633,10 @@ void SetHistExclusion(TH1 * inputHist, float threshExclusion = 1.0) {
 }
 
 void SetStyleHist(TH2F * inHist, int whichKind = -1) {
-//    Color_t colorMarker[3] = {kWhite, kGray, kBlack};
-//    Color_t colorMarker[3] = {kWhite, kOrange-5, kGreen - 7};
-//    Color_t colorMarker[3] = {kGreen - 7, kOrange-5, kWhite};
-//    Color_t colorMarker[4] = {kGray+2, kOrange-5, kWhite, kGreen - 4};
+    //    Color_t colorMarker[3] = {kWhite, kGray, kBlack};
+    //    Color_t colorMarker[3] = {kWhite, kOrange-5, kGreen - 7};
+    //    Color_t colorMarker[3] = {kGreen - 7, kOrange-5, kWhite};
+    //    Color_t colorMarker[4] = {kGray+2, kOrange-5, kWhite, kGreen - 4};
     Color_t colorMarker[4] = {kGray+2, kOrange-5, kAzure + 6, kGreen - 4};
     Size_t markerSize = 0.8;
     inHist->SetMarkerColor(colorMarker[whichKind + 1]);

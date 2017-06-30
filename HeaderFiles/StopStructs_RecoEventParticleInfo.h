@@ -5,7 +5,7 @@ typedef struct BasicEventInfo {
     // Contains very basic info -- weights, run number, event number, etc
     int   nVtx, nVtxTrue;
     bool  passTrigDoubleMu, passTrigDoubleEl, passTrigElMu;
-    float weight, preNVtxRWWeight, basicWeight;
+    float weight, preNVtxRWWeight, basicWeight, weightMC;
     int   runNumber, lumiBlock, eventNumber;
     
     // will drop these dudes eventually
@@ -28,11 +28,13 @@ typedef struct BasicEventInfo {
         weight              = inBEI->weight;
         preNVtxRWWeight     = inBEI->preNVtxRWWeight;
         basicWeight         = inBEI->basicWeight;
+        weightMC            = inBEI->weightMC;
     }
     void DefaultWeights() {
         weight = 1.0;
         preNVtxRWWeight = 1.0;
         basicWeight = 1.0;
+        weightMC = 1.0;
     }
     void  SetVars(BasicEventInfo * inBEI) {
         doData              = inBEI->doData;
@@ -129,6 +131,8 @@ typedef struct EventLepInfo {
     std::vector<float> DiLeptonTotSF;
     EventLepInfo_LepCount ELI_LC;
     int   EventDiLepType;
+    float weightFakeLep;
+    vector<float> vecWeightFakeLep_SystVarUp, vecWeightFakeLep_SystVarDown;
     bool  doEvent;
     int DiLeptonEventType(int Lep0PDGID, int Lep1PDGID) {
         int productPdgId = Lep0PDGID * Lep1PDGID;
@@ -159,6 +163,13 @@ typedef struct EventLepInfo {
         DiLeptonTrigSF.clear();
         DiLeptonIDIsoSF.clear();
         DiLeptonTotSF.clear();
+        weightFakeLep = -1.;
+        vecWeightFakeLep_SystVarUp.resize(3);
+        vecWeightFakeLep_SystVarDown.resize(3);
+        for (int iFakeSyst = 0; iFakeSyst < 3; ++iFakeSyst) {
+            vecWeightFakeLep_SystVarUp[iFakeSyst] = -1.;
+            vecWeightFakeLep_SystVarDown[iFakeSyst] = -1.;
+        }
     }
     void EventFails() {
         EventDiLepMass = -99999.; EventDiLepType = -1; EventLepST = -1.;
@@ -171,6 +182,13 @@ typedef struct EventLepInfo {
         DiLeptonTrigSF.clear();
         DiLeptonIDIsoSF.clear();
         DiLeptonTotSF.clear();
+        weightFakeLep = -1.;
+        vecWeightFakeLep_SystVarUp.resize(3);
+        vecWeightFakeLep_SystVarDown.resize(3);
+        for (int iFakeSyst = 0; iFakeSyst < 3; ++iFakeSyst) {
+            vecWeightFakeLep_SystVarUp[iFakeSyst] = -1.;
+            vecWeightFakeLep_SystVarDown[iFakeSyst] = -1.;
+        }
     }
     void SetLepST() {
         EventLepST = 0;
@@ -197,10 +215,10 @@ typedef struct EventLepInfo {
     }
     void ScaleFactorTrigMC(vector<TH2F *> * vecTrigSF, bool doVerbosity = false) {
         /*
-        float EtaEBEnd = 1.4442;
-        float EtaEEBegin = 1.566;
-        float safetyFactor = 1E-3; //safety factor to shift the eta past a given bound to avoid bin issues
-        */
+         float EtaEBEnd = 1.4442;
+         float EtaEEBegin = 1.566;
+         float safetyFactor = 1E-3; //safety factor to shift the eta past a given bound to avoid bin issues
+         */
         //    float DiLeptonTrigSFCentVal, DiLeptonTrigSFErr;
         int XBin, YBin;
         float LepEtaX, LepEtaY;
@@ -258,10 +276,10 @@ typedef struct EventLepInfo {
     }
     void SingLepIDIsoSF(float * SFArray, Lepton * inputLep, TH2F * histElecSF, TH2F * histMuonSF, bool doVerbosity = false) {
         /*
-        float EtaEBEnd = 1.4442;
-        float EtaEEBegin = 1.566;
-        float safetyFactor = 1E-3; //safety factor to shift the eta past a given bound to avoid bin issues
-        */
+         float EtaEBEnd = 1.4442;
+         float EtaEEBegin = 1.566;
+         float safetyFactor = 1E-3; //safety factor to shift the eta past a given bound to avoid bin issues
+         */
         TH2F * histToUse = inputLep->isElec() ? histElecSF : histMuonSF;
         int nXbins = histToUse->GetNbinsX();
         int nYbins = histToUse->GetNbinsY();
@@ -500,14 +518,251 @@ typedef struct EventLepInfo {
     }
 } EventLepInfo;
 
+struct EventHadronicResolutionInfo {
+    TH2F * histGenJetSF;
+    TH2F * histRecoJetResolution_LowPt;
+    vector<TF1> * vecTF1RecoHighPtJet_PtResolution, * vecTF1RecoHighPtJet_PhiResolution;
+    
+    float ESUncertUnclEn;
+    
+    float EventHadResParFull, EventHadResPerpFull;
+    float EventHadVarParFull, EventHadVarPerpFull, EventHadCoVarFull;
+    float EventHadResPerpGauss, EventHadResParGauss;
+    float EventHadResPerpGauss_AllJets, EventHadResParGauss_AllJets;
+    TLorentzVector EventUnclP4;
+    float SumPtPseudoJet;
+    
+    float threshPtForLowPtJet;
+    float unclParamN, unclParamS;
+    vector<float> vecAParams;
+    
+    void PrintVals() {
+        cout << "EventHadResPerpGauss_AllJets " << EventHadResPerpGauss_AllJets << endl;
+        cout << "EventHadResPerpGauss " << EventHadResPerpGauss << endl;
+        cout << "EventHadResPerpFull " << EventHadResPerpFull << endl;
+        
+        cout << "EventHadResParGauss_AllJets " << EventHadResParGauss_AllJets << endl;
+        cout << "EventHadResParGauss " << EventHadResParGauss << endl;
+        cout << "EventHadResParFull " << EventHadResParFull << endl;
+        
+        cout << "EventHadVarPerpFull " << EventHadVarPerpFull << endl;
+        cout << "EventHadVarParFull " << EventHadVarParFull << endl;
+        cout << "EventHadCoVarFull " << EventHadCoVarFull << endl;
+        
+        cout << "SumPtPseudoJet " << SumPtPseudoJet << endl;
+        cout << "going to print unclustered P4 " << endl;
+        PrintLorentzVector(&EventUnclP4);
+    }
+    void DefaultEventValues(bool isData) {
+        ESUncertUnclEn = 0.1;
+        
+        EventHadVarPerpFull = 0.0;
+        EventHadVarParFull = 0.0;
+        EventHadCoVarFull = 0.0;
+        
+        EventHadResParFull = 0.0;
+        EventHadResPerpFull = 0.0;
+        EventHadResParGauss = 0.0;
+        EventHadResPerpGauss = 0.0;
+        EventHadResParGauss_AllJets = 0.0;
+        EventHadResPerpGauss_AllJets = 0.0;
+        EventUnclP4.SetPxPyPzE(0.0, 0.0, 0.0, 0.0);
+        SumPtPseudoJet = 0.0;
+        
+        //see AN2013-173
+        threshPtForLowPtJet = 20.0;
+        float dataSF[5] = {1.15, 1.08, 1.04, 1.13, 1.56};
+        float mcSF[5] = {1.05, 0.98, 0.96, 0.97, 1.28};
+        
+        vecAParams.resize(0);
+        
+        for (int iAParam = 0; iAParam < 5; ++iAParam) {
+            vecAParams.push_back(isData ? dataSF[iAParam] : mcSF[iAParam]);
+        }
+        unclParamN = isData ? 0.0 : -1.1;
+        unclParamS = isData ? 0.5488 : 0.5204;
+    }
+    void AddUnclEnMETResToTotal(bool doVerbosity = 0) {
+        float UnclEnMETVar = TMath::Power(unclParamN, 2) + TMath::Power(unclParamS, 2) * SumPtPseudoJet;
+        if (doVerbosity) {
+            cout << "SumPtPseudoJet " << SumPtPseudoJet << endl;
+            cout << "unclParamN " << unclParamN << endl;
+            cout << "unclParamS " << unclParamS << endl;
+            cout << "UnclEnMETVar " << UnclEnMETVar << endl;
+        }
+        EventHadVarPerpFull += UnclEnMETVar;
+        EventHadVarParFull += UnclEnMETVar;
+    }
+    float GetPtResSF(TLorentzVector * inVecJet) {
+        float absEta = fabs(inVecJet->Eta());
+        float absEtaThresh[6] = {0.0, 0.5, 1.1, 1.7, 2.3, 5.0};
+        
+        int index = -1;
+        if (absEta > 5.0) {
+            index = 4;
+        }
+        else {
+            for (int iEta = 1; iEta < 6; ++iEta) {
+                if (absEta >= absEtaThresh[iEta - 1] && absEta <= absEtaThresh[iEta]) {
+                    index = iEta - 1;
+                }
+            }
+        }
+        if (index == -1) {
+            cout << "wtf dude, error! " << endl;
+        }
+        /*
+        cout << "absEta " << absEta << endl;
+        cout << "value " << vecAParams[index] << endl;
+        */
+        return vecAParams[index];
+    }
+    void SetInputResObjectDefault(TString baseDirOfficialSmearing) {
+        
+        TFile * GenJetSmearFile = new TFile(baseDirOfficialSmearing + TString("pfJetResolutionMCtoDataCorrLUT.root"));
+        histGenJetSF = (TH2F*) GenJetSmearFile->Get("pfJetResolutionMCtoDataCorrLUT");
+        histRecoJetResolution_LowPt = ResolutionHistMaker(baseDirOfficialSmearing + TString("JetResolution.txt"));
+        vecTF1RecoHighPtJet_PtResolution = new vector<TF1>;
+        vecTF1RecoHighPtJet_PhiResolution = new vector<TF1>;
+        VecHighPtJet_PtResolutionTF1(vecTF1RecoHighPtJet_PtResolution);
+        VecHighPtJet_PhiResolutionTF1(vecTF1RecoHighPtJet_PhiResolution);
+    }
+    float GetJetPhiResolution(TLorentzVector * inJetP4) {
+        float jetAbsEta = fabs(inJetP4->Eta());
+        float jetPt = inJetP4->Pt();
+        
+        float outputRes = 0.0;
+        if (jetPt >= threshPtForLowPtJet) {
+            outputRes = GetPhiResolution_HighPtJet(inJetP4, vecTF1RecoHighPtJet_PhiResolution);
+        }
+        return outputRes * jetPt;
+    }
+    float GetJetPtResolution(TLorentzVector * inJetP4, bool includeSF) {
+        float jetAbsEta = fabs(inJetP4->Eta());
+        float jetPt = inJetP4->Pt();
+        
+        float outputRes = 0.0;
+        if (jetPt < threshPtForLowPtJet) {
+            int binLowPtX = histRecoJetResolution_LowPt->GetXaxis()->FindBin(jetAbsEta);
+            int binLowPtY = histRecoJetResolution_LowPt->GetYaxis()->FindBin(jetPt);
+            
+            if (binLowPtX > histRecoJetResolution_LowPt->GetNbinsX()) binLowPtX = histRecoJetResolution_LowPt->GetNbinsX();
+            if (binLowPtY > histRecoJetResolution_LowPt->GetNbinsY()) binLowPtY = histRecoJetResolution_LowPt->GetNbinsY();
+            outputRes = histRecoJetResolution_LowPt->GetBinContent(binLowPtX, binLowPtY);
+        }
+        else {
+            outputRes = GetPtResolution_HighPtJet(inJetP4, vecTF1RecoHighPtJet_PtResolution);
+        }
+        float pTResSF = 1.0;
+        if (includeSF) {
+            pTResSF = GetPtResSF(inJetP4);
+        }
+        
+        if (jetPt >= threshPtForLowPtJet) {
+            return outputRes * jetPt * pTResSF;  // assuming the outResolution is a fractional resolution
+        }
+        else {
+            return outputRes;
+        }
+    }
+    void AddJetToCovarMatrix(TLorentzVector * inJetP4, float diLepPhi, bool doFullCalc, bool doVerbosity = 0) {
+        float jetPt = inJetP4->Pt();
+        float jetPhi = inJetP4->Phi();
+        float jetPt_Par = fabs(CalculateRecoil(jetPt, jetPhi, diLepPhi, 0));
+        float jetPt_Perp = fabs(CalculateRecoil(jetPt, jetPhi, diLepPhi, 1));
+        float cosPhi_Dilep_Jet = jetPt_Par / jetPt;
+        float sinPhi_Dilep_Jet = jetPt_Perp / jetPt;
+
+        if (doVerbosity && doFullCalc) {
+            cout << "jetPt " << jetPt << endl;
+            cout << "jetPhi " << jetPhi << endl;
+            cout << "diLepPhi " << diLepPhi << endl;
+            cout << "jetPt_Par " << jetPt_Par << endl;
+            cout << "jetPt_Perp " << jetPt_Perp << endl;
+            cout << "cosPhi_Dilep_Jet " << cosPhi_Dilep_Jet << endl;
+            cout << "sinPhi_Dilep_Jet " << sinPhi_Dilep_Jet << endl;
+        }
+        
+        float jetPtRes = 0.0, jetPhiRes = 0.0;
+        jetPtRes = GetJetPtResolution(inJetP4, true);
+        jetPhiRes = GetJetPhiResolution(inJetP4);
+        
+        if (doVerbosity && doFullCalc) {
+            cout << "jetPtRes " << jetPtRes << endl;
+            cout << "jetPtResScaled " << jetPtRes / jetPt << endl;
+            cout << "jetPhiRes " << jetPhiRes << endl;
+            cout << "jetPhiResScaled " << jetPhiRes / jetPt << endl;
+        }
+        
+        float currHadVarParTerm, currHadVarPerpTerm, currHadCoVarTerm;
+        float currHadResParTerm, currHadResPerpTerm;
+        if (doFullCalc) {
+            if (jetPt < threshPtForLowPtJet) {
+                SumPtPseudoJet += jetPt;
+            }
+            else {
+                currHadVarParTerm = TMath::Power(cosPhi_Dilep_Jet * jetPtRes, 2) + TMath::Power(sinPhi_Dilep_Jet * jetPhiRes, 2);
+                currHadVarPerpTerm = TMath::Power(sinPhi_Dilep_Jet * jetPtRes, 2) + TMath::Power(cosPhi_Dilep_Jet * jetPhiRes, 2);
+                currHadCoVarTerm = sinPhi_Dilep_Jet * cosPhi_Dilep_Jet * (TMath::Power(jetPtRes, 2) - TMath::Power(jetPhiRes, 2));
+                if (doVerbosity) {
+                    cout << "currHadVarParTerm " << currHadVarParTerm << endl;
+                    cout << "currHadVarPerpTerm " << currHadVarPerpTerm << endl;
+                    cout << "currHadCoVarTerm " << currHadCoVarTerm << endl;
+                }
+                EventHadVarParFull += currHadVarParTerm;
+                EventHadVarPerpFull += currHadVarPerpTerm;
+                EventHadCoVarFull += currHadCoVarTerm;
+            }
+        }
+        else {
+            currHadResParTerm = TMath::Power(jetPtRes * cosPhi_Dilep_Jet, 2);
+            currHadResPerpTerm = TMath::Power(jetPtRes * sinPhi_Dilep_Jet, 2);
+            if (doVerbosity) {
+                cout << "currHadResParTerm " << currHadResParTerm << endl;
+                cout << "currHadResPerpTerm " << currHadResPerpTerm << endl;
+            }
+            EventHadResParFull += currHadResParTerm;
+            EventHadResPerpFull += currHadResPerpTerm;
+        }
+    }
+    void SetEventResolutions(bool doVerbosity = 0) {
+        EventHadResParGauss = TMath::Sqrt(EventHadResParGauss);
+        EventHadResParGauss_AllJets = TMath::Sqrt(EventHadResParGauss_AllJets);
+        EventHadResParFull = TMath::Sqrt(EventHadResParFull);
+        
+        EventHadResPerpGauss = TMath::Sqrt(EventHadResPerpGauss);
+        EventHadResPerpGauss_AllJets = TMath::Sqrt(EventHadResPerpGauss_AllJets);
+        EventHadResPerpFull = TMath::Sqrt(EventHadResPerpFull);
+        
+        AddUnclEnMETResToTotal(doVerbosity);
+    }
+    
+    TVector3 ShiftMetVec(TVector3 inMETVec, int shiftDir) {
+        TVector3 UnclEnP3Shift = shiftDir * ESUncertUnclEn * EventUnclP4.Vect();
+        TVector3 outVec = inMETVec - UnclEnP3Shift;
+        /*
+        cout << "shiftDir " << shiftDir << endl;
+        cout << "EventUnclP4 Pt " << EventUnclP4.Pt() << endl;
+        cout << "inMETVec.Perp " << inMETVec.Perp() << endl;
+        cout << "UnclEnP3Shift Perp " << UnclEnP3Shift.Perp() << endl;
+        */
+        return outVec;
+    }
+};
+
 typedef struct EventJetInfo {
     // contains information about the pf jets passing cuts in the event
     
-    float EventHT, EventJetST;
+    float EventHT, EventJetST, EventHTPar, EventHTPerp;
+    float EventHT_AllJets;
+    float EventHadResParGauss, EventHadResPerpGauss;
+    float EventHadResParGauss_AllJets, EventHadResPerpGauss_AllJets;
+    float EventHadResParFull, EventHadResPerpFull;
+    float EventHadVarParFull, EventHadVarPerpFull, EventHadCoVarFull;
     int   EventNJets, EventNBtagJets;
     int   numSavedJets, numSavedBJets;
-    TLorentzVector EventSumJetP4, EventSumBJetP4;
-    BasicVecComponents BVC_SumJet, BVC_SumBJet;
+    TLorentzVector EventSumJetP4, EventSumBJetP4, EventUnclP4;
+    BasicVecComponents BVC_SumJet, BVC_SumBJet, BVC_Uncl;
     
     vector<PFJet> vecEventJets;
     
@@ -522,7 +777,23 @@ typedef struct EventJetInfo {
     void SetNonBTagInfo(EventJetInfo * inEJI) {
         
         EventHT = inEJI->EventHT;
+        EventHT_AllJets = inEJI->EventHT_AllJets;
         EventJetST = inEJI->EventJetST;
+        EventHTPar = inEJI->EventHTPar;
+        EventHTPerp = inEJI->EventHTPerp;
+        
+        EventHadResParGauss = inEJI->EventHadResParGauss;
+        EventHadResPerpGauss = inEJI->EventHadResPerpGauss;
+        
+        EventHadResParGauss_AllJets = inEJI->EventHadResParGauss_AllJets;
+        EventHadResPerpGauss_AllJets = inEJI->EventHadResPerpGauss_AllJets;
+        
+        EventHadResParFull = inEJI->EventHadResParFull;
+        EventHadResPerpFull = inEJI->EventHadResPerpFull;
+        
+        EventHadVarPerpFull = inEJI->EventHadVarPerpFull;
+        EventHadVarParFull = inEJI->EventHadVarParFull;
+        EventHadCoVarFull = inEJI->EventHadCoVarFull;
         
         EventSumJetP4 = inEJI->EventSumJetP4;
         BVC_SumJet.ExtractParams(&EventSumJetP4);
@@ -536,7 +807,19 @@ typedef struct EventJetInfo {
     }
     void EJIDefaultVarVals(int setNumSavedJets = 3, int setNumSavedBJets = 2) {
         numSavedJets = setNumSavedJets; numSavedBJets = setNumSavedBJets;
-        EventHT = 0.; EventJetST = 0.; EventNJets = 0; EventNBtagJets = 0;
+        EventHT = 0.; EventJetST = 0.;
+        EventHT_AllJets = 0.;
+        EventHTPar = 0.; EventHTPerp = 0.;
+        EventHadResParGauss = 0.0;
+        EventHadResPerpGauss = 0.0;
+        EventHadResParGauss_AllJets = 0.0;
+        EventHadResPerpGauss_AllJets = 0.0;
+        
+        EventHadVarParFull = 0.0;
+        EventHadVarPerpFull = 0.0;
+        EventHadCoVarFull = 0.0;
+        
+        EventNJets = 0; EventNBtagJets = 0;
         DefaultLorentzVector(&EventSumJetP4);
         BVC_SumJet.ExtractParams(&EventSumJetP4);
         
@@ -555,8 +838,24 @@ typedef struct EventJetInfo {
             vecEventBTagJets_Index[iBJet] = -1;
         }
     }
-    void EJISetValsInput(float inputHT, TLorentzVector * inSumJetVec, TLorentzVector * inSumBJetVec, int inputNJets, vector<int> * vecInJetIndex, int inputNBtagJets, vector<int> * vecInBJetIndex, vector<int> * vecInBJetSubIndex, vector<PFJet> * inputPFJetVec) {
+    void SetHadRes(EventHadronicResolutionInfo * inEHRI) {
+        EventHadResParGauss = inEHRI->EventHadResParGauss;
+        EventHadResParGauss_AllJets = inEHRI->EventHadResParGauss_AllJets;
+        EventHadResParFull = inEHRI->EventHadResParFull;
+    
+        EventHadResPerpGauss = inEHRI->EventHadResPerpGauss;
+        EventHadResPerpGauss_AllJets = inEHRI->EventHadResPerpGauss_AllJets;
+        EventHadResPerpFull = inEHRI->EventHadResPerpFull;
+        
+        EventHadVarParFull = inEHRI->EventHadVarParFull;
+        EventHadVarPerpFull = inEHRI->EventHadVarPerpFull;
+        EventHadCoVarFull = inEHRI->EventHadCoVarFull;
+    }
+    void EJISetValsInput(float inputHT, float inputHT_AllJets, float inputHTPar, float inputHTPerp, TLorentzVector * inSumJetVec, TLorentzVector * inSumBJetVec, int inputNJets, vector<int> * vecInJetIndex, int inputNBtagJets, vector<int> * vecInBJetIndex, vector<int> * vecInBJetSubIndex, vector<PFJet> * inputPFJetVec) {
         EventHT = inputHT;
+        EventHT_AllJets = inputHT_AllJets;
+        EventHTPar = inputHTPar;
+        EventHTPerp = inputHTPerp;
         BVC_SumJet.ExtractParams(inSumJetVec);
         BVC_SumJet.SetP4Vals(&EventSumJetP4);
         
@@ -586,8 +885,11 @@ typedef struct EventJetInfo {
         SetJetST();
     }
     
-    void EJISetValsInput(float inputHT, TLorentzVector * inSumJetVec, TLorentzVector * inSumBJetVec, int inputNJets, vector<int> * vecInJetIndex, int inputNBtagJets, vector<int> * vecInBJetIndex, vector<int> * vecInBJetSubIndex, vector<SmearPFJet> * inputSmearPFJetVec) {
+    void EJISetValsInput(float inputHT, float inputHT_AllJets, float inputHTPar, float inputHTPerp, TLorentzVector * inSumJetVec, TLorentzVector * inSumBJetVec, int inputNJets, vector<int> * vecInJetIndex, int inputNBtagJets, vector<int> * vecInBJetIndex, vector<int> * vecInBJetSubIndex, vector<SmearPFJet> * inputSmearPFJetVec) {
         EventHT = inputHT;
+        EventHT_AllJets = inputHT_AllJets;
+        EventHTPar = inputHTPar;
+        EventHTPerp = inputHTPerp;
         BVC_SumJet.ExtractParams(inSumJetVec);
         BVC_SumJet.SetP4Vals(&EventSumJetP4);
         
@@ -684,6 +986,7 @@ typedef struct EventRecoilInfo {
     TVector3 P3;
     float recoilMag, recoilPhi;
     float recoilUPar, recoilUPerp;
+    
     void GrabbedFromTree() {
         P3.SetPtEtaPhi(recoilMag, 0., recoilPhi);
     }
@@ -697,16 +1000,18 @@ typedef struct EventRecoilInfo {
     void SetVarsfromVec(TVector3 inProbeVec) {
         recoilMag = P3.Pt();
         recoilPhi = P3.Phi();
-        recoilUPar = recoilMag * TMath::Cos(recoilPhi - inProbeVec.Phi());
-        recoilUPerp = recoilMag * TMath::Sin(recoilPhi - inProbeVec.Phi());
+        float inProbeVecPhi = inProbeVec.Phi();
+        recoilUPar = CalculateRecoil(recoilMag, recoilPhi, inProbeVecPhi, 0);
+        recoilUPerp = CalculateRecoil(recoilMag, recoilPhi, inProbeVecPhi, 1);
     }
     void SetRecoilVars(TVector3 inProbeVec, TVector3 METP3) {
         P3.SetXYZ(0., 0., 0.);
         P3 = P3 - inProbeVec - METP3;
         recoilMag = P3.Pt();
         recoilPhi = P3.Phi();
-        recoilUPar = recoilMag * TMath::Cos(recoilPhi - inProbeVec.Phi());
-        recoilUPerp = recoilMag * TMath::Sin(recoilPhi - inProbeVec.Phi());
+        float inProbeVecPhi = inProbeVec.Phi();
+        recoilUPar = CalculateRecoil(recoilMag, recoilPhi, inProbeVecPhi, 0);
+        recoilUPerp = CalculateRecoil(recoilMag, recoilPhi, inProbeVecPhi, 1);
     }
     void ERIDefaultVarVals() {
         P3.SetPtEtaPhi(1E-8, 1E-8, 1E-8);
@@ -732,23 +1037,27 @@ typedef struct EventRecoilInfo {
 typedef struct EventMT2Info {
     // Contains information about the various MT and MT2 variables in the event
     
-    float EventMT2ll, EventMT2lblb, EventMT2bb_ZMET;
+    float EventMT2ll;
+    float EventMT2bb_ZMET, EventMT2bb;
+    float EventMT2lblb, EventMT2lblb_ZeroBLepMass;
     float EventDeltaPhiMT2lblb_JetsUsed, EventDeltaPhiMT2lblb_BLepsUsed;
     float EventDeltaPhiMT2bb_ZMET_JetsUsed;
     float EventMassBLep0_BLepsUsed, EventMassBLep1_BLepsUsed;
-    vector<TLorentzVector> EventVecBLepsMT2lb;
+    vector<TLorentzVector> EventVecBLepsMT2lblb;
     int caseMT2lblb;
     vector<int> vecCorrPairValMT2lblb;
     // 0 is minMT2lb, 1 is minMaxMass, 2 is minAbsMassDiff, 3 is AND of 0 and 1, 4 is OR of 0 and 1
     // 5 is AND of 0 and 2, 6 is OR of 0 and 2, 7 is AND of 1 and 2, 8 is OR of 1 and 2, 9 is AND of 0, 1, and 2; 10 is OR of 0, 1, and 2
     float MT_Lep0, MT_Lep1, MT_HTVec, MT_BHTVec;
     void EMT2IDefaultVarVals() {
-        EventMT2ll = 0.; EventMT2lblb = 0.; EventMT2bb_ZMET = 0.;
+        EventMT2ll = 0.;
+        EventMT2bb_ZMET = 0.; EventMT2bb = 0.;
+        EventMT2lblb = 0.; EventMT2lblb_ZeroBLepMass = 0.;
         EventDeltaPhiMT2lblb_JetsUsed = -99.; EventDeltaPhiMT2lblb_BLepsUsed= -99.;
         EventDeltaPhiMT2bb_ZMET_JetsUsed = -99.;
         EventMassBLep0_BLepsUsed = -99.; EventMassBLep1_BLepsUsed = -99.;
-        EventVecBLepsMT2lb.clear();
-        EventVecBLepsMT2lb.resize(2);
+        EventVecBLepsMT2lblb.clear();
+        EventVecBLepsMT2lblb.resize(2);
         caseMT2lblb = -1;
         MT_Lep0 = 0.; MT_Lep1 = 0.; MT_HTVec = 0.; MT_BHTVec = 0.;
         vecCorrPairValMT2lblb.resize(16);
@@ -759,6 +1068,7 @@ typedef struct EventMT2Info {
     void SetBadMT2lblb() {
         caseMT2lblb = -1;
         EventMT2lblb = -99.;
+        EventMT2lblb_ZeroBLepMass = -99.;
         EventDeltaPhiMT2bb_ZMET_JetsUsed = -99.;
         EventDeltaPhiMT2lblb_JetsUsed = -99.;
         EventDeltaPhiMT2lblb_BLepsUsed = -99.;
@@ -768,6 +1078,9 @@ typedef struct EventMT2Info {
     }
     void SetBadMT2ll() {
         EventMT2ll = -99.;
+    }
+    void SetBadMT2bb() {
+        EventMT2bb = -99;
     }
     void SetBadMT2bb_ZMET() {
         EventMT2bb_ZMET = -99;
@@ -817,10 +1130,24 @@ typedef struct EventMT2Info {
         MT_BHTVec = GetMT(inBJet, &METvec);
     }
     void CalcMT2ll(EventLepInfo * inELI, float EventMET, float EventMETPhi) {
-        EventMT2ll = getMT2(inELI->vecEventLeps[0].P4, inELI->vecEventLeps[1].P4, EventMET, EventMETPhi);
+        EventMT2ll = MT2::getMT2(inELI->vecEventLeps[0].P4, inELI->vecEventLeps[1].P4, EventMET, EventMETPhi, false);
+    }
+    void CalcMT2bb(EventJetInfo * inEJI, float EventMET, float EventMETPhi, int levelVerbosity = 0) {
+        vector<int> vecJetPartFlavor(2);
+        vector<TLorentzVector> vecJetsMT2bb(2);
+        int caseMT2bb = inEJI->JetSelectorForMT2(&vecJetsMT2bb, &vecJetPartFlavor, levelVerbosity);
+        if (vecJetsMT2bb.size() == 2) {
+            EventMT2bb = MT2::getMT2(vecJetsMT2bb[0], vecJetsMT2bb[1], EventMET, EventMETPhi, false);
+        }
+        else {
+            if (vecJetsMT2bb.size() > 2) {
+                cout << "something weird with vecJetsMT2bb size " << vecJetsMT2bb.size() << endl;
+            }
+            SetBadMT2bb();
+        }
     }
     void CalcMT2bb_ZMET(EventJetInfo * inEJI, EventRecoilInfo * inERI, int levelVerbosity = 0) {
-
+        
         float testMass = 80.4;
         TVector3 ZMET = -1 * inERI->P3;
         
@@ -828,7 +1155,7 @@ typedef struct EventMT2Info {
         vector<TLorentzVector> vecJetsMT2bb(2);
         int caseMT2bb = inEJI->JetSelectorForMT2(&vecJetsMT2bb, &vecJetPartFlavor, levelVerbosity);
         if (vecJetsMT2bb.size() == 2) {
-            EventMT2bb_ZMET = getMT2(vecJetsMT2bb[0], vecJetsMT2bb[1], ZMET.Pt(), ZMET.Phi(), testMass);
+            EventMT2bb_ZMET = MT2::getMT2(vecJetsMT2bb[0], vecJetsMT2bb[1], ZMET.Pt(), ZMET.Phi(), false, testMass);
             EventDeltaPhiMT2bb_ZMET_JetsUsed = dPhi(vecJetsMT2bb[0].Phi(), vecJetsMT2bb[1].Phi());
         }
         else {
@@ -838,14 +1165,14 @@ typedef struct EventMT2Info {
             SetBadMT2bb_ZMET();
         }
     }
-    void SetValsMT2lbPairing(float MT2lbPair1, float MT2lbPair2, float &returnMT2lb, vector<TLorentzVector> * vecBLeps_Pair1, vector<TLorentzVector> * vecBLeps_Pair2, vector<TLorentzVector> * vec_GoodBLeps, int corrPairCheckIndex) {
+    void SetValsMT2lblbPairing(float MT2lblbPair1, float MT2lblbPair2, float &returnMT2lblb, vector<TLorentzVector> * vecBLeps_Pair1, vector<TLorentzVector> * vecBLeps_Pair2, vector<TLorentzVector> * vec_GoodBLeps, int corrPairCheckIndex) {
         if (corrPairCheckIndex == 0) {
-            returnMT2lb = MT2lbPair1;
+            returnMT2lblb = MT2lblbPair1;
             vec_GoodBLeps->at(0) = vecBLeps_Pair1->at(0);
             vec_GoodBLeps->at(1) = vecBLeps_Pair1->at(1);
         }
         else if (corrPairCheckIndex == 1) {
-            returnMT2lb = MT2lbPair2;
+            returnMT2lblb = MT2lblbPair2;
             vec_GoodBLeps->at(0) = vecBLeps_Pair2->at(0);
             vec_GoodBLeps->at(1) = vecBLeps_Pair2->at(1);
         }
@@ -853,14 +1180,14 @@ typedef struct EventMT2Info {
             cout << "corrPairCheckIndex != 0 or 1; it is " << corrPairCheckIndex << endl;
         }
     }
-    float MT2lbPairingCheck(vector<TLorentzVector> * vecBLeps_Pair1, vector<TLorentzVector> * vecBLeps_Pair2, vector<TLorentzVector> * vec_GoodBLeps, float MET, float METPhi, vector<int> * vecCorrPairCheckIndex, int whichCheck = 0) {
+    float MT2lblbPairingCheck(vector<TLorentzVector> * vecBLeps_Pair1, vector<TLorentzVector> * vecBLeps_Pair2, vector<TLorentzVector> * vec_GoodBLeps, float MET, float METPhi, bool useMassless, vector<int> * vecCorrPairCheckIndex, int whichCheck = 0) {
         
         float topMass = 176;
         
-        float MT2lbPair1 = getMT2(vecBLeps_Pair1->at(0), vecBLeps_Pair1->at(1), MET, METPhi);
-        float MT2lbPair2 = getMT2(vecBLeps_Pair2->at(0), vecBLeps_Pair2->at(1), MET, METPhi);
+        float MT2lblbPair1 = MT2::getMT2(vecBLeps_Pair1->at(0), vecBLeps_Pair1->at(1), MET, METPhi, useMassless);
+        float MT2lblbPair2 = MT2::getMT2(vecBLeps_Pair2->at(0), vecBLeps_Pair2->at(1), MET, METPhi, useMassless);
         
-        bool minMT2lbPair2 = (MT2lbPair1 > MT2lbPair2);
+        bool minMT2lblbPair2 = (MT2lblbPair1 > MT2lblbPair2);
         
         float massBLeadLep_Pair1 = vecBLeps_Pair1->at(0).M();
         float massBSubLep_Pair1 = vecBLeps_Pair1->at(1).M();
@@ -879,31 +1206,31 @@ typedef struct EventMT2Info {
         float minAbsDiffBLepMassTopMassPair1 = TMath::Min(abs(massBLeadLep_Pair1 - topMass), abs(massBSubLep_Pair1 - topMass));
         float minAbsDiffBLepMassTopMassPair2 = TMath::Min(abs(massBLeadLep_Pair2 - topMass), abs(massBSubLep_Pair2 - topMass));
         bool minAbsDiffBLepMassTopMassIsPair2 = minAbsDiffBLepMassTopMassPair1 > minAbsDiffBLepMassTopMassPair2;
-        float returnMT2lb = -1;
+        float returnMT2lblb = -1;
         
         // 0 is minMT2lb, 1 is minMaxMass, 2 is minAbsMassDiff, 3 is AND of 0 and 1, 4 is OR of 0 and 1
         // 5 is AND of 0 and 2, 6 is OR of 0 and 2, 7 is AND of 1 and 2, 8 is OR of 1 and 2, 9 is AND of 0, 1, and 2; 10 is OR of 0, 1, and 2
-        vecCorrPairCheckIndex->at(0) = minMT2lbPair2;
+        vecCorrPairCheckIndex->at(0) = minMT2lblbPair2;
         vecCorrPairCheckIndex->at(1) = minMaxBLepMassPair2;
         vecCorrPairCheckIndex->at(2) = minAbsDiffBLepMassPair2;
-        vecCorrPairCheckIndex->at(3) = (minMT2lbPair2 && minMaxBLepMassPair2);
-        vecCorrPairCheckIndex->at(4) = (minMT2lbPair2 || minMaxBLepMassPair2);
-        vecCorrPairCheckIndex->at(5) = (minMT2lbPair2 && minAbsDiffBLepMassPair2);
-        vecCorrPairCheckIndex->at(6) = (minMT2lbPair2 || minAbsDiffBLepMassPair2);
+        vecCorrPairCheckIndex->at(3) = (minMT2lblbPair2 && minMaxBLepMassPair2);
+        vecCorrPairCheckIndex->at(4) = (minMT2lblbPair2 || minMaxBLepMassPair2);
+        vecCorrPairCheckIndex->at(5) = (minMT2lblbPair2 && minAbsDiffBLepMassPair2);
+        vecCorrPairCheckIndex->at(6) = (minMT2lblbPair2 || minAbsDiffBLepMassPair2);
         vecCorrPairCheckIndex->at(7) = (minMaxBLepMassPair2 && minAbsDiffBLepMassPair2);
         vecCorrPairCheckIndex->at(8) = (minMaxBLepMassPair2 || minAbsDiffBLepMassPair2);
-        vecCorrPairCheckIndex->at(9) = (minMT2lbPair2 && minMaxBLepMassPair2 && minAbsDiffBLepMassPair2);
-        vecCorrPairCheckIndex->at(10) = (minMT2lbPair2 || minMaxBLepMassPair2 || minAbsDiffBLepMassPair2);
+        vecCorrPairCheckIndex->at(9) = (minMT2lblbPair2 && minMaxBLepMassPair2 && minAbsDiffBLepMassPair2);
+        vecCorrPairCheckIndex->at(10) = (minMT2lblbPair2 || minMaxBLepMassPair2 || minAbsDiffBLepMassPair2);
         vecCorrPairCheckIndex->at(11) = minAbsDiffBLepMassTopMassIsPair2;
         vecCorrPairCheckIndex->at(12) = (minAbsDiffBLepMassTopMassIsPair2 || minAbsDiffBLepMassPair2);
         vecCorrPairCheckIndex->at(13) = (minAbsDiffBLepMassTopMassIsPair2 && minAbsDiffBLepMassPair2);
-        vecCorrPairCheckIndex->at(14) = (minAbsDiffBLepMassTopMassIsPair2 || minMT2lbPair2);
-        vecCorrPairCheckIndex->at(15) = (minAbsDiffBLepMassTopMassIsPair2 && minMT2lbPair2);
+        vecCorrPairCheckIndex->at(14) = (minAbsDiffBLepMassTopMassIsPair2 || minMT2lblbPair2);
+        vecCorrPairCheckIndex->at(15) = (minAbsDiffBLepMassTopMassIsPair2 && minMT2lblbPair2);
         
-        SetValsMT2lbPairing(MT2lbPair1, MT2lbPair2, returnMT2lb, vecBLeps_Pair1, vecBLeps_Pair2, vec_GoodBLeps, vecCorrPairCheckIndex->at(whichCheck));
-        return returnMT2lb;
+        SetValsMT2lblbPairing(MT2lblbPair1, MT2lblbPair2, returnMT2lblb, vecBLeps_Pair1, vecBLeps_Pair2, vec_GoodBLeps, vecCorrPairCheckIndex->at(whichCheck));
+        return returnMT2lblb;
     }
-    float MT2lbCalculator(vector<TLorentzVector> * vecLeps, vector<TLorentzVector> * vecJets, float MET, float METPhi, vector<TLorentzVector> &vecBLeps_Good, int whichCheck, bool doVerbosity, vector<int> * inputJetPartFlavor = 0, vector<int> * inputLepPDGIDs = 0) {
+    float MT2lblbCalculator(vector<TLorentzVector> * vecLeps, vector<TLorentzVector> * vecJets, float MET, float METPhi, bool useMassless, vector<TLorentzVector> &vecBLeps_Good, int whichCheck, bool doVerbosity, vector<int> * inputJetPartFlavor = 0, vector<int> * inputLepPDGIDs = 0) {
         
         vector<int> vecCorrPairCheckIndex;
         vecCorrPairCheckIndex.resize(vecCorrPairValMT2lblb.size());
@@ -912,7 +1239,7 @@ typedef struct EventMT2Info {
             vecCorrPairCheckIndex[iCorrPair] = -1;
         }
         
-        float returnMT2lb;
+        float returnMT2lblb;
         vector<TLorentzVector> vecBLeps_Pair1(0);
         vector<TLorentzVector> vecBLeps_Pair2(0);
         if (vecLeps->size() < 2 || vecJets->size() < 2) {
@@ -926,7 +1253,7 @@ typedef struct EventMT2Info {
         vecBLeps_Pair2.push_back(vecLeps->at(0) + vecJets->at(1));
         vecBLeps_Pair2.push_back(vecLeps->at(1) + vecJets->at(0));
         
-        returnMT2lb = MT2lbPairingCheck(&vecBLeps_Pair1, &vecBLeps_Pair2, &vecBLeps_Good, MET, METPhi, &vecCorrPairCheckIndex, whichCheck);
+        returnMT2lblb = MT2lblbPairingCheck(&vecBLeps_Pair1, &vecBLeps_Pair2, &vecBLeps_Good, MET, METPhi, useMassless, &vecCorrPairCheckIndex, whichCheck);
         if (inputJetPartFlavor == NULL || inputLepPDGIDs == NULL) {
             for (int iCorrPair = 0; iCorrPair < (int) vecCorrPairValMT2lblb.size(); ++iCorrPair) {
                 vecCorrPairValMT2lblb[iCorrPair] = -2;
@@ -943,36 +1270,36 @@ typedef struct EventMT2Info {
                 }
             }
         }
-        return returnMT2lb;
+        return returnMT2lblb;
     }
     void CalcMT2lblb(EventLepInfo * inELI, EventJetInfo * inEJI, float EventMET, float EventMETPhi, int whichCheck, int levelVerbosity = 0) {
         // Set the events M_{T2}(lb)(lb)
-        vector<TLorentzVector> vecLepMT2lb(2), vecJetMT2lblb(2);
+        vector<TLorentzVector> vecLepMT2lblb(2), vecJetMT2lblb(2);
         vector<int> vecJetPartFlavor(2), vecLepPDGID(2);
         caseMT2lblb = inEJI->JetSelectorForMT2(&vecJetMT2lblb, &vecJetPartFlavor, levelVerbosity);
         
         if (vecJetMT2lblb.size() == 2) {
-            vecLepMT2lb[0] = inELI->vecEventLeps[0].P4;
-            vecLepMT2lb[1] = inELI->vecEventLeps[1].P4;
+            vecLepMT2lblb[0] = inELI->vecEventLeps[0].P4;
+            vecLepMT2lblb[1] = inELI->vecEventLeps[1].P4;
             vecLepPDGID[0] = inELI->vecEventLeps[0].PDGID;
             vecLepPDGID[1] = inELI->vecEventLeps[1].PDGID;
             if (levelVerbosity > 0) {
                 cout << "vecJetMT2lblb[0].Pt() " << vecJetMT2lblb[0].Pt() << endl;
                 cout << "vecJetMT2lblb[1].Pt() " << vecJetMT2lblb[1].Pt() << endl;
             }
-            
             if (vecJetPartFlavor[0] == -999999 || vecJetPartFlavor[1] == -999999) {
-                EventMT2lblb = MT2lbCalculator(&vecLepMT2lb, &vecJetMT2lblb, EventMET, EventMETPhi, EventVecBLepsMT2lb, whichCheck, levelVerbosity);
+                EventMT2lblb_ZeroBLepMass = MT2lblbCalculator(&vecLepMT2lblb, &vecJetMT2lblb, EventMET, EventMETPhi, true, EventVecBLepsMT2lblb, whichCheck, levelVerbosity);
+                EventMT2lblb = MT2lblbCalculator(&vecLepMT2lblb, &vecJetMT2lblb, EventMET, EventMETPhi, false, EventVecBLepsMT2lblb, whichCheck, levelVerbosity);
             }
             else {
-                EventMT2lblb = MT2lbCalculator(&vecLepMT2lb, &vecJetMT2lblb, EventMET, EventMETPhi, EventVecBLepsMT2lb, whichCheck, levelVerbosity, &vecJetPartFlavor, &vecLepPDGID);
+                EventMT2lblb_ZeroBLepMass = MT2lblbCalculator(&vecLepMT2lblb, &vecJetMT2lblb, EventMET, EventMETPhi, true, EventVecBLepsMT2lblb, whichCheck, levelVerbosity, &vecJetPartFlavor, &vecLepPDGID);
+                EventMT2lblb = MT2lblbCalculator(&vecLepMT2lblb, &vecJetMT2lblb, EventMET, EventMETPhi, false, EventVecBLepsMT2lblb, whichCheck, levelVerbosity, &vecJetPartFlavor, &vecLepPDGID);
             }
-            
             EventDeltaPhiMT2lblb_JetsUsed = dPhi(vecJetMT2lblb[0].Phi(), vecJetMT2lblb[1].Phi());
-            EventDeltaPhiMT2lblb_BLepsUsed = dPhi(EventVecBLepsMT2lb[0].Phi(), EventVecBLepsMT2lb[1].Phi());
+            EventDeltaPhiMT2lblb_BLepsUsed = dPhi(EventVecBLepsMT2lblb[0].Phi(), EventVecBLepsMT2lblb[1].Phi());
             
-            EventMassBLep0_BLepsUsed = EventVecBLepsMT2lb[0].M();
-            EventMassBLep1_BLepsUsed = EventVecBLepsMT2lb[1].M();
+            EventMassBLep0_BLepsUsed = EventVecBLepsMT2lblb[0].M();
+            EventMassBLep1_BLepsUsed = EventVecBLepsMT2lblb[1].M();
             
         }
         else {
@@ -988,21 +1315,25 @@ typedef struct EventMETInfo {
     // Contains information about the MET and MET related variables in the event
     
     TVector3 P3;
-    float EventMET, EventMETPhi, EventMETX, EventMETY, EventMETSig, EventSumET;
+    float EventMET, EventMETPhi, EventMETX, EventMETY, EventMETSig, EventMETSigTrue, EventSumET;
+    float EventUnclPt, EventUnclPhi;
     float EventBMET, EventBMETPhi;
     EventMT2Info MET_EMT2I;
     EventRecoilInfo MET_ERI;
     float EventMETdivMeff;
     float EventMETdivHT;
     int METType;
+    
     void EMIDefaultVarVals() {
         EventMET = 0.; EventMETPhi = 0.;
         EventMETX = 0.; EventMETY = 0.;
         EventSumET = 0.; EventMETSig = 0.;
+        EventMETSigTrue = 0.;
+        EventUnclPt = 0.; EventUnclPhi = 0.;
         MET_EMT2I.EMT2IDefaultVarVals();
         MET_ERI.ERIDefaultVarVals();
         EventMETdivMeff = 0.;
-        METType = -1;
+        METType = 0;
     }
     void PrintVals() {
         std::cout << "EventMET " << EventMET << std::endl;
@@ -1080,6 +1411,11 @@ typedef struct EventMETInfo {
     void SystShiftMET(vector<PFJet> * inputJetVec, vector<PFJet> * shiftJetVec, EventMETInfo * inEMI, int doVerbosity = 0) {
         METSystShift(inputJetVec, shiftJetVec, EventMET, EventMETPhi, inEMI->EventMET, inEMI->EventMETPhi, doVerbosity);
     }
+    /*
+     void SetUnclusteredMET(vector<Lepton> * inputLepVec, vector<PFJet> * inputJetVec, int doVerbosity = 0) {
+     CalcUnclusteredMET(inputLepVec, inputJetVec, EventUnclPt, EventUnclPhi, EventMET, EventMETPhi, doVerbosity);
+     }
+     */
     void SetERIBadProbe() {
         MET_ERI.SetRecoilVarsBadProbe();
     }
@@ -1131,6 +1467,14 @@ typedef struct EventMETInfo {
             MET_EMT2I.SetBadMT2ll();
         }
     }
+    void CalcMT2bb(EventLepInfo * inELI, EventJetInfo * inEJI) {
+        if (inELI->doEvent) {
+            MET_EMT2I.CalcMT2bb(inEJI, EventMET, EventMETPhi);
+        }
+        else {
+            MET_EMT2I.SetBadMT2bb();
+        }
+    }
     void CalcMT2bb_ZMET(EventLepInfo * inELI, EventJetInfo * inEJI) {
         if (inELI->doEvent) {
             MET_EMT2I.CalcMT2bb_ZMET(inEJI, &MET_ERI);
@@ -1161,7 +1505,39 @@ typedef struct EventMETInfo {
             EventBMETPhi = EventMETPhi;
         }
     }
-    void CalcMETVariations(EventLepInfo * inELI, EventJetInfo * inEJI, int whichCheck, int levelVerbosity = 0) {
+    void CalculateMETSig(EventLepInfo * inELI, EventHadronicResolutionInfo * inEHRI, bool doVerbosity = 0) {
+        float CovarDeterminant = inEHRI->EventHadVarParFull * inEHRI->EventHadVarPerpFull - TMath::Power(inEHRI->EventHadCoVarFull, 2);
+        float invVarPar = inEHRI->EventHadVarPerpFull / CovarDeterminant;
+        float invVarPerp = inEHRI->EventHadVarParFull / CovarDeterminant;
+        float invCovar = -1 * inEHRI->EventHadCoVarFull / CovarDeterminant;
+        float diLepPt = (inELI->vecEventLeps[0].P4 + inELI->vecEventLeps[1].P4).Pt();
+        float METPar = -1 * (MET_ERI.recoilUPar + diLepPt);
+        float METPerp = MET_ERI.recoilUPerp;
+        
+        EventMETSigTrue = (TMath::Power(METPar, 2)  * invVarPar) + (TMath::Power(METPerp, 2) * invVarPerp) + (2 * METPerp * METPar * invCovar);
+        
+        if (doVerbosity) {
+            cout << "inEHRI->EventHadVarParFull " << inEHRI->EventHadVarParFull << endl;
+            cout << "inEHRI->EventHadVarPerpFull " << inEHRI->EventHadVarPerpFull << endl;
+            cout << "inEHRI->EventHadCoVarFull " << inEHRI->EventHadCoVarFull << endl;
+            cout << "CovarDeterminant " << CovarDeterminant << endl;
+            cout << "invVarPar " << invVarPar << endl;
+            cout << "invVarPerp " << invVarPerp << endl;
+            cout << "invCovar " << invCovar << endl;
+            cout << "diLepPt " << diLepPt << endl;
+            
+            cout << "METPar " << METPar << endl;
+            cout << "METPerp " << METPerp << endl;
+            cout << "TMath::Power(METPar, 2)  * invVarPar " << TMath::Power(METPar, 2)  * invVarPar  << endl;
+            cout << "TMath::Power(METPerp, 2) * invVarPerp " << TMath::Power(METPerp, 2) * invVarPerp << endl;
+            cout << "2 * METPerp * METPar * invCovar " << 2 * METPerp * METPar * invCovar << endl;
+            cout << "TMath::Power(METPar / inEHRI->EventHadResParFull, 2) " << TMath::Power(METPar / inEHRI->EventHadResParFull, 2) << endl;
+            cout << "TMath::Power(METPerp / inEHRI->EventHadResPerpFull, 2) " << TMath::Power(METPerp / inEHRI->EventHadResPerpFull, 2) << endl;
+            cout << "METSigHack " << TMath::Power(METPar / inEHRI->EventHadResParFull, 2) + TMath::Power(METPerp / inEHRI->EventHadResPerpFull, 2) << endl;
+            cout << "EventMETSigTrue " << EventMETSigTrue << endl;
+        }
+    }
+    void CalcMETVariations(EventLepInfo * inELI, EventJetInfo * inEJI, EventHadronicResolutionInfo * inEHRI, int whichCheck, int levelVerbosity = 0) {
         MET_EMT2I.EMT2IDefaultVarVals();
         CalcBMET(inEJI);
         SetERI(inELI);
@@ -1170,9 +1546,11 @@ typedef struct EventMETInfo {
         SetMTBJet(inELI, inEJI);
         CalcMT2ll(inELI);
         CalcMT2lblb(inELI, inEJI, whichCheck, levelVerbosity);
+        CalcMT2bb(inELI, inEJI);
         CalcMT2bb_ZMET(inELI, inEJI);
         EventMETdivMeff = EventMET / (inEJI->EventJetST + EventMET + inELI->EventLepST);
         EventMETdivHT = EventMET / (inEJI->EventHT);
+        CalculateMETSig(inELI, inEHRI, levelVerbosity);
     }
 } EventMETInfo;
 
@@ -1261,7 +1639,7 @@ typedef struct EventDiStructureInfo {
             if (levelVerbosity > 0) {
                 cout << "setting DiBLep DP " << endl;
             }
-            DP_DiBLeps.SetDPVals(&inEMI->MET_EMT2I.EventVecBLepsMT2lb[0], &inEMI->MET_EMT2I.EventVecBLepsMT2lb[1]);
+            DP_DiBLeps.SetDPVals(&inEMI->MET_EMT2I.EventVecBLepsMT2lblb[0], &inEMI->MET_EMT2I.EventVecBLepsMT2lblb[1]);
         }
         if (levelVerbosity > 0) {
             cout << "setting DiZMET DP " << endl;
@@ -1378,9 +1756,10 @@ typedef struct EventStructPointerInfo {
     EventMETInfo * addEMI;
     EventJetInfo * addEJI;
     EventDiStructureInfo * addEDSI;
-    void SetBEI(int iSyst, mapIntBEI * inMapIntBEI) {
+    void SetBEI(int iSyst, mapIntBEI * inMapIntBEI, bool findSyst = true) {
+        int intToFind = findSyst ? iSyst : 0;
         mapIntBEI::iterator xIterBEI;
-        xIterBEI = inMapIntBEI->find(iSyst);
+        xIterBEI = inMapIntBEI->find(intToFind);
         if (xIterBEI != inMapIntBEI->end()) {
             addBEI = xIterBEI->second;
         }
@@ -1388,9 +1767,10 @@ typedef struct EventStructPointerInfo {
             cout << "something wiggedy: not in the map, hombre!!" << endl;
         }
     }
-    void SetEMI(int iSyst, mapIntEMI * inMapIntEMI) {
+    void SetEMI(int iSyst, mapIntEMI * inMapIntEMI, bool findSyst = true) {
+        int intToFind = findSyst ? iSyst : 0;
         mapIntEMI::iterator xIterEMI;
-        xIterEMI = inMapIntEMI->find(iSyst);
+        xIterEMI = inMapIntEMI->find(intToFind);
         if (xIterEMI != inMapIntEMI->end()) {
             addEMI = xIterEMI->second;
         }
@@ -1398,9 +1778,10 @@ typedef struct EventStructPointerInfo {
             cout << "something wiggedy: not in the map, hombre!!" << endl;
         }
     }
-    void SetEJI(int iSyst, mapIntEJI * inMapIntEJI) {
+    void SetEJI(int iSyst, mapIntEJI * inMapIntEJI, bool findSyst = true) {
+        int intToFind = findSyst ? iSyst : 0;
         mapIntEJI::iterator xIterEJI;
-        xIterEJI = inMapIntEJI->find(iSyst);
+        xIterEJI = inMapIntEJI->find(intToFind);
         if (xIterEJI != inMapIntEJI->end()) {
             addEJI = xIterEJI->second;
         }
@@ -1408,9 +1789,10 @@ typedef struct EventStructPointerInfo {
             cout << "something wiggedy: not in the map, hombre!!" << endl;
         }
     }
-    void SetELI(int iSyst, mapIntELI * inMapIntELI) {
+    void SetELI(int iSyst, mapIntELI * inMapIntELI, bool findSyst = true) {
+        int intToFind = findSyst ? iSyst : 0;
         mapIntELI::iterator xIterELI;
-        xIterELI = inMapIntELI->find(iSyst);
+        xIterELI = inMapIntELI->find(intToFind);
         if (xIterELI != inMapIntELI->end()) {
             addELI = xIterELI->second;
         }
@@ -1418,9 +1800,10 @@ typedef struct EventStructPointerInfo {
             cout << "something wiggedy: not in the map, hombre!!" << endl;
         }
     }
-    void SetEDSI(int iSyst, mapIntEDSI * inMapIntEDSI) {
+    void SetEDSI(int iSyst, mapIntEDSI * inMapIntEDSI, bool findSyst = true) {
+        int intToFind = findSyst ? iSyst : 0;
         mapIntEDSI::iterator xIterEDSI;
-        xIterEDSI = inMapIntEDSI->find(iSyst);
+        xIterEDSI = inMapIntEDSI->find(intToFind);
         if (xIterEDSI != inMapIntEDSI->end()) {
             addEDSI = xIterEDSI->second;
         }
@@ -1440,6 +1823,14 @@ typedef struct EventStructPointerInfo {
         if (doVerbosity) cout << "trying to set EDSI " << endl;
         SetEDSI(iSyst, inMapIntEDSI);
     }
+    void SetStructsPDF(int iSyst, mapIntBEI * inMapIntBEI, EventLepInfo * inELI, EventJetInfo * inEJI, EventMETInfo * inEMI, EventDiStructureInfo * inEDSI, bool doVerbosity = false) {
+        if (doVerbosity) cout << "trying to set BEI " << endl;
+        SetBEI(iSyst, inMapIntBEI);
+        addELI = inELI;
+        addEJI = inEJI;
+        addEMI = inEMI;
+        addEDSI = inEDSI;
+    }
     void ZeroPointers() {
         addBEI = NULL;
         addELI = NULL;
@@ -1449,3 +1840,417 @@ typedef struct EventStructPointerInfo {
     }
 } EventStructPointerInfo;
 
+struct EventRazorInfo {
+    TVector3 vecPSum_Lab, vecPtCM;
+    
+    TVector3 boost_Razor, boost_Top, boost_W0, boost_W1;
+    float gamma_Razor, gamma_Top, gamma_W0, gamma_W1;
+    // 3-vectors containing the components to boost from lab frame to approximate 'Razor' frame
+    // followed by subsequent boost from 'Razor' frame to "Top frame"
+    float ESum_Lab;
+    float SHat_Razor;
+    
+    TLorentzVector lep0_lab, lep1_lab, bjet0_lab, bjet1_lab;
+    TLorentzVector lep0_Razor, lep1_Razor, bjet0_Razor, bjet1_Razor;
+    TLorentzVector lep0_Top, lep1_Top, bjet0_Top, bjet1_Top;
+    TLorentzVector lep0_W, lep1_W;
+    float mass_Razor1, mass_Razor2;
+    float mass_RazorTop, mass_RazorW0, mass_RazorW1;
+    float mass_blep0, mass_blep1;
+    
+    
+    float dPhiBLeps_Razor, dPhiLeps_Razor;
+    float cosThetaLep0_Top, cosThetaLep0_W;
+    float cosThetaLep1_Top, cosThetaLep1_W;
+    
+    void PrintVecVals() {
+        cout << "in lab frame: " << endl;
+        cout << "lep0: " << endl;
+        PrintLorentzVector(&lep0_lab);
+        cout << "lep1: " << endl;
+        PrintLorentzVector(&lep1_lab);
+        cout << "bjet0: " << endl;
+        PrintLorentzVector(&bjet0_lab);
+        cout << "bjet1: " << endl;
+        PrintLorentzVector(&bjet1_lab);
+        cout << endl;
+        cout << "in Razor frame " << endl;
+        cout << "lep0: " << endl;
+        PrintLorentzVector(&lep0_Razor);
+        cout << "lep1: " << endl;
+        PrintLorentzVector(&lep1_Razor);
+        cout << "bjet0: " << endl;
+        PrintLorentzVector(&bjet0_Razor);
+        cout << "bjet1: " << endl;
+        PrintLorentzVector(&bjet1_Razor);
+        cout << endl;
+        cout << "in Top frame " << endl;
+        cout << "lep0: " << endl;
+        PrintLorentzVector(&lep0_Top);
+        cout << "lep1: " << endl;
+        PrintLorentzVector(&lep1_Top);
+        cout << "bjet0: " << endl;
+        PrintLorentzVector(&bjet0_Top);
+        cout << "bjet1: " << endl;
+        PrintLorentzVector(&bjet1_Top);
+        cout << endl;
+        cout << "in W frame " << endl;
+        cout << "lep0: " << endl;
+        PrintLorentzVector(&lep0_W);
+        cout << "lep1: " << endl;
+        PrintLorentzVector(&lep1_W);
+    }
+    
+    void DefaultValsBadEvent() {
+        gamma_Razor = -99.;
+        gamma_Top = -99.;
+        gamma_W0 = -99.;
+        gamma_W1 = -99.;
+        
+        mass_Razor1 = -99.;
+        mass_Razor2 = -99.;
+        mass_RazorTop = -99.;
+        mass_RazorW0 = -99.;
+        mass_RazorW1 = -99.;
+        SHat_Razor = -99.;
+        
+        dPhiBLeps_Razor = -99.;
+        dPhiLeps_Razor = -99.;
+        
+        cosThetaLep0_Top = -99.;
+        cosThetaLep0_W = -99.;
+        
+        cosThetaLep1_Top = -99.;
+        cosThetaLep1_W = -99.;
+    }
+    
+    int SetPairing(vector<TLorentzVector> * inVecBJets, vector<TLorentzVector> * inVecLeps, bool levelVerbosity = 0) {
+        vector<TLorentzVector> vecBLeps_Pair1(0);
+        vector<TLorentzVector> vecBLeps_Pair2(0);
+        if (inVecLeps->size() < 2 || inVecBJets->size() < 2) {
+            cout << "Houston, we've had a problem here: one of the two vectors' sizes is less than 2!" << endl;
+            cout << "inVecLeps size " << inVecLeps->size() << endl;
+            cout << "inVecBJets size " << inVecBJets->size() << endl;
+        }
+        vecBLeps_Pair1.push_back(inVecLeps->at(0) + inVecBJets->at(0));
+        vecBLeps_Pair1.push_back(inVecLeps->at(1) + inVecBJets->at(1));
+        
+        vecBLeps_Pair2.push_back(inVecLeps->at(0) + inVecBJets->at(1));
+        vecBLeps_Pair2.push_back(inVecLeps->at(1) + inVecBJets->at(0));
+        
+        float massBLeadLep_Pair1 = vecBLeps_Pair1[0].M();
+        float massBSubLep_Pair1 = vecBLeps_Pair1[1].M();
+        
+        float massBLeadLep_Pair2 = vecBLeps_Pair2[0].M();
+        float massBSubLep_Pair2 = vecBLeps_Pair2[1].M();
+        
+        float maxBLepMassPair1 = TMath::Max(massBLeadLep_Pair1, massBSubLep_Pair1);
+        float maxBLepMassPair2 = TMath::Max(massBLeadLep_Pair2, massBSubLep_Pair2);
+        bool minMaxBLepMassPair2 = (maxBLepMassPair1 > maxBLepMassPair2);
+        
+        if (minMaxBLepMassPair2) {
+            mass_blep0 = massBLeadLep_Pair2;
+            mass_blep1 = massBSubLep_Pair2;
+        }
+        else {
+            mass_blep0 = massBLeadLep_Pair1;
+            mass_blep1 = massBSubLep_Pair1;
+        }
+        return minMaxBLepMassPair2;
+    }
+    void SetLabFrameVecs(EventLepInfo * inELI, EventJetInfo * inEJI, bool levelVerbosity = 0) {
+        //Function to set the lab-frame 4 vectors
+        //As part of this, it selects the "b-jets" and also pairs the "b-jets" with the leptons
+        vector<TLorentzVector> vecLepMT2lblb(2), vecJetMT2lblb(2);
+        vector<int> vecJetPartFlavor(2);
+        int caseMT2lblb = inEJI->JetSelectorForMT2(&vecJetMT2lblb, &vecJetPartFlavor, levelVerbosity);
+        vecLepMT2lblb[0] = inELI->vecEventLeps[0].P4;
+        vecLepMT2lblb[1] = inELI->vecEventLeps[1].P4;
+        
+        int whichPairing = SetPairing(&vecJetMT2lblb, &vecLepMT2lblb, levelVerbosity);
+        if (whichPairing == 1) {
+            //second pairing is "correct" one
+            lep0_lab = vecLepMT2lblb[0];
+            lep1_lab = vecLepMT2lblb[1];
+            
+            bjet0_lab = vecJetMT2lblb[1];
+            bjet1_lab = vecJetMT2lblb[0];
+        }
+        else {
+            //first pairing is "correct" one
+            lep0_lab = vecLepMT2lblb[0];
+            lep1_lab = vecLepMT2lblb[1];
+            
+            bjet0_lab = vecJetMT2lblb[0];
+            bjet1_lab = vecJetMT2lblb[1];
+        }
+    }
+    
+    void SetESumAndPSum(bool levelVerbosity = 0) {
+        ESum_Lab = lep0_lab.E() + lep1_lab.E() + bjet0_lab.E() + bjet1_lab.E();
+        vecPSum_Lab = lep0_lab.Vect() + lep1_lab.Vect() + bjet0_lab.Vect() + bjet1_lab.Vect();
+        
+        if (levelVerbosity) {
+            cout << "ESum_Lab " << ESum_Lab << endl;
+            cout << "vecPSum_Lab X " << vecPSum_Lab.X() << endl;
+            cout << "vecPSum_Lab Y " << vecPSum_Lab.Y() << endl;
+            cout << "vecPSum_Lab Z " << vecPSum_Lab.Z() << endl;
+        }
+    }
+    
+    void SetCMPtVec(EventMETInfo * inEMI, bool levelVerbosity = 0) {
+        vecPtCM = vecPSum_Lab + inEMI->P3;
+        vecPtCM.SetZ(0); //make sure it's a transverse vector;
+        if (levelVerbosity) {
+            cout << "vecPtCM Pt " << vecPtCM.Pt() << endl;
+            cout << "vecPtCM Phi " << vecPtCM.Phi() << endl;
+        }
+    }
+    void CalculateSHat_Razor(bool levelVerbosity = 0) {
+        float firstterm = 2 * ESum_Lab * ESum_Lab;
+        float secondterm = -1 * 2 * vecPtCM.Dot(vecPSum_Lab);
+        float thirdterm = 2 * ESum_Lab * TMath::Sqrt(TMath::Power(ESum_Lab, 2) + TMath::Power(vecPtCM.Mag(), 2) - 2 * vecPtCM.Dot(vecPSum_Lab));
+        SHat_Razor = firstterm + secondterm + thirdterm;
+        
+        if (levelVerbosity) {
+            cout << "first term " << firstterm << endl;
+            cout << "second term " << secondterm << endl;
+            cout << "third term " << thirdterm << endl;
+        }
+    }
+    void SetBoostRazor(bool levelVerbosity = 0) {
+        //Set the z-component of the boost (C.Rogan's thesis, equation 11.37a)
+        float boost_RazorZNumerator = vecPSum_Lab.Pz();
+        float boost_RazorZDenominator = ESum_Lab;
+        boost_Razor.SetZ(boost_RazorZNumerator / boost_RazorZDenominator);
+        //Set the transverse-component of the boost (C.Rogan's thesis, equation 11.37b)
+        float boost_RazorTransverseDenominator = TMath::Sqrt(SHat_Razor + TMath::Power(vecPtCM.Mag(), 2));
+        float boost_RazorXNumerator = vecPtCM.Px();
+        float boost_RazorYNumerator = vecPtCM.Py();
+        boost_Razor.SetX(boost_RazorXNumerator / boost_RazorTransverseDenominator);
+        boost_Razor.SetY(boost_RazorYNumerator / boost_RazorTransverseDenominator);
+        
+        if (levelVerbosity) {
+            cout << "boost_RazorZNumerator " << boost_RazorZNumerator << endl;
+            cout << "boost_RazorZDenominator " << boost_RazorZDenominator << endl;
+            cout << "boost_RazorXNumerator " << boost_RazorXNumerator << endl;
+            cout << "boost_RazorYNumerator " << boost_RazorYNumerator << endl;
+            cout << "SHat_Razor " << SHat_Razor << endl;
+            cout << "boost_RazorTransverseDenominator " << boost_RazorTransverseDenominator << endl;
+        }
+        
+        gamma_Razor = 1 / TMath::Sqrt(1 - TMath::Power(boost_Razor.Mag(), 2));
+        
+        if (levelVerbosity) {
+            cout << "boost_Razor X " << boost_Razor.X() << endl;
+            cout << "boost_Razor Y " << boost_Razor.Y() << endl;
+            cout << "boost_Razor Z " << boost_Razor.Z() << endl;
+            cout << "gamma_Razor " << gamma_Razor << endl;
+        }
+    }
+    
+    void SetBoostTop(bool levelVerbosity = 0) {
+        
+        //Get the orthogonal basis
+        TVector3 v1 = bjet0_Razor.Vect() + bjet1_Razor.Vect();
+        TVector3 v1hat = v1.Unit();
+        
+        TVector3 v2 = (bjet0_Razor.Vect() + lep0_Razor.Vect()) - (bjet1_Razor.Vect() + lep1_Razor.Vect());
+        v2 = v2 - (v2.Dot(v1hat) * v1hat);
+        TVector3 v2hat = v2.Unit();
+        
+        //Get the Top Boost components
+        float boost_TopV1Numerator = bjet0_Razor.E() - bjet1_Razor.E();
+        float boost_TopV1Denominator = v1.Mag();
+        float boost_TopV2Numerator = v2.Dot(v2hat);
+        float boost_TopV2Denominator = bjet0_Razor.E() + bjet1_Razor.E() + lep0_Razor.E() + lep1_Razor.E();
+        
+        if (levelVerbosity ) {
+            cout << "boost_TopV1Numerator " << boost_TopV1Numerator << endl;
+            cout << "boost_TopV1Denominator " << boost_TopV1Denominator << endl;
+            cout << "boost_TopV2Numerator " << boost_TopV2Numerator << endl;
+            cout << "boost_TopV2Denominator " << boost_TopV2Denominator << endl;
+        }
+        
+        boost_Top = ((boost_TopV1Numerator / boost_TopV1Denominator) * v1hat) + ((boost_TopV2Numerator / boost_TopV2Denominator) * v2hat);
+        gamma_Top = 1 / TMath::Sqrt(1 - TMath::Power(boost_Top.Mag(), 2));
+        
+        if (levelVerbosity) {
+            cout << "boost_Top X " << boost_Top.X() << endl;
+            cout << "boost_Top Y " << boost_Top.Y() << endl;
+            cout << "boost_Top Z " << boost_Top.Z() << endl;
+            cout << "gamma_Top " << gamma_Top << endl;
+        }
+    }
+    
+    void SetBoostW(bool levelVerbosity = 0) {
+        float MassW = 80.4;
+        float boost_W0Denominator = TMath::Sqrt(TMath::Power(bjet0_Top.E(), 2) + TMath::Power(MassW, 2));
+        float boost_W1Denominator = TMath::Sqrt(TMath::Power(bjet1_Top.E(), 2) + TMath::Power(MassW, 2));
+        
+        boost_W0 = (-1.0 / boost_W0Denominator) * bjet0_Top.Vect();
+        gamma_W0 = 1 / TMath::Sqrt(1 - TMath::Power(boost_W0.Mag(), 2));
+        
+        boost_W1 = (-1.0 / boost_W1Denominator) * bjet1_Top.Vect();
+        gamma_W1 = 1 / TMath::Sqrt(1 - TMath::Power(boost_W1.Mag(), 2));
+        
+        
+        if (levelVerbosity) {
+            cout << "boost_W0Denominator " << boost_W0Denominator << endl;
+            cout << "boost_W0 X " << boost_W0.X() << endl;
+            cout << "boost_W0 Y " << boost_W0.Y() << endl;
+            cout << "boost_W0 Z " << boost_W0.Z() << endl;
+            cout << "gamma_W0 " << gamma_W0 << endl;
+            
+            cout << "boost_W1Denominator " << boost_W1Denominator << endl;
+            cout << "boost_W1 X " << boost_W1.X() << endl;
+            cout << "boost_W1 Y " << boost_W1.Y() << endl;
+            cout << "boost_W1 Z " << boost_W1.Z() << endl;
+            cout << "gamma_W1 " << gamma_W1 << endl;
+        }
+    }
+    
+    void DoBoostRazor(bool levelVerbosity = 0) {
+        //Set boosted vectors as equal
+        bjet0_Razor = bjet0_lab;
+        bjet1_Razor = bjet1_lab;
+        lep0_Razor = lep0_lab;
+        lep1_Razor = lep1_lab;
+        
+        bjet0_Razor.Boost(boost_Razor);
+        bjet1_Razor.Boost(boost_Razor);
+        lep0_Razor.Boost(boost_Razor);
+        lep1_Razor.Boost(boost_Razor);
+    }
+    
+    void DoBoostTop(bool levelVerbosity = 0) {
+        //Set boosted vectors as equal
+        bjet0_Top = bjet0_Razor;
+        lep0_Top = lep0_Razor;
+        
+        bjet1_Top = bjet1_Razor;
+        lep1_Top = lep1_Razor;
+        
+        //Note do asymmetric Boost since tops are recoiling
+        bjet0_Top.Boost(boost_Top);
+        lep0_Top.Boost(boost_Top);
+        
+        bjet1_Top.Boost(-1 * boost_Top);
+        lep1_Top.Boost(-1 * boost_Top);
+    }
+    
+    void DoBoostW(bool levelVerbosity = 0) {
+        //Set boosted vectors as equal
+        lep0_W = lep0_Top;
+        lep1_W = lep1_Top;
+        
+        lep0_W.Boost(boost_W0);
+        lep1_W.Boost(boost_W1);
+    }
+    void CalculateRazorMasses(bool levelVerbosity = 0) {
+        //calculate the first characteristic scale variable
+        float massBSq = TMath::Power(bjet0_lab.M(), 2);
+        float massLepSq = TMath::Power(lep0_lab.M(), 2);
+        
+        mass_Razor1 = bjet0_Top.E() + bjet1_Top.E();
+        mass_Razor2 = lep0_W.E() + lep1_W.E();
+        mass_RazorTop = 0.5 * (TMath::Power(mass_blep0, 2) - TMath::Power(mass_blep1, 2));
+        mass_RazorTop /= (lep0_Top.E() - lep1_Top.E());
+        mass_RazorW0 = TMath::Sqrt(TMath::Power(mass_RazorTop, 2) + massBSq - 2 * mass_RazorTop*bjet0_Top.E());
+        mass_RazorW1 = TMath::Sqrt(TMath::Power(mass_RazorTop, 2) + massBSq - 2 * mass_RazorTop*bjet1_Top.E());
+        
+        float mass_Razor2Vers2 = 1 / (2 * 80.4) * ((2 * mass_RazorTop *(lep0_Top.E() + lep1_Top.E())) + massBSq + massLepSq - TMath::Power(mass_blep0, 2) - TMath::Power(mass_blep1, 2));
+        if (levelVerbosity) {
+            if (fabs(mass_Razor2 - mass_Razor2Vers2) > 1E-3) {
+                cout << "noticeable difference..." << endl;
+                cout << "mass_Razor2 " << mass_Razor2 << endl;
+                cout << "mass_Razor2Vers2 " << mass_Razor2Vers2 << endl;
+            }
+        }
+        if (levelVerbosity) {
+            cout << "mass_Razor1 " << mass_Razor1 << endl;
+            cout << "mass_Razor2 " << mass_Razor2 << endl;
+            cout << "mass_RazorTop " << mass_RazorTop << endl;
+            cout << "mass_RazorW0 " << mass_RazorW0 << endl;
+            cout << "mass_RazorW1 " << mass_RazorW1 << endl;
+        }
+    }
+    void CalculateCosines(bool levelVerbosity = 0) {
+        cosThetaLep0_Top = lep0_Top.Vect().Dot(boost_Top) / (lep0_Top.Vect().Mag() * boost_Top.Mag());
+        cosThetaLep1_Top = lep1_Top.Vect().Dot(-1 * boost_Top) / (lep1_Top.Vect().Mag() * (-1 * boost_Top).Mag());
+        
+        cosThetaLep0_W = lep0_W.Vect().Dot(boost_W0) / (lep0_W.Vect().Mag() * boost_W0.Mag());
+        cosThetaLep1_W = lep1_W.Vect().Dot(boost_W1) / (lep1_W.Vect().Mag() * boost_W1.Mag());
+        
+        if (levelVerbosity) {
+            cout << "cosThetaLep0_Top " << cosThetaLep0_Top << endl;
+            cout << "cosThetaLep1_Top " << cosThetaLep1_Top << endl;
+            cout << "cosThetaLep0_W " << cosThetaLep0_W << endl;
+            cout << "cosThetaLep1_W " << cosThetaLep1_W << endl;
+        }
+    }
+    void CalculateDPhis(bool levelVerbosity = 0) {
+        dPhiBLeps_Razor = dPhi((lep0_Razor + bjet0_Razor).Phi(), (lep1_Razor + bjet1_Razor).Phi());
+        dPhiLeps_Razor = dPhi(lep0_Razor.Phi(), lep1_Razor.Phi());
+        
+        if (levelVerbosity) {
+            cout << "dPhiBLeps_Razor " << dPhiBLeps_Razor << endl;
+            cout << "dPhiLeps_Razor " << dPhiLeps_Razor << endl;
+        }
+    }
+    
+    void DoEverything(EventLepInfo * inELI, EventJetInfo * inEJI, EventMETInfo * inEMI, bool levelVerbosity = 0) {
+        if (inEJI->EventNJets < 2) {
+            DefaultValsBadEvent();
+        }
+        else {
+            //Set the lab frame 4 vectors first
+            if (levelVerbosity) {
+                cout << "setting the lab frame vectors " << endl;
+            }
+            SetLabFrameVecs(inELI, inEJI, levelVerbosity);
+            
+            //Now set the ESum_Lab, vecPSum_Lab, vecPtCM and also SHat_Razor
+            if (levelVerbosity) {
+                cout << "setting ESum_Lab, vecPSum_Lab, and SHat_Razor " << endl;
+            }
+            SetESumAndPSum(levelVerbosity);
+            SetCMPtVec(inEMI, levelVerbosity);
+            CalculateSHat_Razor(levelVerbosity);
+            
+            //Run the razor boost calculation (both the boost vector calculation and subsequent boosted object 4-vectors)
+            if (levelVerbosity) {
+                cout << "running the razor frame boost calculation" << endl;
+            }
+            SetBoostRazor(levelVerbosity);
+            DoBoostRazor(levelVerbosity);
+            
+            //Run The top-rest frame boost calculation (both the boost vector calculation and subsequent boosted object 4-vectors)
+            if (levelVerbosity) {
+                cout << "running the top rest-frame boost calculation" << endl;
+            }
+            SetBoostTop(levelVerbosity);
+            DoBoostTop(levelVerbosity);
+            
+            //Run The W-rest frame boost calculation (both the boost vector calculation and subsequent boosted object 4-vectors)
+            if (levelVerbosity) {
+                cout << "running the W rest-frame boost calculation" << endl;
+            }
+            SetBoostW(levelVerbosity);
+            DoBoostW(levelVerbosity);
+            
+            //Calculate quantities using the various frame objects
+            if (levelVerbosity) {
+                cout << "calculating razor quantities" << endl;
+            }
+            CalculateRazorMasses(levelVerbosity);
+            CalculateCosines(levelVerbosity);
+            CalculateDPhis(levelVerbosity);
+            
+            if (levelVerbosity) {
+                cout << "going to print out vector values for objects" << endl;
+                PrintVecVals();
+            }
+        }
+    }
+};

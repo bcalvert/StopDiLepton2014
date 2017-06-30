@@ -1,5 +1,6 @@
 #ifndef STOP_PLOT_HADD_INFO_H
 #define STOP_PLOT_HADD_INFO_H
+
 //Relevant things for hadding non-Legacy nTuple version
 
 #include <vector>
@@ -8,7 +9,142 @@
 #include <sstream>
 using namespace std;
 
-TString WhichTTBarString(int whichTTBarSyst) {    
+float WeightMCSample(TString nameSample) {
+    double xsecTTbar                = 245.8;
+    // Specific Decay Mode TTBar; Only Oviedo and only Madgraph
+    //branching ratios taken from the Oviedo Spreadsheet
+    double branchRatioTTBarHadronic = 106.9/235;
+    double branchRatioTTBarSemiLeptonic = 103./235.;
+    double branchRatioTTBarFullLeptonic = 0.108 * 0.108 * 9;
+    double xsecTTbarHadronic        = xsecTTbar * branchRatioTTBarHadronic;
+    double xsecTTbarFullLeptonic    = xsecTTbar * branchRatioTTBarFullLeptonic;
+    double xsecTTbarSemiLeptonic    = xsecTTbar * branchRatioTTBarSemiLeptonic;
+    // Basic Single Top XSec
+    double xsecSingTopplusW         = 11.1;// Original amount I had from Cross section site
+    //    double xsecSingTopplusW         = 11.1773;
+    double xsecSingTopTchan         = 59.5364608;
+    double xsecSingTopBarTchan      = 32.168436;
+    double xsecSingTopSchan         = 4.5305656;
+    double xsecSingTopBarSchan      = 2.0451456;
+    
+    //// Di-Weak Vector Boson cross section
+    double xsecWW                   = 54.838;
+    double xsecWZ                   = 33.21; // Note Oviedo's different versions for WZ and ZZ
+    double xsecZZ                   = 17.654;
+    // Oviedo version of DiW production
+    double xsecWWincl               = 57.1;
+    double xsecWW2L2Nu              = 5.8123;
+    double xsecggWW2L                 = 0.182852;
+    
+    ////Drell Yan
+    // "Inclusive DY"
+    double xsecZDY10to50            = 860.5;
+    double xsecZDY50toInf           = 3503.71;
+    // DY NumJet Exclusive samples Note: Oviedo only
+    double xsecZDY50toInf_1Jets     = 671.830779661017;
+    double xsecZDY50toInf_2Jets     = 216.758237288136;
+    double xsecZDY50toInf_3Jets     = 61.1952813559322;
+    double xsecZDY50toInf_4Jets     = 27.591766779661;
+    
+    //// WJets
+    double xsecWLNu                 = 36257.2;
+    
+    //// QCD
+    double xsecQCDMu15              = 3.640E8*3.7E-4;
+    double xsecQCDMu20to30          = 2.870E8*6.500E-3;
+    double xsecQCDMu30to50          = 6.609E7*12.20E-3;
+    double xsecQCDMu50to80          = 8.802E6*21.80E-3;
+    double xsecQCDMu80to120         = 1.024E6*39.50E-3;
+    double xsecQCDMu120to170        = 1.578E5*47.30E-3;
+    double xsecQCDEM20to30          = 2.886E8*10.10E-3;
+    double xsecQCDEM30to80          = 7.433E7*62.10E-3;
+    double xsecQCDEM80to170         = 1.191E6*153.9E-3;
+    double xsecQCDBCEM20to30        = 2.886E8*5.800E-4;
+    double xsecQCDBCEM30to80        = 7.424E7*2.250E-3;
+    double xsecQCDBCEM80to170       = 1.191E6*10.90E-3;
+    
+    //// Weak VBoson + Photon
+    double xsecZG                   = 132.6;
+    double xsecWG                   = 553.92;
+    double xsecWGstarToElNu         = 5.873;
+    double xsecWGstarToMuNu         = 1.914;
+    double xsecWGstarToTauNu        = 0.336;
+    
+    
+    /////Rare backgrounds
+    //Higgs samples
+    double xsecHiggsVBF             = 0.0356;
+    double xsecHiggsWW              = 0.444;
+    double xsecHiggsZZ4L            = 0.052428931968;
+    //Triple Vector Boson ish
+    double xsecWWG                  = 0.528;
+    double xsecWWW                  = 0.0822;
+    double xsecWWZ                  = 0.0633;
+    double xsecWZZ                  = 0.0192;
+    double xsecZZZ                  = 0.00459;
+    //TTBar + Vector Boson(s)
+    double xsecTTbarW               = 0.232;
+    double xsecTTbarZ               = 0.174;
+    double xsecTTbarG               = 1.44;
+    double xsecTTbarWW              = 0.00204;
+    //
+    xsecZDY50toInf              = 3532.8;
+    xsecSingTopplusW            = 1.1733482448; //so different because it's dilepton channel
+    xsecWZ                      = 22.44;
+    xsecZZ                      = 9.03;
+    xsecWLNu                    = 37509;
+    
+    
+    // Numbers taken from https://docs.google.com/spreadsheet/ccc?key=0Aq5OAopf_dtsdDJqREJReGQyY21wbERldVFSZVJHbFE&hl=en_US&pli=1#gid=57
+    if (nameSample.Contains("TTbar_Powheg")) return xsecTTbar/28150723;
+    if (nameSample.Contains("TTbar_Madgraph")) return xsecTTbar/6923750;
+    if (nameSample.Contains("TTbar_MCatNLO")) return xsecTTbar/32852589;
+    if (nameSample.Contains("TTJetsFullHadrMG")) return xsecTTbarHadronic/28123821;
+    if (nameSample.Contains("TTJetsSemiLeptMG")) return xsecTTbarSemiLeptonic/24424818;
+    if (nameSample.Contains("TTJetsFullLeptMGtauola")) return xsecTTbarFullLeptonic/11673402;
+    if (nameSample.Contains("TTJetsFullLeptMG")) return xsecTTbarFullLeptonic/12114013;
+    if (nameSample.Contains("TWDilep")) return xsecSingTopplusW/2976510;
+    if (nameSample.Contains("TbarWDilep")) return xsecSingTopplusW/2971482;
+    if (nameSample.Contains("SingleTop_Tchannel")) return xsecSingTopTchan/3748227;
+    if (nameSample.Contains("SingleTopBar_Tchannel")) return xsecSingTopBarTchan/1935072;
+    if (nameSample.Contains("SingleTop_Schannel")) return xsecSingTopSchan/259961;
+    if (nameSample.Contains("SingleTopBar_Schannel")) return xsecSingTopBarSchan/139974;
+    if (nameSample.Contains("DYJets_Madgraph")) return xsecZDY10to50/7132223;
+    if (nameSample.Contains("DY50toLLMad1jet")) return xsecZDY50toInf_1Jets/24045248;
+    if (nameSample.Contains("DY50toLLMad2jet") && !nameSample.Contains("DY50toLLMad2jetV7C")) return xsecZDY50toInf_2Jets/2352304;
+    if (nameSample.Contains("DY50toLLMad2jetV7C")) return xsecZDY50toInf_2Jets/21852156;
+    if (nameSample.Contains("DY50toLLMad3jet")) return xsecZDY50toInf_3Jets/11015445;
+    if (nameSample.Contains("DY50toLLMad4jet")) return xsecZDY50toInf_4Jets/6402827;
+    if (nameSample.Contains("ZJets_Madgraph")) return xsecZDY50toInf/30459503;
+    if (nameSample.Contains("WWincl")) return xsecWWincl/9980431;
+    if (nameSample.Contains("ggWWto2L")) return xsecggWW2L/109987;
+    if (nameSample.Contains("WWTo2L2Nu_Madgraph")) return xsecWW2L2Nu/1933235;
+    if (nameSample.Contains("WGstarToElNuMad")) return xsecWGstarToElNu/314653;
+    if (nameSample.Contains("WGstarToMuNuMad")) return xsecWGstarToMuNu/299973;
+    if (nameSample.Contains("WGstarToTauNuMad")) return xsecWGstarToTauNu/49997;
+    if (nameSample.Contains("WZ_")) return xsecWZ/10000283;
+    if (nameSample.Contains("ZZ_")) return xsecZZ/9799908;
+    if (nameSample.Contains("WJets_Madgraph")) return xsecWLNu/76102995;
+    if (nameSample.Contains("ZgammaToLLG")) return xsecZG/6588161;
+    if (nameSample.Contains("WgammaToLNuG")) return xsecWG/4802358;
+    if (nameSample.Contains("HWW125")) return xsecHiggsWW/299975;
+    if (nameSample.Contains("VBF125")) return xsecHiggsVBF/299687;
+    if (nameSample.Contains("HZZ4L")) return xsecHiggsZZ4L/995117;
+    if (nameSample.Contains("WWGJets")) return xsecWWG/215121;
+    if (nameSample.Contains("WZZJets")) return xsecWZZ/219835;
+    if (nameSample.Contains("ZZZJets")) return xsecZZZ/224904;
+    if (nameSample.Contains("WWZJets")) return xsecWWZ/222234;
+    if (nameSample.Contains("WWWJets")) return xsecWWW/220549;
+    if (nameSample.Contains("TTWJets")) return xsecTTbarW/196046;
+    if (nameSample.Contains("TTZJets")) return xsecTTbarZ/210160;
+    if (nameSample.Contains("TTWWJets")) return xsecTTbarWW/197820;
+    if (nameSample.Contains("TTGJets")) return xsecTTbarG/71598;
+    cout << "didn't MATCH ANY" << endl;
+    return 0;
+    
+}
+
+TString WhichTTBarString(int whichTTBarSyst) {
     TString TTBarSystString;
     switch (whichTTBarSyst) {
         case 0:
@@ -249,11 +385,11 @@ vector<double> * WeightVec(float L_data, vector<double> * baseWeightVec, unsigne
             numParFiles = numParFilesVec->at(0);
             outVec->push_back(numParFiles * L_data * xsecZDY10to50 / baseWeightVec->at(0));
             if (doExclusiveSample) {
-                numParFiles = numParFilesVec->at(1);                        
+                numParFiles = numParFilesVec->at(1);
                 outVec->push_back(numParFiles * L_data * xsecZDY50toInf_1Jets / baseWeightVec->at(1));
-                numParFiles = numParFilesVec->at(2);                        
+                numParFiles = numParFilesVec->at(2);
                 outVec->push_back(numParFiles * L_data * xsecZDY50toInf_2Jets / baseWeightVec->at(2));
-                //                        numParFiles = numParFilesVec->at(3);                        
+                //                        numParFiles = numParFilesVec->at(3);
                 //                        outVec->push_back(numParFiles * L_data * xsecZDY50toInf_2Jets / baseWeightVec->at(3));
                 numParFiles = numParFilesVec->at(3);
                 outVec->push_back(numParFiles * L_data * xsecZDY50toInf_3Jets / baseWeightVec->at(3));
@@ -261,9 +397,29 @@ vector<double> * WeightVec(float L_data, vector<double> * baseWeightVec, unsigne
                 outVec->push_back(numParFiles * L_data * xsecZDY50toInf_4Jets / baseWeightVec->at(4));
             }
             else {
+                numParFiles = numParFilesVec->at(1);
+                outVec->push_back(numParFiles * L_data * xsecZDY50toInf / baseWeightVec->at(1));
+            }
+            /*
+            if (doExclusiveSample) {
+                numParFiles = numParFilesVec->at(0);
+                outVec->push_back(numParFiles * L_data * xsecZDY50toInf_1Jets / baseWeightVec->at(0));
+                numParFiles = numParFilesVec->at(1);
+                outVec->push_back(numParFiles * L_data * xsecZDY50toInf_2Jets / baseWeightVec->at(1));
+                //                        numParFiles = numParFilesVec->at(3);                        
+                //                        outVec->push_back(numParFiles * L_data * xsecZDY50toInf_2Jets / baseWeightVec->at(3));
+                numParFiles = numParFilesVec->at(2);
+                outVec->push_back(numParFiles * L_data * xsecZDY50toInf_3Jets / baseWeightVec->at(2));
+                numParFiles = numParFilesVec->at(3);
+                outVec->push_back(numParFiles * L_data * xsecZDY50toInf_4Jets / baseWeightVec->at(3));
+            }
+            else {
+                numParFiles = numParFilesVec->at(0);
+                outVec->push_back(numParFiles * L_data * xsecZDY10to50 / baseWeightVec->at(0));
                 numParFiles = numParFilesVec->at(1);                        
                 outVec->push_back(numParFiles * L_data * xsecZDY50toInf / baseWeightVec->at(1));
             }
+            */
             break;
         case 2:
             numParFiles = numParFilesVec->at(0);
@@ -438,6 +594,19 @@ vector<TList *> * FileListVec(TString TTBarSystString, TString mainString, vecto
         else {
             FileListZDY->Add(TFile::Open(TString("ZJets_Madgraph") + mainString + suffixString));
         }
+        /*
+        if (doExclusiveSample) {
+            FileListZDY->Add(TFile::Open(TString("DY50toLLMad1jet") + mainString + suffixString));
+            //                    FileListZDY->Add(TFile::Open(TString("DY50toLLMad2jet") + mainString + suffixString));
+            FileListZDY->Add(TFile::Open(TString("DY50toLLMad2jetV7C") + mainString + suffixString));
+            FileListZDY->Add(TFile::Open(TString("DY50toLLMad3jet") + mainString + suffixString));
+            FileListZDY->Add(TFile::Open(TString("DY50toLLMad4jet") + mainString + suffixString));
+        }
+        else {
+            FileListZDY->Add(TFile::Open(TString("DYJets_Madgraph") + mainString + suffixString));
+            FileListZDY->Add(TFile::Open(TString("ZJets_Madgraph") + mainString + suffixString));
+        }
+        */
         outVec->push_back(FileListZDY);
     }
     if (boolVec->at(2)) {
@@ -508,4 +677,3 @@ vector<TList *> * FileListVec(TString TTBarSystString, TString mainString, vecto
 }
 
 #endif // STOP_PLOT_HADD_INFO_H
-
