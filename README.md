@@ -34,10 +34,12 @@ In most of these models, the top-squark plays an integral role in fixing some of
 
 For my thesis, I specifically considered the *dileptonic* decay signature of pair-produced top-squarks. Lots of buzzwords I know -- here's how it plays out: two top-squarks are produced from the collision of two protons; these top-squarks can decay in a number of different ways, as an example, one of these decay modes includes the direct decay of each top-*squark* to a top *quark* and a *neutralino* (NB, this is the dark matter candidate), as can be seen in the image below,
 
-<p>
-    <img src="https://github.com/bcalvert/StopDiLepton2014/files/1116647/T2tt.pdf" alt="T2tt" align="center" height="250">
+
+<p align="center">
+  <img src="https://github.com/bcalvert/StopDiLepton2014/files/1116647/T2tt.pdf" alt="T2tt" height="250"/>
 </p>
-    <em>A pseudo-Feynman diagram representation of the decay of pair-produced top-squarks (t with a tilde) into top quarks and neutralinos (the greek chi); supersymmetric particles (i.e. hypothetical particles) are marked in red. </em>
+
+*A pseudo-Feynman diagram representation of the decay of pair-produced top-squarks (t with a tilde) into top quarks and neutralinos (the greek chi); supersymmetric particles (i.e. hypothetical particles) are marked in red.*
 
 
 In the above decay mode, the top quarks then decay to a W boson and b-quark, where *each* of the two W bosons then promptly decays to a lepton (hence the **di**-*leptonic* qualifier).
@@ -54,8 +56,8 @@ When built in this fashion, the distribution of MT2(ll) in the main category of 
 
 Both of these phenomena can be observed in the figure below, which shows a comparison between the observed distribution of this variable for our experimental data (black points), the expected distributions for our known backgrounds (filled, colored histograms), and, using unfilled histograms, the expected distributions for two possible top-squark signal scenarios ("tt" refers to the top-squark decay chain mentioned above, while "bbWW" references a very similar top-squark decay chain that results in effectively the same net collection of final, stable particles).
 
-<p>
-    <img src="https://github.com/bcalvert/StopDiLepton2014/files/1116848/DilepMT2ll_wSig.pdf" alt="MT2ll" align="center" height="450">
+<p align="center">
+  <img src="https://github.com/bcalvert/StopDiLepton2014/files/1116848/DilepMT2ll_wSig.pdf" alt="MT2ll" height="450"/>
 </p>
 
 You can easily observe the kinematic edge (marked with a dashed line) in the t-tbar background (note the logarithmic scale on the y-axis); in contrast, one can see how the distribution for the top-squark signal scenarios extends far beyond the kinematic edge. Unfortunately (if you're a theorist), we don't see any clear "smoking gun" differences between our observed data and the expected background distributions (remember! you have to account for statistical and experimental systematic uncertainties), so there is no clear evidence for top-squark pair-production in this figure.
