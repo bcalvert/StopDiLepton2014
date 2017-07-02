@@ -36,7 +36,7 @@ For my thesis, I specifically considered the *dileptonic* decay signature of pai
 
 
 <p align="center">
-  <img src="https://github.com/bcalvert/StopDiLepton2014/files/1116647/T2tt.pdf" alt="T2tt" height="250"/>
+  <img src="https://user-images.githubusercontent.com/4801246/27773293-1280e83e-5f2b-11e7-97d1-48a40e5c8e0c.jpg" alt="T2tt" height="250"/>
 </p>
 
 *A pseudo-Feynman diagram representation of the decay of pair-produced top-squarks (t with a tilde) into top quarks and neutralinos (the greek chi); supersymmetric particles (i.e. hypothetical particles) are marked in red.*
@@ -57,7 +57,7 @@ When built in this fashion, the distribution of MT2(ll) in the main category of 
 Both of these phenomena can be observed in the figure below, which shows a comparison between the observed distribution of this variable for our experimental data (black points), the expected distributions for our known backgrounds (filled, colored histograms), and, using unfilled histograms, the expected distributions for two possible top-squark signal scenarios ("tt" refers to the top-squark decay chain mentioned above, while "bbWW" references a very similar top-squark decay chain that results in effectively the same net collection of final, stable particles).
 
 <p align="center">
-  <img src="https://github.com/bcalvert/StopDiLepton2014/files/1116848/DilepMT2ll_wSig.pdf" alt="MT2ll" height="450"/>
+  <img src="https://user-images.githubusercontent.com/4801246/27773290-10b87b2a-5f2b-11e7-9c68-bd055d81f0d2.jpg" alt="MT2ll" height="450"/>
 </p>
 
 You can easily observe the kinematic edge (marked with a dashed line) in the t-tbar background (note the logarithmic scale on the y-axis); in contrast, one can see how the distribution for the top-squark signal scenarios extends far beyond the kinematic edge. Unfortunately (if you're a theorist), we don't see any clear "smoking gun" differences between our observed data and the expected background distributions (remember! you have to account for statistical and experimental systematic uncertainties), so there is no clear evidence for top-squark pair-production in this figure.
