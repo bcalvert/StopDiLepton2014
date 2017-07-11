@@ -5,13 +5,14 @@ COMPFLAGS=`root-config --cflags` -Wall -Wextra -pedantic -Wno-vla -O2 -g -std=c+
 all: NewOviStopPlotFillerRunOnSkim_wSyst
 
 #StopPlotFillerRunOnSkim_wSyst:  StopDict_ver2.o StopPlotFillerRunOnSkim_wSyst.o
-NewOviStopPlotFillerRunOnSkim_wSyst:  StopDict.o NewOviStopPlotFillerRunOnSkim_wSyst.o
+#NewOviStopPlotFillerRunOnSkim_wSyst:  StopDict.o NewOviStopPlotFillerRunOnSkim_wSyst.o
+NewOviStopPlotFillerRunOnSkim_wSyst:  NewOviStopPlotFillerRunOnSkim_wSyst.o
 	g++ -o $@ $^ $(ROOTLIBS) mt2bisect.cc
 
 #StopDict_ver2.o: StopDict_ver2.cpp
 #StopDict.o: StopDict.cpp
-StopDict.o: StopDictTry2.cpp
-	g++ -c -o $@ $(COMPFLAGS) $^
+#StopDict.o: StopDictTry2.cpp
+#	g++ -c -o $@ $(COMPFLAGS) $^
 
 NewOviStopPlotFillerRunOnSkim_wSyst.o: NewOviStopPlotFillerRunOnSkim_wSyst.C
 	g++ -c -o $@ $(COMPFLAGS) $^
