@@ -32,7 +32,7 @@ int main( int argc, char* argv[] ) {
     std::cout << "saving to " << tsOutFileName << std::endl;
     TFile * tfOutputFile = new TFile(tsOutFileName,"RECREATE");
 
-    TString tsFileTreeName("Events");
+    TString tsFileTreeName("OviSkimTree");
     TChain tcFileTree(tsFileTreeName);
     /////Set up the tree////////
     tcFileTree.Add(paramsPlotMaking_KK.GetFileName() + TString(".root"));
@@ -41,9 +41,22 @@ int main( int argc, char* argv[] ) {
     infoMETPF.SetStrings();
     infoMETPF.SetTreeBranchInfo(&tcFileTree);
 
+    EventMETInfo infoMETSmearPF(0, 0, true);
+    infoMETSmearPF.SetStrings();
+    infoMETSmearPF.SetTreeBranchInfo(&tcFileTree);
+
     EventMETInfo infoMETCalo(4, 0, false);
     infoMETCalo.SetStrings();
     infoMETCalo.SetTreeBranchInfo(&tcFileTree);
+
+
+    //Need to add in booking of histograms
+    //c.f. https://github.com/bcalvert/StopDiLepton2014/blob/master/PlotMakingCode/NewOviStopPlotFillerRunOnSkim_wSyst.C#L543-L776
+    //for the code -- yes there's a lot and yes I'm working on cleaning it up
+
+    //Need to declare the maps that will contain the values of event variables (using strings as keys)
+    //c.f. https://github.com/bcalvert/StopDiLepton2014/blob/master/PlotMakingCode/NewOviStopPlotFillerRunOnSkim_wSyst.C#L784-L875
+    //for the code -- yes there's a lot and yes I'm working on cleaning it up
     
     /////Iterate over events
     int const iTotalFileEvents = tcFileTree.GetEntries();
@@ -74,6 +87,14 @@ int main( int argc, char* argv[] ) {
         }
         
         tcFileTree.GetEntry(ievt);
+
+        //Need to add in the code that sets up all the event variable mapping
+        //c.f. https://github.com/bcalvert/StopDiLepton2014/blob/master/PlotMakingCode/NewOviStopPlotFillerRunOnSkim_wSyst.C#L972-L1460
+        //for the code -- yes there's a lot and yes I'm working on cleaning it up
+        //
+        //Need to add in the code that fills the histograms given maps of variables
+        //c.f. https://github.com/bcalvert/StopDiLepton2014/blob/master/PlotMakingCode/NewOviStopPlotFillerRunOnSkim_wSyst.C#L1464-L1550
+        //for the code -- yes there's a lot and yes I'm working on cleaning it up
         
     }
     std::cout << "All events done" << std::endl;
