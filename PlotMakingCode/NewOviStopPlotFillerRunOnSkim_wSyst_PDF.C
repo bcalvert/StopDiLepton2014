@@ -136,6 +136,8 @@ int main( int argc, char* argv[] ) {
     
     TFile * fileElecFakeRate = TFile::Open(baseDirFakePromptRate + nameElec + nameFake + "Rate.root");
     TH2F * h_ElecFakeRate = (TH2F *) fileElecFakeRate->Get(TString("h_") + nameElec + nameFake + TString("Rate"));
+    TH2F * h_ElecFakeRateShiftUp = (TH2F *) fileElecFakeRate->Get(TString("h_") + nameElec + nameFake + TString("RateShiftUp"));
+    TH2F * h_ElecFakeRateShiftDown = (TH2F *) fileElecFakeRate->Get(TString("h_") + nameElec + nameFake + TString("RateShiftDown"));
     
     TFile * fileElecPromptRate = TFile::Open(baseDirFakePromptRate + nameElec + namePrompt + "Rate.root");
     TH2F * h_ElecPromptRate = (TH2F *) fileElecPromptRate->Get(TString("h_") + nameElec + namePrompt + TString("Rate"));
@@ -167,9 +169,6 @@ int main( int argc, char* argv[] ) {
     TH2F * h_ElecPromptRateShiftDown = h_ElecPromptRate;
     TH2F * h_MuonPromptRateShiftUp = h_MuonPromptRate;
     TH2F * h_MuonPromptRateShiftDown = h_MuonPromptRate;
-    
-    TH2F * h_ElecFakeRateShiftUp = h_ElecFakeRate;
-    TH2F * h_ElecFakeRateShiftDown = h_ElecFakeRate;
     
     /******************************************************************************************************************************/
     ///////////////////////  End: Deal with loading in Fake/Prompt Lepton Histos + FakeLeptonCalculator Initalization
@@ -264,7 +263,9 @@ int main( int argc, char* argv[] ) {
     
     int numPDFSysts_CT10 = 25;
     int numPDFSysts_MSTW = 23;
-    int numPDFSysts_NNPDF = 50;
+    //int numPDFSysts_NNPDF = 50;
+    int numPDFSysts_NNPDF = 0;
+    cout << "not running NNPDF for now!" << endl;
     
     int numPDFSysts_Total = 1 + numPDFSysts_CT10 + numPDFSysts_MSTW + numPDFSysts_NNPDF; //genRecoilSyst
     
@@ -400,6 +401,7 @@ int main( int argc, char* argv[] ) {
     PlotMakingRunParams PMRP;
     PMRP.DefaultVarVals();
     PMRP.SetVals(argc, argv);
+    PMRP.SRS.isT2tb = PMRP.PSIV.fInName.Contains("T2tb");
     PMRP.SetStrings(2);
     
     BEI.blindData = PMRP.SMV.doBlindData;
@@ -580,12 +582,24 @@ int main( int argc, char* argv[] ) {
     
     /////initialize the vectors of HistogramTs and then create them
     int numSpaceDimensions = 3;
+    
+    if (PMRP.SMV.whichSSType > 2 && PMRP.SMV.whichSSType < 4) numSpaceDimensions = 1; // 4/16/15: only save 1D histograms for reduced impact histogram nTuples
+    
     vector< vector<HistogramT> *> vecVecHistT_Inclusive; vecVecHistT_Inclusive.resize(numSpaceDimensions);
     vector< vector<HistogramT> *> vecVecHistT_MET_noType0; vecVecHistT_MET_noType0.resize(numSpaceDimensions);
     
     for (int iDim = 0; iDim < numSpaceDimensions; ++iDim) {
         vecVecHistT_Inclusive[iDim] = new vector<HistogramT>;
-        SetHistTVec_Inclusive(vecVecHistT_Inclusive[iDim], &basicSHBB, &mapVartoLabel, iDim + 1, PMRP.SMV.whichSSType);
+        if (PMRP.SMV.whichSSType != 4) { // == 4 is MET Performance hists
+            SetHistTVec_Inclusive(vecVecHistT_Inclusive[iDim], &basicSHBB, &mapVartoLabel, iDim + 1, PMRP.SMV.whichSSType);
+            if (PMRP.SMV.doData && iDim != 0) {
+                //ghetto check on iDim because I don't want to re-add histograms
+                SetHistTVec_METPerformance(vecVecHistT_Inclusive[iDim], &basicSHBB, &mapVartoLabel, iDim + 1);
+            }
+        }
+        else {
+            SetHistTVec_METPerformance(vecVecHistT_Inclusive[iDim], &basicSHBB, &mapVartoLabel, iDim + 1);
+        }
         AddPatsyName(vecVecHistT_Inclusive[iDim]);
         vecVecHistT_MET_noType0[iDim] = new vector<HistogramT>;
         //SetHistTVec_MET_noType0(vecVecHistT_MET_noType0[iDim], &basicSHBB, &mapVartoLabel, iDim + 1, PMRP.SRS.isSignal);
@@ -611,7 +625,12 @@ int main( int argc, char* argv[] ) {
         
         for (int iDim = 0; iDim < numSpaceDimensions; ++iDim) {
             vecVecHistT_Inclusive_Smear[iDim] = new vector<HistogramT>;
-            SetHistTVec_Inclusive_Smeared(vecVecHistT_Inclusive_Smear[iDim], &basicSHBB, &mapVartoLabel, iDim + 1, PMRP.SMV.whichSSType);
+            if (PMRP.SMV.whichSSType != 4) {
+                SetHistTVec_Inclusive_Smeared(vecVecHistT_Inclusive_Smear[iDim], &basicSHBB, &mapVartoLabel, iDim + 1, PMRP.SMV.whichSSType);
+            }
+            else {
+                SetHistTVec_METPerformance_Smeared(vecVecHistT_Inclusive_Smear[iDim], &basicSHBB, &mapVartoLabel, iDim + 1);
+            }
             AddPatsyName(vecVecHistT_Inclusive_Smear[iDim]);
             
             vecVecHistT_MET_noType0_Smear[iDim] = new vector<HistogramT>;
@@ -1029,10 +1048,27 @@ int main( int argc, char* argv[] ) {
         if (!PMRP.SMV.doData) {
             if (PMRP.SRS.isSignal) {
                 //                cout << "test 1 " << endl;
-                if (!BEI.hasStopInfo) continue;
+                if (!BEI.hasStopInfo) {
+                    if (PMRP.PSIV.doVerbosity) {
+                        cout << "skipping because event doesn't have stop info" << endl;
+                    }
+                    continue;
+                }
                 //                cout << "test 2 " << endl;
                 
-                if (!EGSPI.PassMassCutPlotMaker(PMRP.SRS.grabStopMass, PMRP.SRS.grabChi0Mass , PMRP.SRS.grabCharginoMassFrac, PMRP.SRS.massDiffThresh, PMRP.SRS.CharginoMassFracDiffThresh, PMRP.SRS.isT2tt)) continue;
+                if (PMRP.PSIV.fInName.Contains("T2tb")) {
+                    PMRP.SRS.isT2tb = 1;
+                    int typeDecay = EGSPI.TypeT2Decay();
+                    //cout << "typeDecay " << typeDecay << endl;
+                    if (PMRP.SRS.cutT2tbDecayType != typeDecay) continue;
+                }
+                
+                if (!EGSPI.PassMassCutPlotMaker(PMRP.SRS.grabStopMass, PMRP.SRS.grabChi0Mass , PMRP.SRS.grabCharginoMassFrac, PMRP.SRS.massDiffThresh, PMRP.SRS.CharginoMassFracDiffThresh, PMRP.SRS.isT2tt || PMRP.SRS.isT2tb , PMRP.PSIV.doVerbosity)) {
+                    if (PMRP.PSIV.doVerbosity) {
+                        cout << "skipping because event didn't pass the mass cut " << endl;
+                    }
+                    continue;
+                }
                 PMRP.SRS.weightPol = EGSPI.GetStopPolWeight(PMRP.SRS.stopPolPercentRight);
                 if (PMRP.PSIV.doVerbosity) {
                     cout << "weightPol " << PMRP.SRS.weightPol << endl;
