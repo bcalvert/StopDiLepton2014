@@ -676,7 +676,7 @@ inline void PassFailORCut3D(TH1 * inHist, double &numPassCut, double &numPassCut
     numPassCutErr = TMath::Sqrt(totalEventsErr*totalEventsErr - numFailCutErr * numFailCutErr);
 }
 
-inline void PassFailCut(TH1 * inHist, double &numPassCut, double &numPassCutErr, double &numFailCut, double &numFailCutErr, int * binAddreses, int whichIntType, bool doVerbosity = 0) {
+inline void PassFailCut(TH1 * inHist, double &numPassCut, double &numPassCutErr, double &numFailCut, double &numFailCutErr, int * binAddreses, int whichIntType/*, bool doVerbosity = 0*/) {
     //whichIntType
     //0 is AND
     //1 is OR

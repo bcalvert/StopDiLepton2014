@@ -229,9 +229,12 @@ int main( int argc, char* argv[] ) {
     int systGenRecoilRW = 8;
     
     //If doing fake lepton estimate, only have 3 systematics
+    //
+    /*
     int systFakeLepStat = 1;
     int systFakeLepFakeRateSyst = 2;
     int systFakeLepPromptRateSyst = 3;
+    */
 //    int systStopXSec = 9;
     
     systLB_Lepton.push_back(systLepES);  systUB_Lepton.push_back(systLepES);
@@ -706,8 +709,8 @@ int main( int argc, char* argv[] ) {
     /////Declare the Histogram Maps that will be used for determining how to fill the histograms
     /******************************************************************************************************************************/
     /////Set up vectors for custom bins (patsies right now)
-    vector<int> * vecNBins = new vector<int>;
-    vector<Double_t *> vecBinEdges;
+    //vector<int> * vecNBins = new vector<int>; // not using
+    //vector<Double_t *> vecBinEdges;
     /////Set up vectors for custom bins (patsies right now)
     /******************************************************************************************************************************/
     /////Book the Histograms

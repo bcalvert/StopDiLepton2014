@@ -23,11 +23,12 @@ inline void TwoDeeHistTVec_AddMETPhiCorrHists(vector<HistogramT> * inHistTVec, S
     H_METY_vs_nVtx.SetIndAxisLabel(stringnVtx, mapVartoLabel, 1);
     H_METY_vs_nVtx.yAxis.SetAxis("patsy", stringMET + "Y", &inSHBB->IHBB_PxPy, doSyst);
     H_METY_vs_nVtx.SetIndAxisLabel(stringSmear + stringMET + "Y", mapVartoLabel, 2);
-    
-    /*
-    inHistTVec->push_back(H_METX_vs_nVtx);
-    inHistTVec->push_back(H_METY_vs_nVtx);
-    */
+
+    bool bAdding = false;
+    if (bAdding) {
+        inHistTVec->push_back(H_METX_vs_nVtx);
+	inHistTVec->push_back(H_METY_vs_nVtx);
+    }
 }
 
 inline void TwoDeeHistTVec_AddMT2CorrelationHists(vector<HistogramT> * inHistTVec, StopHistBinBounds * inSHBB, labelMap * mapVartoLabel, bool isSmear) {

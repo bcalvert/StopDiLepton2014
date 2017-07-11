@@ -1,7 +1,7 @@
 // Set of functions that handle setting up the unordered_map<TString, float> that the plot filler uses
 // to automatically fill histograms with the correct event variables
 
-inline void SetStringKey_StFMap_Basic(StV_Map &inStVM, EventStructPointerInfo * inESPI, EventPileUpInfo * inEPI) {
+inline void SetStringKey_StFMap_Basic(StV_Map &inStVM /*, EventStructPointerInfo * inESPI*/, EventPileUpInfo * inEPI) {
     inStVM["BasicWeight"] = 1.0;
     inStVM["CutFlowEntry"] = 4.0;
     inStVM["nVtx"] = inEPI->nVtx;
@@ -395,7 +395,7 @@ inline void SetStringKey_StFMap(StV_Map &inStVM, EventStructPointerInfo * inESPI
     SetStringKey_StFMap_IndLepton(inStVM, inESPI->addELI);
     SetStringKey_StFMap_IndJets(inStVM, inESPI->addEJI);
     SetStringKey_StFMap_HadrRes(inStVM, inESPI->addEJI);
-    SetStringKey_StFMap_Basic(inStVM, inESPI, inEPI);
+    SetStringKey_StFMap_Basic(inStVM /*, inESPI*/, inEPI);
     SetStringKey_StFMap_AddDiStructureKinInfo(inStVM, inESPI->addEDSI, inESPI->addEJI);
     SetStringKey_StFMap_AddDiStructureAngleInfo(inStVM, inESPI->addEDSI, inESPI->addEJI);
     SetStringKey_StFMap_AddBasicMETSig(inStVM, RawMETSig);

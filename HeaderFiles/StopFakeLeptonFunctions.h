@@ -64,7 +64,7 @@ typedef struct FakeLeptonCalculator {
         return binPair;
     }
     void SetEta(EventLepInfo * inELI, TH2F * histElecPromptRate, TH2F * histMuonPromptRate, int levelVerbosity = 0) {
-        TH2F * currLepHistToUse;
+        //TH2F * currLepHistToUse; to use?
         pair<int, int> currLepBinPair;
         pair<int, int> firstLepBinPair(-1,-1);
         pair<int, int> secondLepBinPair(-1,-1);
@@ -131,7 +131,7 @@ typedef struct FakeLeptonCalculator {
         }
     }
     void SetEpsilon(EventLepInfo * inELI, TH2F * histElecFakeRate, TH2F * histMuonFakeRate, int levelVerbosity = 0) {
-        TH2F * currLepHistToUse;
+        //TH2F * currLepHistToUse; to use?
         pair<int, int> currLepBinPair;
         
         valPlusErr currFakeRateVPE;

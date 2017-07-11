@@ -834,7 +834,7 @@ typedef struct GenSUSYEventPointers {
         GPP_St3_Chargino.SetSize();
     }
     void SetGenParticleInfo_Full(int whichParticleType, int indexGenParticle, GenParticleSt3Info * inGPISt3) {
-        GenParticlePointers_St3 * GPP_St3ToUse;
+        GenParticlePointers_St3 * GPP_St3ToUse = nullptr; // TODO: will break if which particle type not right
         switch (whichParticleType) {
             case 0:
                 GPP_St3ToUse = &GPP_St3_Stop;
@@ -870,7 +870,7 @@ typedef struct GenQuarkEventPointers {
         GPP_St1_B.SetSize();
     }
     void SetGenParticleInfo_Full(int whichParticleType, int indexGenParticle, GenParticleSt3Info * inGPISt3) {
-        GenParticlePointers_St3 * GPP_St3ToUse;
+        GenParticlePointers_St3 * GPP_St3ToUse = nullptr; //TODO Will break if things aren't set up
         switch (whichParticleType) {
             case 0:
                 GPP_St3ToUse = &GPP_St3_Top;
@@ -882,7 +882,7 @@ typedef struct GenQuarkEventPointers {
         GPP_St3ToUse->SetGenParticleInfo_Full(indexGenParticle, inGPISt3);
     }
     void SetGenParticleInfo_Full(int whichParticleType, int indexGenParticle, GenParticleSt1Info * inGPISt1) {
-        GenParticlePointers_St1 * GPP_St1ToUse;
+        GenParticlePointers_St1 * GPP_St1ToUse = nullptr; //TODO will break if whichParticleType not right...
         switch (whichParticleType) {
             case 1:
                 GPP_St1ToUse = &GPP_St1_B;
@@ -920,7 +920,7 @@ typedef struct GenLeptonEventPointers {
         GPP_St3_Muon.SetSize();
     }
     void SetGenParticleInfo_Full(int whichParticleType, int indexGenParticle, GenParticleSt3Info * inGPISt3) {
-        GenParticlePointers_St3 * GPP_St3ToUse;
+        GenParticlePointers_St3 * GPP_St3ToUse = nullptr; //TODO will break if things aren't setup
         switch (whichParticleType) {
             case 0:
                 GPP_St3ToUse = &GPP_St3_Elec;
@@ -932,7 +932,7 @@ typedef struct GenLeptonEventPointers {
         GPP_St3ToUse->SetGenParticleInfo_Full(indexGenParticle, inGPISt3);
     }
     void SetGenParticleInfo_Full(int whichParticleType, int indexGenParticle, GenParticleSt1Info * inGPISt1) {
-        GenParticlePointers_St1 * GPP_St1ToUse;
+        GenParticlePointers_St1 * GPP_St1ToUse = nullptr; //TODO Will break if things aren't set up
         switch (whichParticleType) {
             case 0:
                 GPP_St1ToUse = &GPP_St1_Elec;
@@ -954,7 +954,7 @@ typedef struct GenLeptonEventPointers {
         float matchPtLB, matchPtUB;
         GenParticle MomTemp;
         int matchIndex;
-        GenParticlePointers_St1 * GPP_St1_ToUse;
+        GenParticlePointers_St1 * GPP_St1_ToUse = nullptr; //TODO Will break if things aren't set up
         switch (abs(inLep->PDGID)) {
             case 11:
                 GPP_St1_ToUse = &GPP_St1_Elec;

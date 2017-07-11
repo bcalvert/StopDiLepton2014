@@ -87,7 +87,7 @@ typedef struct RunRangeLimits {
         startPoint = 0;
         stringRRL = "";
     }
-    void SetRRLString(int whichType) {
+    void SetRRLString(/*int whichType what's this for??*/) {
         stringRRL = "";
         if (doSpecRun) {
             stringRRL += "_specRun";
@@ -462,7 +462,7 @@ typedef struct PlotMakingRunParams {
     }
     void SetStrings(int whichType) {
         SMV.SetSMVString(whichType);
-        RRL.SetRRLString(whichType);
+        RRL.SetRRLString(/*whichType*/);
         SRS.SetSRSString(whichType);
     }
     TString OutStringAdd() {

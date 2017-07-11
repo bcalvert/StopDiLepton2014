@@ -37,7 +37,7 @@ inline void OneDeeHistTVec_AddMiscHists(vector<HistogramT> * inHistTVec, StopHis
     inHistTVec->push_back(H_nVtx_preRW);
 }
 
-inline void OneDeeHistTVec_AddMiscLeptonHists(vector<HistogramT> * inHistTVec, StopHistBinBounds * inSHBB, labelMap * mapVartoLabel, int whichPos) {
+inline void OneDeeHistTVec_AddMiscLeptonHists(vector<HistogramT> * inHistTVec/*, StopHistBinBounds * inSHBB*/, labelMap * mapVartoLabel, int whichPos) {
     // Relatively unimportant lepton histograms, i.e. stuff we don't check that often
     //bool doSyst = true;
     bool noSyst = false;
@@ -603,7 +603,7 @@ inline void OneDeeHistTVec_AddMT2Hists_SpecialCuts(vector<HistogramT> * inHistTV
 }
 
 
-inline void OneDeeHistTVec_AddBasicMETSigHists(vector<HistogramT> * inHistTVec, StopHistBinBounds * inSHBB, labelMap * mapVartoLabel, bool isSmear) {
+inline void OneDeeHistTVec_AddBasicMETSigHists(vector<HistogramT> * inHistTVec/*, StopHistBinBounds * inSHBB*/, labelMap * mapVartoLabel, bool isSmear) {
     // histograms for MET Significance
     
     bool doSyst = true;
@@ -787,7 +787,7 @@ inline void OneDeeHistTVec_AddBasicMETHists(vector<HistogramT> * inHistTVec, Sto
     inHistTVec->push_back(H_TTBarPt);
 }
 
-inline void OneDeeHistTVec_AddMETPerformanceHists_SpecialCuts(vector<HistogramT> * inHistTVec, StopHistBinBounds * inSHBB, labelMap * mapVartoLabel, bool isSmear) {
+inline void OneDeeHistTVec_AddMETPerformanceHists_SpecialCuts(std::vector<HistogramT> * inHistTVec, StopHistBinBounds * inSHBB, labelMap * mapVartoLabel, bool isSmear) {
     
     // MET Performance variables -- UPar/UPerp, but with special cuts/requirements
     bool doSyst = true;
@@ -828,14 +828,16 @@ inline void OneDeeHistTVec_AddMETPerformanceHists_SpecialCuts(vector<HistogramT>
         H_UPerp_MT2GeqCut[iCut].specialHistCutFloat.SetParams(&SC_MT2llGeqCut[iCut]);
         H_UPerp_MT2GeqCut[iCut].specialHistCutFloatVar = stringMT2ll;
     }
-    /*
-    for (int iCut = 0; iCut < numCutVals; ++iCut) {
-        inHistTVec->push_back(H_UParPlusqT_MT2GeqCut[iCut]);
+
+    bool bAdding(false);
+    if (bAdding) {    
+	for (int iCut = 0; iCut < numCutVals; ++iCut) {
+	    inHistTVec->push_back(H_UParPlusqT_MT2GeqCut[iCut]);
+	}
+	for (int iCut = 0; iCut < numCutVals; ++iCut) {
+	    inHistTVec->push_back(H_UPerp_MT2GeqCut[iCut]);
+	}
     }
-    for (int iCut = 0; iCut < numCutVals; ++iCut) {
-        inHistTVec->push_back(H_UPerp_MT2GeqCut[iCut]);
-    }
-    */
 }
 
 
@@ -1034,7 +1036,7 @@ inline void OneDeeHistTVec_Basic(vector<HistogramT> * inHistTVec, StopHistBinBou
     OneDeeHistTVec_AddMiscHists(inHistTVec, inSHBB, mapVartoLabel);
     if (cutPlotLevel <= 0 || cutPlotLevel > 2) {
         for (int iLep = 0; iLep < 2; ++iLep) {
-            OneDeeHistTVec_AddMiscLeptonHists(inHistTVec, inSHBB, mapVartoLabel, iLep);
+            OneDeeHistTVec_AddMiscLeptonHists(inHistTVec/*, inSHBB*/, mapVartoLabel, iLep);
         }
     }
 }
@@ -1076,7 +1078,7 @@ inline void OneDeeHistTVec_DiObjKinematics(vector<HistogramT> * inHistTVec, Stop
 inline void OneDeeHistTVec_AddMET_MT2(vector<HistogramT> * inHistTVec, StopHistBinBounds * inSHBB, labelMap * mapVartoLabel, bool isSmear = false, int cutPlotLevel = false) {
     if (cutPlotLevel == 2 && !isSmear) return;
     if (cutPlotLevel != 2) {
-        OneDeeHistTVec_AddBasicMETSigHists(inHistTVec, inSHBB, mapVartoLabel, isSmear);
+        OneDeeHistTVec_AddBasicMETSigHists(inHistTVec/*, inSHBB*/, mapVartoLabel, isSmear);
         OneDeeHistTVec_AddBasicMETHists(inHistTVec, inSHBB, mapVartoLabel, isSmear);
         OneDeeHistTVec_AddMETPerformanceHists(inHistTVec, inSHBB, mapVartoLabel, isSmear);
         OneDeeHistTVec_AddMETPerformanceHists_SpecialCuts(inHistTVec, inSHBB, mapVartoLabel, isSmear);

@@ -26,7 +26,7 @@ inline void AddInUperpUparBounds(vector< vector<Double_t> > * inVecVecBinEdges, 
     int i5start = 0;
     int i5end = i5start + 6;
     
-    int uprp_uparNBins = 115;
+    const int uprp_uparNBins = 115;
     Double_t uprp_uparBinVals[uprp_uparNBins+1];
     for (int i1 = i1start; i1 < i1end; ++i1) {
         uprp_uparBinVals[i1] = -200 + 10 * i1;
@@ -58,7 +58,7 @@ inline void AddInUperpUparBounds(vector< vector<Double_t> > * inVecVecBinEdges, 
 }
 
 inline void AddInUparDivQtBounds(vector< vector<Double_t> > * inVecVecBinEdges, vector<int> * vecNumBins) {
-    int uparDivqTNBins = 166;
+    const int uparDivqTNBins = 166;
     Double_t uparDivqTBinVals[uparDivqTNBins+1];
     uparDivqTBinVals[0] = -7.;
     uparDivqTBinVals[1] = -4.;
@@ -89,7 +89,7 @@ inline void AddInUparDivQtBounds(vector< vector<Double_t> > * inVecVecBinEdges, 
 }
 
 inline void AddInNVtxBounds(vector< vector<Double_t> > * inVecVecBinEdges, vector<int> * vecNumBins) {
-    int nVtxBins = 35;
+    const int nVtxBins = 35;
     Double_t nVtxBinVals[nVtxBins+1];
     for (int k = 0; k < nVtxBins+1; ++k) {
         nVtxBinVals[k] = (Double_t) k+0.5;

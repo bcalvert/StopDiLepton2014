@@ -113,17 +113,17 @@ inline float GetPtResolution_HighPtJet(TLorentzVector * inputJet, vector<TF1> * 
     cout << "currJetPt " << inputJet->Pt() << endl;
     */
     outResolution = inputTF1Vec->at(currJetEtaIndex).Eval(inputJet->Pt());
-    /*
-     if (cornerCaseBinEdge) {
-     outResolution += inputTF1Vec->at(currJetEtaIndex - 1).Eval(inputJet->Pt());
-     outResolution /= 2;
-     }
-     */
+    
+    if (cornerCaseBinEdge) {
+       outResolution += inputTF1Vec->at(currJetEtaIndex - 1).Eval(inputJet->Pt());
+       outResolution /= 2;
+    }
+    
     return outResolution;
 }
 
 inline float GetPhiResolution_HighPtJet(TLorentzVector * inputJet, vector<TF1> * inputTF1Vec) {
-    const int numTF1s = 10;
+    const int numTF1s = 9; //just set back down to 9 from 10....
     float currJetAbsEta = fabs(inputJet->Eta());
     float EtaBinEnds[numTF1s + 1] = {0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 9.9}; // in reality 9 TF1 vecs -- think this is a bug...
     int   currJetEtaIndex = -1;
@@ -150,6 +150,10 @@ inline float GetPhiResolution_HighPtJet(TLorentzVector * inputJet, vector<TF1> *
      cout << "currJetPt " << inputJet->Pt() << endl;
      */
     outResolution = inputTF1Vec->at(currJetEtaIndex).Eval(inputJet->Pt());
+    if (cornerCaseBinEdge) {
+       outResolution += inputTF1Vec->at(currJetEtaIndex - 1).Eval(inputJet->Pt());
+       outResolution /= 2;
+    }
     return outResolution;
 }
 

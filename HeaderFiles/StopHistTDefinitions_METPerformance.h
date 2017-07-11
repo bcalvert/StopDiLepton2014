@@ -1,8 +1,8 @@
-void TwoDeeHistTVec_AddMET_vs_qTHists(vector<HistogramT> * inHistTVec,  StopHistBinBounds * inSHBB, labelMap * mapVartoLabel, bool isSmear, TString addString = "") {
+void TwoDeeHistTVec_AddMET_vs_qTHists(vector<HistogramT> * inHistTVec/*,  StopHistBinBounds * inSHBB*/, labelMap * mapVartoLabel, bool isSmear, TString addString = "") {
     // Histograms used as part of calculating MET Phi corrections
     
     bool doSyst = true;
-    bool noSyst = false;
+    //bool noSyst = false; // not using?
     
     TString stringSmear = GetStringSmear(isSmear, false);
     TString stringUPerp = "UPerp";
@@ -42,7 +42,7 @@ void TwoDeeHistTVec_AddMET_vs_qTHists(vector<HistogramT> * inHistTVec,  StopHist
     inHistTVec->push_back(H_UParDivqT_vs_qT);
 }
 
-void TwoDeeHistTVec_AddMET_vs_nVtxHists(vector<HistogramT> * inHistTVec,  StopHistBinBounds * inSHBB, labelMap * mapVartoLabel, bool isSmear, TString addString = "") {
+void TwoDeeHistTVec_AddMET_vs_nVtxHists(vector<HistogramT> * inHistTVec/*,  StopHistBinBounds * inSHBB*/, labelMap * mapVartoLabel, bool isSmear, TString addString = "") {
     // Histograms used as part of calculating MET Phi corrections
     
     bool doSyst = true;
@@ -82,14 +82,14 @@ void TwoDeeHistTVec_AddMET_vs_nVtxHists(vector<HistogramT> * inHistTVec,  StopHi
 
 
 
-void TwoDeeHistTVec_METPerformance(vector<HistogramT> * inHistTVec,  StopHistBinBounds * inSHBB, labelMap * mapVartoLabel, TString addString = "") {
+void TwoDeeHistTVec_METPerformance(vector<HistogramT> * inHistTVec/*,  StopHistBinBounds * inSHBB*/, labelMap * mapVartoLabel, TString addString = "") {
     bool doSmear = true;
-    TwoDeeHistTVec_AddMET_vs_qTHists(inHistTVec, inSHBB, mapVartoLabel, doSmear, addString);
-    TwoDeeHistTVec_AddMET_vs_nVtxHists(inHistTVec, inSHBB, mapVartoLabel, doSmear, addString);
+    TwoDeeHistTVec_AddMET_vs_qTHists(inHistTVec/*, inSHBB*/, mapVartoLabel, doSmear, addString);
+    TwoDeeHistTVec_AddMET_vs_nVtxHists(inHistTVec/*, inSHBB*/, mapVartoLabel, doSmear, addString);
 }
 
-void TwoDeeHistTVec_METPerformance_NoSmear(vector<HistogramT> * inHistTVec,  StopHistBinBounds * inSHBB, labelMap * mapVartoLabel, TString addString = "") {
+void TwoDeeHistTVec_METPerformance_NoSmear(vector<HistogramT> * inHistTVec/*,  StopHistBinBounds * inSHBB*/, labelMap * mapVartoLabel, TString addString = "") {
     bool doSmear = false;
-    TwoDeeHistTVec_AddMET_vs_qTHists(inHistTVec, inSHBB, mapVartoLabel, doSmear, addString);
-    TwoDeeHistTVec_AddMET_vs_nVtxHists(inHistTVec, inSHBB, mapVartoLabel, doSmear, addString);
+    TwoDeeHistTVec_AddMET_vs_qTHists(inHistTVec/*, inSHBB*/, mapVartoLabel, doSmear, addString);
+    TwoDeeHistTVec_AddMET_vs_nVtxHists(inHistTVec/*, inSHBB*/, mapVartoLabel, doSmear, addString);
 }

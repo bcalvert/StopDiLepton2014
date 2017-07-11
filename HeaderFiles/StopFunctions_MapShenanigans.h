@@ -7,9 +7,11 @@ using namespace std;
 
 inline void SetMapIntBoolFakeLep(mIB &inMapIntBool, int typeMapIntBool) {
     int numSysts = 3;
+    /*
     int systFakeStat = 1;
     int systFakeSystFakeRate = 2;
     int systFakeSystPromptRate = 3;
+    */
     inMapIntBool[0] = false; //central value should never grab syst
     mIB::iterator x;
     for (int iSyst = 1; iSyst <= numSysts; ++iSyst) {

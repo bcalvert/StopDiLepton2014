@@ -6,7 +6,8 @@ typedef struct BasicEventInfo {
     int   nVtx, nVtxTrue;
     bool  passTrigDoubleMu, passTrigDoubleEl, passTrigElMu;
     float weight, preNVtxRWWeight, basicWeight, weightMC;
-    int   runNumber, lumiBlock, eventNumber;
+    //int   runNumber, lumiBlock, eventNumber;
+    size_t runNumber, lumiBlock, eventNumber;
     
     // will drop these dudes eventually
     bool  doData, doPURWOviToDESY, doHackPURW, isSignal, doPURW, doReReco, doPhiCorr;
@@ -221,7 +222,7 @@ typedef struct EventLepInfo {
          */
         //    float DiLeptonTrigSFCentVal, DiLeptonTrigSFErr;
         int XBin, YBin;
-        float LepEtaX, LepEtaY;
+        float LepEtaX(0.0f), LepEtaY(0.0f);
         float tempLepEta0, tempLepEta1;
         
         tempLepEta0 = vecEventLeps[0].isElec() ? vecEventLeps[0].TempEtaFixElectron() : vecEventLeps[0].BVC.Vec_Eta;
@@ -628,7 +629,7 @@ struct EventHadronicResolutionInfo {
         VecHighPtJet_PhiResolutionTF1(vecTF1RecoHighPtJet_PhiResolution);
     }
     float GetJetPhiResolution(TLorentzVector * inJetP4) {
-        float jetAbsEta = fabs(inJetP4->Eta());
+//        float jetAbsEta = fabs(inJetP4->Eta());
         float jetPt = inJetP4->Pt();
         
         float outputRes = 0.0;
@@ -1135,7 +1136,8 @@ typedef struct EventMT2Info {
     void CalcMT2bb(EventJetInfo * inEJI, float EventMET, float EventMETPhi, int levelVerbosity = 0) {
         vector<int> vecJetPartFlavor(2);
         vector<TLorentzVector> vecJetsMT2bb(2);
-        int caseMT2bb = inEJI->JetSelectorForMT2(&vecJetsMT2bb, &vecJetPartFlavor, levelVerbosity);
+        /*int caseMT2bb = inEJI->JetSelectorForMT2(&vecJetsMT2bb, &vecJetPartFlavor, levelVerbosity);*/
+	inEJI->JetSelectorForMT2(&vecJetsMT2bb, &vecJetPartFlavor, levelVerbosity);
         if (vecJetsMT2bb.size() == 2) {
             EventMT2bb = MT2::getMT2(vecJetsMT2bb[0], vecJetsMT2bb[1], EventMET, EventMETPhi, false);
         }
@@ -1153,7 +1155,8 @@ typedef struct EventMT2Info {
         
         vector<int> vecJetPartFlavor(2);
         vector<TLorentzVector> vecJetsMT2bb(2);
-        int caseMT2bb = inEJI->JetSelectorForMT2(&vecJetsMT2bb, &vecJetPartFlavor, levelVerbosity);
+        //int caseMT2bb = inEJI->JetSelectorForMT2(&vecJetsMT2bb, &vecJetPartFlavor, levelVerbosity);
+	inEJI->JetSelectorForMT2(&vecJetsMT2bb, &vecJetPartFlavor, levelVerbosity);
         if (vecJetsMT2bb.size() == 2) {
             EventMT2bb_ZMET = MT2::getMT2(vecJetsMT2bb[0], vecJetsMT2bb[1], ZMET.Pt(), ZMET.Phi(), false, testMass);
             EventDeltaPhiMT2bb_ZMET_JetsUsed = dPhi(vecJetsMT2bb[0].Phi(), vecJetsMT2bb[1].Phi());
@@ -1924,7 +1927,7 @@ struct EventRazorInfo {
         cosThetaLep1_W = -99.;
     }
     
-    int SetPairing(vector<TLorentzVector> * inVecBJets, vector<TLorentzVector> * inVecLeps, bool levelVerbosity = 0) {
+    int SetPairing(vector<TLorentzVector> * inVecBJets, vector<TLorentzVector> * inVecLeps/*, bool levelVerbosity = 0*/) {
         vector<TLorentzVector> vecBLeps_Pair1(0);
         vector<TLorentzVector> vecBLeps_Pair2(0);
         if (inVecLeps->size() < 2 || inVecBJets->size() < 2) {
@@ -1963,11 +1966,12 @@ struct EventRazorInfo {
         //As part of this, it selects the "b-jets" and also pairs the "b-jets" with the leptons
         vector<TLorentzVector> vecLepMT2lblb(2), vecJetMT2lblb(2);
         vector<int> vecJetPartFlavor(2);
-        int caseMT2lblb = inEJI->JetSelectorForMT2(&vecJetMT2lblb, &vecJetPartFlavor, levelVerbosity);
+        //int caseMT2lblb = inEJI->JetSelectorForMT2(&vecJetMT2lblb, &vecJetPartFlavor, levelVerbosity);
+	inEJI->JetSelectorForMT2(&vecJetMT2lblb, &vecJetPartFlavor, levelVerbosity);
         vecLepMT2lblb[0] = inELI->vecEventLeps[0].P4;
         vecLepMT2lblb[1] = inELI->vecEventLeps[1].P4;
         
-        int whichPairing = SetPairing(&vecJetMT2lblb, &vecLepMT2lblb, levelVerbosity);
+        int whichPairing = SetPairing(&vecJetMT2lblb, &vecLepMT2lblb/*, levelVerbosity*/);
         if (whichPairing == 1) {
             //second pairing is "correct" one
             lep0_lab = vecLepMT2lblb[0];
@@ -2110,7 +2114,7 @@ struct EventRazorInfo {
         }
     }
     
-    void DoBoostRazor(bool levelVerbosity = 0) {
+    void DoBoostRazor(/*bool levelVerbosity = 0*/) {
         //Set boosted vectors as equal
         bjet0_Razor = bjet0_lab;
         bjet1_Razor = bjet1_lab;
@@ -2123,7 +2127,7 @@ struct EventRazorInfo {
         lep1_Razor.Boost(boost_Razor);
     }
     
-    void DoBoostTop(bool levelVerbosity = 0) {
+    void DoBoostTop(/*bool levelVerbosity = 0*/) {
         //Set boosted vectors as equal
         bjet0_Top = bjet0_Razor;
         lep0_Top = lep0_Razor;
@@ -2139,7 +2143,7 @@ struct EventRazorInfo {
         lep1_Top.Boost(-1 * boost_Top);
     }
     
-    void DoBoostW(bool levelVerbosity = 0) {
+    void DoBoostW(/*bool levelVerbosity = 0*/) {
         //Set boosted vectors as equal
         lep0_W = lep0_Top;
         lep1_W = lep1_Top;
@@ -2223,21 +2227,21 @@ struct EventRazorInfo {
                 cout << "running the razor frame boost calculation" << endl;
             }
             SetBoostRazor(levelVerbosity);
-            DoBoostRazor(levelVerbosity);
+            DoBoostRazor(/*levelVerbosity*/);
             
             //Run The top-rest frame boost calculation (both the boost vector calculation and subsequent boosted object 4-vectors)
             if (levelVerbosity) {
                 cout << "running the top rest-frame boost calculation" << endl;
             }
             SetBoostTop(levelVerbosity);
-            DoBoostTop(levelVerbosity);
+            DoBoostTop(/*levelVerbosity*/);
             
             //Run The W-rest frame boost calculation (both the boost vector calculation and subsequent boosted object 4-vectors)
             if (levelVerbosity) {
                 cout << "running the W rest-frame boost calculation" << endl;
             }
             SetBoostW(levelVerbosity);
-            DoBoostW(levelVerbosity);
+            DoBoostW(/*levelVerbosity*/);
             
             //Calculate quantities using the various frame objects
             if (levelVerbosity) {

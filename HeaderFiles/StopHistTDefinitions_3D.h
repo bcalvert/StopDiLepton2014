@@ -1,6 +1,6 @@
 // Set of functions that set up the Three-Dimensional histograms that will be automatically booked and filled by the plot-making macro
 
-inline void ThreeDeeHistTVec_AddMT2CorrelationHists(vector<HistogramT> * inHistTVec, StopHistBinBounds * inSHBB, labelMap * mapVartoLabel, bool isSmear) {
+inline void ThreeDeeHistTVec_AddMT2CorrelationHists(vector<HistogramT> * inHistTVec/*, StopHistBinBounds * inSHBB*/, labelMap * mapVartoLabel, bool isSmear) {
     // Histograms used for checking correlations of the various MT2s with other variables
     
     bool doSyst = true;
@@ -38,15 +38,15 @@ inline void ThreeDeeHistTVec_AddMT2CorrelationHists(vector<HistogramT> * inHistT
 
 
 
-inline void ThreeDeeHistTVec_Inclusive(vector<HistogramT> * inHistTVec, StopHistBinBounds * inSHBB, labelMap * mapVartoLabel, int cutPlotLevel) {
+inline void ThreeDeeHistTVec_Inclusive(vector<HistogramT> * inHistTVec/*, StopHistBinBounds * inSHBB*/, labelMap * mapVartoLabel, int cutPlotLevel) {
     bool noSmear = false;
     if (cutPlotLevel > 0) return;
-    ThreeDeeHistTVec_AddMT2CorrelationHists(inHistTVec, inSHBB, mapVartoLabel, noSmear);
+    ThreeDeeHistTVec_AddMT2CorrelationHists(inHistTVec/*, inSHBB*/, mapVartoLabel, noSmear);
 }
-inline void ThreeDeeHistTVec_Inclusive_Smeared(vector<HistogramT> * inHistTVec, StopHistBinBounds * inSHBB, labelMap * mapVartoLabel, int cutPlotLevel) {
+inline void ThreeDeeHistTVec_Inclusive_Smeared(vector<HistogramT> * inHistTVec/*, StopHistBinBounds * inSHBB*/, labelMap * mapVartoLabel, int cutPlotLevel) {
     bool doSmear = true;
     if (cutPlotLevel > 0 && cutPlotLevel < 2) return;
-    ThreeDeeHistTVec_AddMT2CorrelationHists(inHistTVec, inSHBB, mapVartoLabel, doSmear);
+    ThreeDeeHistTVec_AddMT2CorrelationHists(inHistTVec/*, inSHBB*/, mapVartoLabel, doSmear);
 }
 
 

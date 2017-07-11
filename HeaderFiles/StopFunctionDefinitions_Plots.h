@@ -68,7 +68,7 @@ inline vector<TH1F *> * OneDProjectionReturnVec(TH1 * inputHist, int numDims, in
     TH3F * projPatsy3DHist;
     TString patsyNamebase = "patsy";
     TString patsyName;
-    int NBins;
+    int NBins(0);
     int whichAxisToMix = 6 - (whichAxisForDist + whichAxisToProjTo);
     int axis1LB, axis1UB, axis2LB, axis2UB;
     switch (whichAxisForDist) {
@@ -151,7 +151,7 @@ inline void SetHistTVec_Inclusive(vector<HistogramT> * inHistTVec, StopHistBinBo
             TwoDeeHistTVec_Inclusive(inHistTVec, inSHBB, mapVartoLabel, cutPlotLevel);            
             break;
         case 3:
-            ThreeDeeHistTVec_Inclusive(inHistTVec, inSHBB, mapVartoLabel, cutPlotLevel);
+            ThreeDeeHistTVec_Inclusive(inHistTVec/*, inSHBB*/, mapVartoLabel, cutPlotLevel);
             break;
         default:
             cout << "num of Dims should be 1, 2, or 3 -- it is " << numDims << endl;
@@ -169,7 +169,7 @@ inline void SetHistTVec_Inclusive_Smeared(vector<HistogramT> * inHistTVec, StopH
             TwoDeeHistTVec_Inclusive_Smeared(inHistTVec, inSHBB, mapVartoLabel, cutPlotLevel);            
             break;
         case 3:
-            ThreeDeeHistTVec_Inclusive_Smeared(inHistTVec, inSHBB, mapVartoLabel, cutPlotLevel);
+            ThreeDeeHistTVec_Inclusive_Smeared(inHistTVec/*, inSHBB*/, mapVartoLabel, cutPlotLevel);
             break;
         default:
             cout << "num of Dims should be 1, 2, or 3 -- it is " << numDims << endl;
@@ -184,7 +184,7 @@ inline void SetHistTVec_METPerformance_Smeared(vector<HistogramT> * inHistTVec, 
             OneDeeHistTVec_AddDiKinObjectHists_Main(inHistTVec, inSHBB, mapVartoLabel, 0, true, true);
             break;
         case 2:
-            TwoDeeHistTVec_METPerformance(inHistTVec, inSHBB, mapVartoLabel);
+            TwoDeeHistTVec_METPerformance(inHistTVec/*, inSHBB*/, mapVartoLabel);
             break;
         default:
             cout << "num of Dims should be 1, 2 -- it is " << numDims << endl;
@@ -199,7 +199,7 @@ inline void SetHistTVec_METPerformance(vector<HistogramT> * inHistTVec, StopHist
             OneDeeHistTVec_AddDiKinObjectHists_Main(inHistTVec, inSHBB, mapVartoLabel, 0, false, true);
             break;
         case 2:
-            TwoDeeHistTVec_METPerformance_NoSmear(inHistTVec, inSHBB, mapVartoLabel);
+            TwoDeeHistTVec_METPerformance_NoSmear(inHistTVec/*, inSHBB*/, mapVartoLabel);
             break;
         default:
             cout << "num of Dims should be 1, 2 -- it is " << numDims << endl;

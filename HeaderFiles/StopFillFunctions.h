@@ -128,17 +128,17 @@ inline float ScaleFactorMC(int Type, int Syst) {
 }
 
 inline bool EventPassTrigger(BasicEventInfo * inBEI, EventLepInfo * inELI) {
-    bool stillDoEvent;
+    bool bStillDoEvent(false);
     if (inELI->doEvent) {
-        if (inELI->EventDiLepType == 0) stillDoEvent = inBEI->passTrigDoubleMu;
-        else if (inELI->EventDiLepType == 1) stillDoEvent = inBEI->passTrigDoubleEl;
-        else if (inELI->EventDiLepType == 2) stillDoEvent = inBEI->passTrigElMu;
+        if (inELI->EventDiLepType == 0) bStillDoEvent = inBEI->passTrigDoubleMu;
+        else if (inELI->EventDiLepType == 1) bStillDoEvent = inBEI->passTrigDoubleEl;
+        else if (inELI->EventDiLepType == 2) bStillDoEvent = inBEI->passTrigElMu;
         else {
             std::cout << "oddity with EventDiLepType for input ELI" << std::endl;
-            stillDoEvent = false;
+            bStillDoEvent = false;
         }
     }
-    return stillDoEvent;
+    return bStillDoEvent;
 }
 /*
 inline float nVtxWeight(BasicEventInfo * inBEI, TH2F * nVtxSFHistOviToDESY, TH2F * nVtxSFHist_v2, TH2F * h_S7toS10RWHist, TH2F * nVtxSFHist) {
