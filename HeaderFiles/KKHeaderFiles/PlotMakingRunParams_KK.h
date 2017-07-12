@@ -12,8 +12,8 @@ public:
 	void SetStrings();
 
 	void SetNEvents(int iNEvents) {m_ERC.SetNEvents(iNEvents);}
-    int const GetNEvents() const { return m_ERC.GetNEvents();}
-    size_t const GetStartPoint() const { return m_ERC.GetStartPoint();}
+    int GetNEvents() const { return m_ERC.GetNEvents();}
+    size_t GetStartPoint() const { return m_ERC.GetStartPoint();}
 private:
 	EventRangeController m_ERC; ///< Controls the event range run over
 	TString m_tsFileName; 		///< File name

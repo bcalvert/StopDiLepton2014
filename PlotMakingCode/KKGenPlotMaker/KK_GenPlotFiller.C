@@ -1,5 +1,12 @@
 #include "../../HeaderFiles/KKHeaderFiles/PlotMakingRunParams_KK.h"
 #include "../../HeaderFiles/KKHeaderFiles/EventMETInfo.h"
+#include "../../HeaderFiles/KKHeaderFiles/METLabelStrings.h"
+#include "../../HeaderFiles/KKHeaderFiles/HistogramT.h"
+#include "../../HeaderFiles/KKHeaderFiles/SampleT.h"
+#include "../../HeaderFiles/KKHeaderFiles/StopHistBinBounds.h"
+#include "../../HeaderFiles/KKHeaderFiles/KKHistDefinitions.h"
+#include "../../HeaderFiles/KKHeaderFiles/HasherPart2.h"
+#include "../../HeaderFiles/KKHeaderFiles/StopFunctions_PlotFillingShowing_HistogramBooking.h"
 
 #include "TString.h"
 #include "TFile.h"
@@ -8,7 +15,7 @@
 
 #include <fstream>
 #include <vector>
-
+#include <unordered_map>
 #include <iostream>
 
 //different nVtx regions for the plots
@@ -22,11 +29,11 @@ int main( int argc, char* argv[] ) {
     paramsPlotMaking_KK.SetVals(argc, argv);
     paramsPlotMaking_KK.SetStrings();
 
-
+    /*
     char Buffer[500];
     std::ifstream * outDirFile;
     TRegexp fCutSlash("[^/]+$");
-
+    */
     TString tsOutFileName = paramsPlotMaking_KK.GetOutputString();
 
     std::cout << "saving to " << tsOutFileName << std::endl;
@@ -50,6 +57,69 @@ int main( int argc, char* argv[] ) {
     infoMETCalo.SetTreeBranchInfo(&tcFileTree);
 
 
+    /******************************************************************************************************************************/
+    /******************************************************************************************************************************/
+    /******************************************************************************************************************************/
+    ///////////////////////  BEGIN: Deal with booking of histograms
+    /******************************************************************************************************************************/
+    /******************************************************************************************************************************/
+    /******************************************************************************************************************************/
+    ////Book histograms and histogram names
+    tfOutputFile->cd();
+
+    //Set up the Default Stop Hist Binnings and Bounds
+    StopHistBinBounds basicSHBB; basicSHBB.DefaultVarVals();
+
+    //Set up the mapping of input axis label variables to full out labels;
+    labelMap mapVartoLabel;
+    SetStringKey_StSMap_Composite(mapVartoLabel);
+
+    // Set up the SubSampleVector (i.e. the different classes of events)
+    std::vector<SampleT> * subSampVec = new std::vector<SampleT>;
+    SetSubSampVec(subSampVec);
+
+    /////initialize the vectors of HistogramTs and then create them
+    int iNumDims(1);
+    std::vector< std::vector<HistogramT> *> vvHistT(iNumDims);
+
+    for (int iDim = 0; iDim < iNumDims; ++iDim) {
+        SetHistTVec_Inclusive(vvHistT[iDim], &basicSHBB, &mapVartoLabel, iDim + 1);
+    }
+
+
+       /******************************************************************************************************************************/
+    
+    /////Declare the Histogram Maps that will be used for determining how to fill the histograms
+    typedef std::unordered_map<histKeyString, TH1 *, Hasher2, EqualFn2>      HMap_1D;
+    typedef std::unordered_map<histKeyString, TH2 *, Hasher2, EqualFn2>      HMap_2D;
+    typedef std::unordered_map<histKeyString, TH3 *, Hasher2, EqualFn2>      HMap_3D;
+
+    ///Basic 1D HistMaps
+    HMap_1D histMap_1D;
+
+    ///Basic 2D HistMaps
+    HMap_2D histMap_2D;
+
+    ///Basic 3D HistMaps
+    HMap_3D histMap_3D;
+
+    /////Declare the Histogram Maps that will be used for determining how to fill the histograms
+    /////Book the Histograms
+    for (unsigned int iSubSamp = 0; iSubSamp < subSampVec->size(); ++iSubSamp) {
+        for (int iDim = 0; iDim < iNumDims; ++iDim) {
+            BookHists(vvHistT[iDim], histMap_1D, histMap_2D, histMap_3D, &subSampVec->at(iSubSamp), &basicSHBB.SAB, iDim + 1);            
+        }
+    }
+    /////Book the Histograms
+    
+    /******************************************************************************************************************************/
+    /******************************************************************************************************************************/
+    /******************************************************************************************************************************/
+    ///////////////////////  END: Deal with booking of histograms
+    /******************************************************************************************************************************/
+    /******************************************************************************************************************************/
+    /******************************************************************************************************************************/
+    
     //Need to add in booking of histograms
     //c.f. https://github.com/bcalvert/StopDiLepton2014/blob/master/PlotMakingCode/NewOviStopPlotFillerRunOnSkim_wSyst.C#L543-L776
     //for the code -- yes there's a lot and yes I'm working on cleaning it up
@@ -75,18 +145,18 @@ int main( int argc, char* argv[] ) {
     size_t const szModFactor = 1E3;
     size_t const szStartPoint = paramsPlotMaking_KK.GetStartPoint();
     size_t const szEndPoint = szStartPoint + static_cast<size_t>(iNEvents);
-    for (Long64_t ievt = szStartPoint; ievt < paramsPlotMaking_KK.GetNEvents(); ++ievt) {
-        //    for (Long64_t ievt=0; ievt<1000;ievt++)
+    for (size_t szEventIndex = szStartPoint; szEventIndex < paramsPlotMaking_KK.GetNEvents(); ++szEventIndex) {
+        //    for (Long64_t szEventIndex=0; szEventIndex<1000;szEventIndex++)
         if (szStartPoint > 0 ) {
-            if ((ievt / szStartPoint == 1) && (ievt % szStartPoint == 0)) std::cout << "ievt at start point: " << ievt << std::endl;
+            if ((szEventIndex / szStartPoint == 1) && (szEventIndex % szStartPoint == 0)) std::cout << "event index at start point: " << szEventIndex << std::endl;
         }
-        if (ievt % szModFactor == 0) std::cout << ievt << std::endl;
-        if (ievt == szEndPoint) {
-            std::cout << "ievt at end point (note, not running on this event!):" << ievt << std::endl;
+        if (szEventIndex % szModFactor == 0) std::cout << szEventIndex << std::endl;
+        if (szEventIndex == szEndPoint) {
+            std::cout << "event index at end point (note, not running on this event!):" << szEventIndex << std::endl;
             break;
         }
         
-        tcFileTree.GetEntry(ievt);
+        tcFileTree.GetEntry(szEventIndex);
 
         //Need to add in the code that sets up all the event variable mapping
         //c.f. https://github.com/bcalvert/StopDiLepton2014/blob/master/PlotMakingCode/NewOviStopPlotFillerRunOnSkim_wSyst.C#L972-L1460

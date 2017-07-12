@@ -1,0 +1,62 @@
+#ifndef STOP_FUNCTIONS_PLOT_FILLING_SHOWING_HISTOGRAM_BOOKING_H
+#define STOP_FUNCTIONS_PLOT_FILLING_SHOWING_HISTOGRAM_BOOKING_H
+
+#include <vector>
+#include <unordered_map>
+
+#include "HistogramT.h"
+#include "SpecialAxisBounds.h"
+#include "SampleT.h"
+#include "HasherPart2.h"
+
+typedef std::pair<HistogramT, TString> histKeyString;
+typedef std::unordered_map<histKeyString, TH1 *, Hasher2, EqualFn2>      HMap_1D;
+typedef std::unordered_map<histKeyString, TH2 *, Hasher2, EqualFn2>      HMap_2D;
+typedef std::unordered_map<histKeyString, TH3 *, Hasher2, EqualFn2>      HMap_3D;
+
+// Set of functions used for booking of histograms
+using namespace std;
+void Book1DHists(HMap_1D &inHMap_1D, vector<HistogramT> * inHistVec_1D, SampleT * inSampT, SpecialAxisBounds * inSAB) {
+    TH1F * h_1DCurr;
+    for (unsigned int iH1D = 0; iH1D < inHistVec_1D->size(); ++iH1D) {
+        inHistVec_1D->at(iH1D).SetAxisString();
+        h_1DCurr = inHistVec_1D->at(iH1D).BookOneDeeHist(inSampT, inSAB);
+        inHMap_1D[histKeyString(inHistVec_1D->at(iH1D), inSampT->histNameSuffix)] = h_1DCurr;
+    }
+}
+
+void Book2DHists(HMap_2D &inHMap_2D, vector<HistogramT> * inHistVec_2D, SampleT * inSampT, SpecialAxisBounds * inSAB) {
+    TH2F * h_2DCurr;
+    for (unsigned int iH2D = 0; iH2D < inHistVec_2D->size(); ++iH2D) {
+        inHistVec_2D->at(iH2D).SetAxisString();
+        h_2DCurr = inHistVec_2D->at(iH2D).BookTwoDeeHist(inSampT, inSAB);
+        inHMap_2D[histKeyString(inHistVec_2D->at(iH2D), inSampT->histNameSuffix)] = h_2DCurr;
+    }
+}
+
+void Book3DHists(HMap_3D &inHMap_3D, vector<HistogramT> * inHistVec_3D, SampleT * inSampT, SpecialAxisBounds * inSAB) {
+    TH3F * h_3DCurr;
+    for (unsigned int iH3D = 0; iH3D < inHistVec_3D->size(); ++iH3D) {
+        inHistVec_3D->at(iH3D).SetAxisString();
+        h_3DCurr = inHistVec_3D->at(iH3D).BookThreeDeeHist(inSampT, inSAB);
+        inHMap_3D[histKeyString(inHistVec_3D->at(iH3D), inSampT->histNameSuffix)] = h_3DCurr;
+    }
+}
+
+void BookHists(vector<HistogramT> * inHistVec, HMap_1D &inHMap_1D, HMap_2D &inHMap_2D, HMap_3D &inHMap_3D, SampleT * inSampT, SpecialAxisBounds * inSAB, int numDims) {
+    switch (numDims) {
+        case 1:
+            Book1DHists(inHMap_1D, inHistVec, inSampT, inSAB);
+            break;
+        case 2:
+            Book2DHists(inHMap_2D, inHistVec, inSampT, inSAB);
+            break;
+        case 3:
+            Book3DHists(inHMap_3D, inHistVec, inSampT, inSAB);
+            break;
+        default:
+            cout << "num of Dims should be 1, 2, or 3 -- it is " << numDims << endl;
+            break;
+    }
+}
+#endif // STOP_FUNCTIONS_PLOT_FILLING_SHOWING_HISTOGRAM_BOOKING_H
