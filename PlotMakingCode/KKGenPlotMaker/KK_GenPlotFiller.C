@@ -5,8 +5,10 @@
 #include "../../HeaderFiles/KKHeaderFiles/SampleT.h"
 #include "../../HeaderFiles/KKHeaderFiles/StopHistBinBounds.h"
 #include "../../HeaderFiles/KKHeaderFiles/KKHistDefinitions.h"
+#include "../../HeaderFiles/KKHeaderFiles/Hasher.h"
 #include "../../HeaderFiles/KKHeaderFiles/HasherPart2.h"
 #include "../../HeaderFiles/KKHeaderFiles/StopFunctions_PlotFillingShowing_HistogramBooking.h"
+//#include "../../HeaderFiles/KKHeaderFiles/HistogramFilling.h"
 
 #include "TString.h"
 #include "TFile.h"
@@ -121,10 +123,11 @@ int main( int argc, char* argv[] ) {
     /******************************************************************************************************************************/
     /******************************************************************************************************************************/
     /******************************************************************************************************************************/
-    
-    //Need to add in booking of histograms
-    //c.f. https://github.com/bcalvert/StopDiLepton2014/blob/master/PlotMakingCode/NewOviStopPlotFillerRunOnSkim_wSyst.C#L543-L776
-    //for the code -- yes there's a lot and yes I'm working on cleaning it up
+
+    typedef std::unordered_map<TString, float, Hasher, EqualFn> StV_Map;
+    /////declare the maps that will contain the values of event variables (using strings as keys)
+    StV_Map StVM_Basic;
+
 
     //Need to declare the maps that will contain the values of event variables (using strings as keys)
     //c.f. https://github.com/bcalvert/StopDiLepton2014/blob/master/PlotMakingCode/NewOviStopPlotFillerRunOnSkim_wSyst.C#L784-L875
@@ -160,14 +163,20 @@ int main( int argc, char* argv[] ) {
         
         tcFileTree.GetEntry(szEventIndex);
 
+        /// Clear the Maps    
+        StVM_Basic.clear();
+
         //Need to add in the code that sets up all the event variable mapping
         //c.f. https://github.com/bcalvert/StopDiLepton2014/blob/master/PlotMakingCode/NewOviStopPlotFillerRunOnSkim_wSyst.C#L972-L1460
         //for the code -- yes there's a lot and yes I'm working on cleaning it up
         //
+        //
+        
         //Need to add in the code that fills the histograms given maps of variables
         //c.f. https://github.com/bcalvert/StopDiLepton2014/blob/master/PlotMakingCode/NewOviStopPlotFillerRunOnSkim_wSyst.C#L1464-L1550
         //for the code -- yes there's a lot and yes I'm working on cleaning it up
-        
+        //It's going to involve this line below
+        //SetupMapsAndFillHistograms(StVM_Basic, subSampBool, subSampVec, &ESPI, &EPI, &vecVecHistT_Inclusive, &histMap_1D, &histMap_2D, &histMap_3D, METSig_Raw, iNumDims, systStopBook, 0, PMRP.SMV.doData, false, PMRP.SMV.whichDiLepType, PMRP.PSIV.doVerbosity_Plots);
     }
     std::cout << "All events done" << std::endl;
     tfOutputFile->cd();

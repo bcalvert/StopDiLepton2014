@@ -82,7 +82,6 @@ void SampleCut<T>::SetParamsBound(TString tsHistNameSuffix, int tCutLB, int iCut
 template <typename T>
 std::ostream& operator<<(std::ostream &os, SampleCut<T> const& sample_cut) 
 {
-    os << "tCheckVal " << sample_cut.tCheckVal << std::endl;
     os << "m_tCutLB " << sample_cut.m_tCutLB << std::endl;
     os << "m_tCutUB " << sample_cut.m_tCutUB << std::endl;
     os << "m_iCutDir " << sample_cut.m_iCutDir << std::endl;
@@ -94,6 +93,7 @@ template<typename T>
 bool SampleCut<T>::PassCut(T tCheckVal, bool bDoVerbosity) {
     bool bPassCut = true;
     if (bDoVerbosity) {
+        std::cout << "Value being checked: " << tCheckVal << std::endl;
         std::cout << *this;
     }
     if (m_bDoCut) {

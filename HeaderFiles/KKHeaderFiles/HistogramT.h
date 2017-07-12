@@ -5,6 +5,8 @@
 #include "TH1F.h"
 #include "TH2F.h"
 #include "TH3F.h"
+
+#include <unordered_map>
 #include <vector>
 #include <iostream>
 
@@ -12,6 +14,9 @@
 #include "SampleCut.h"
 #include "SampleT.h"
 #include "SpecialAxisBounds.h"
+
+#include "Hasher.h"
+typedef std::unordered_map<TString, float, Hasher, EqualFn> StV_Map;
 
 // Structs used as part of booking/showing histograms
 struct HistogramT {
@@ -176,7 +181,7 @@ struct HistogramT {
         return outHist3D;
     }
     
-    /*
+    
     bool EventPassesHistSpecificCut_Float(StV_Map * inStVM, bool doVerbosity = false) {
         bool passesCut = true;
         StV_Map::iterator xIter;
@@ -209,7 +214,6 @@ struct HistogramT {
 //        bool passesIntCut = EventPassesHistSpecificCut_Int(inStVM);
         return passesFloatCut && passesIntCut;       
     }
-    */
     bool HistContainsStringAsAxisVar(TString inString, int numDims) {
         bool containsString = false;
         if (numDims < 1 || numDims > 3) {
