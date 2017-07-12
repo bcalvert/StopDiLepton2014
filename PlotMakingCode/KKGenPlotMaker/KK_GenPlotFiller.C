@@ -83,7 +83,9 @@ int main( int argc, char* argv[] ) {
     std::vector< std::vector<HistogramT> *> vvHistT(iNumDims);
 
     for (int iDim = 0; iDim < iNumDims; ++iDim) {
+        vvHistT[iDim] = new std::vector<HistogramT>;
         SetHistTVec_Inclusive(vvHistT[iDim], &basicSHBB, &mapVartoLabel, iDim + 1);
+        AddPatsyName(vvHistT[iDim]);
     }
 
 

@@ -12,6 +12,7 @@
 #include "SampleCut.h"
 #include "SampleT.h"
 #include "SpecialAxisBounds.h"
+
 // Structs used as part of booking/showing histograms
 struct HistogramT {
     TString name;
@@ -227,5 +228,10 @@ inline bool operator<(const HistogramT &a, const HistogramT &b)
     return (a.name < b.name) || (a.xAxis.axisLabel < b.xAxis.axisLabel);
 }
 
-typedef std::pair<HistogramT, TString> histKeyString;
+void AddPatsyName(std::vector<HistogramT> * pvHistT) {
+    // function used to take on the "PATSY" into hist names so that I can find and replace it later with the sub-channel name
+    for (unsigned int iHistT = 0; iHistT < pvHistT->size(); ++iHistT) {
+        pvHistT->at(iHistT).name += "PATSY";
+    }
+}
 #endif // HISTOGRAM_T_H
