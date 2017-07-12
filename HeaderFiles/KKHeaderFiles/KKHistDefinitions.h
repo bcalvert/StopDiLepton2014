@@ -17,20 +17,6 @@ void OneDeeHistTVec_AddBasicMETHists(std::vector<HistogramT> * inHistTVec, StopH
 
     TString stringSmear = ""; //hard-coded for now because it's not illustrative -- normally set to GetStringSmear(isSmear, false);
     TString stringMET = "MET";
-    TString stringMETSig1DHack = "METSig1DHack";
-    TString stringMETSig1DHack_AllJets = "METSig1DHack_AllJets";
-    TString stringMETSig2DHack = "METSig2DHack";
-    TString stringMETSig2DHack_AllJets = "METSig2DHack_AllJets";
-    TString stringMETSig2DHack_Par = "METSig2DHack_Par";
-    TString stringMETSig2DHack_Perp = "METSig2DHack_Perp";
-    TString stringMETSig2DHack_Par_AllJets = "METSig2DHack_Par_AllJets";
-    TString stringMETSig2DHack_Perp_AllJets = "METSig2DHack_Perp_AllJets";
-    
-    TString stringMETSig2DHackFull = "METSig2DHackFull";
-    TString stringMETSig2DHack_ParFull = "METSig2DHack_ParFull";
-    TString stringMETSig2DHack_PerpFull = "METSig2DHack_PerpFull";
-    
-    TString stringMETSig2DTrue = "METSig2DTrue";
     
     HistogramT H_MET; H_MET.DefaultVarVals();
     H_MET.SetName(stringSmear, stringMET, "");
@@ -48,79 +34,7 @@ void OneDeeHistTVec_AddBasicMETHists(std::vector<HistogramT> * inHistTVec, StopH
     H_METPhi.SetName(stringSmear, stringMET + "Phi", "");
     H_METPhi.xAxis.SetAxis("patsy", stringMET + "Phi", &inSHBB->m_histBounds_Phi, bDoSyst);
     H_METPhi.SetIndAxisLabel(stringSmear + stringMET + "Phi", mapVartoLabel, 1);
-    H_METPhi.yAxis.SetAxisAsDefaultCountAxis("radians");
-    
-    HistogramT H_METSig1DHack; H_METSig1DHack.DefaultVarVals();
-    H_METSig1DHack.SetName(stringSmear, stringMETSig1DHack, "");
-    H_METSig1DHack.xAxis.SetAxis("patsy", stringMETSig1DHack, &inSHBB->m_histBounds_EnergyPtMET_SR, bDoSyst);
-    H_METSig1DHack.SetIndAxisLabel(stringSmear + stringMETSig1DHack, mapVartoLabel, 1);
-    H_METSig1DHack.yAxis.SetAxisAsDefaultCountAxis("Sig.");
-    
-    HistogramT H_METSig1DHack_AllJets; H_METSig1DHack_AllJets.DefaultVarVals();
-    H_METSig1DHack_AllJets.SetName(stringSmear, stringMETSig1DHack_AllJets, "");
-    H_METSig1DHack_AllJets.xAxis.SetAxis("patsy", stringMETSig1DHack_AllJets, &inSHBB->m_histBounds_EnergyPtMET_SR, bDoSyst);
-    H_METSig1DHack_AllJets.SetIndAxisLabel(stringSmear + stringMETSig1DHack_AllJets, mapVartoLabel, 1);
-    H_METSig1DHack_AllJets.yAxis.SetAxisAsDefaultCountAxis("Sig.");
-    
-    HistogramT H_METSig2DHack; H_METSig2DHack.DefaultVarVals();
-    H_METSig2DHack.SetName(stringSmear, stringMETSig2DHack, "");
-    H_METSig2DHack.xAxis.SetAxis("patsy", stringMETSig2DHack, &inSHBB->m_histBounds_EnergyPtMET_SR, bDoSyst);
-    H_METSig2DHack.SetIndAxisLabel(stringSmear + stringMETSig2DHack, mapVartoLabel, 1);
-    H_METSig2DHack.yAxis.SetAxisAsDefaultCountAxis("Sig.");
-    
-    HistogramT H_METSig2DHack_AllJets; H_METSig2DHack_AllJets.DefaultVarVals();
-    H_METSig2DHack_AllJets.SetName(stringSmear, stringMETSig2DHack_AllJets, "");
-    H_METSig2DHack_AllJets.xAxis.SetAxis("patsy", stringMETSig2DHack_AllJets, &inSHBB->m_histBounds_EnergyPtMET_SR, bDoSyst);
-    H_METSig2DHack_AllJets.SetIndAxisLabel(stringSmear + stringMETSig2DHack_AllJets, mapVartoLabel, 1);
-    H_METSig2DHack_AllJets.yAxis.SetAxisAsDefaultCountAxis("Sig.");
-    
-    HistogramT H_METSig2DTrue; H_METSig2DTrue.DefaultVarVals();
-    H_METSig2DTrue.SetName(stringSmear, stringMETSig2DTrue, "");
-    H_METSig2DTrue.xAxis.SetAxis("patsy", stringMETSig2DTrue, &inSHBB->m_histBounds_EnergyPtMET_SR, bDoSyst);
-    H_METSig2DTrue.SetIndAxisLabel(stringSmear + stringMETSig2DTrue, mapVartoLabel, 1);
-    H_METSig2DTrue.yAxis.SetAxisAsDefaultCountAxis("Sig.");
-    
-    HistogramT H_METSig2DHackFull; H_METSig2DHackFull.DefaultVarVals();
-    H_METSig2DHackFull.SetName(stringSmear, stringMETSig2DHackFull, "");
-    H_METSig2DHackFull.xAxis.SetAxis("patsy", stringMETSig2DHackFull, &inSHBB->m_histBounds_EnergyPtMET_SR, bDoSyst);
-    H_METSig2DHackFull.SetIndAxisLabel(stringSmear + stringMETSig2DHackFull, mapVartoLabel, 1);
-    H_METSig2DHackFull.yAxis.SetAxisAsDefaultCountAxis("Sig.");
-    
-    HistogramT H_METSig2DHack_Par; H_METSig2DHack_Par.DefaultVarVals();
-    H_METSig2DHack_Par.SetName(stringSmear, stringMETSig2DHack_Par, "");
-    H_METSig2DHack_Par.xAxis.SetAxis("patsy", stringMETSig2DHack_Par, &inSHBB->m_histBounds_RootPxPy, bDoSyst);
-    H_METSig2DHack_Par.SetIndAxisLabel(stringSmear + stringMETSig2DHack_Par, mapVartoLabel, 1);
-    H_METSig2DHack_Par.yAxis.SetAxisAsDefaultCountAxis("Sig.");
-    
-    HistogramT H_METSig2DHack_Perp; H_METSig2DHack_Perp.DefaultVarVals();
-    H_METSig2DHack_Perp.SetName(stringSmear, stringMETSig2DHack_Perp, "");
-    H_METSig2DHack_Perp.xAxis.SetAxis("patsy", stringMETSig2DHack_Perp, &inSHBB->m_histBounds_RootPxPy, bDoSyst);
-    H_METSig2DHack_Perp.SetIndAxisLabel(stringSmear + stringMETSig2DHack_Perp, mapVartoLabel, 1);
-    H_METSig2DHack_Perp.yAxis.SetAxisAsDefaultCountAxis("Sig.");
-    
-    HistogramT H_METSig2DHack_Par_AllJets; H_METSig2DHack_Par_AllJets.DefaultVarVals();
-    H_METSig2DHack_Par_AllJets.SetName(stringSmear, stringMETSig2DHack_Par_AllJets, "");
-    H_METSig2DHack_Par_AllJets.xAxis.SetAxis("patsy", stringMETSig2DHack_Par_AllJets, &inSHBB->m_histBounds_RootPxPy, bDoSyst);
-    H_METSig2DHack_Par_AllJets.SetIndAxisLabel(stringSmear + stringMETSig2DHack_Par_AllJets, mapVartoLabel, 1);
-    H_METSig2DHack_Par_AllJets.yAxis.SetAxisAsDefaultCountAxis("Sig.");
-    
-    HistogramT H_METSig2DHack_Perp_AllJets; H_METSig2DHack_Perp_AllJets.DefaultVarVals();
-    H_METSig2DHack_Perp_AllJets.SetName(stringSmear, stringMETSig2DHack_Perp_AllJets, "");
-    H_METSig2DHack_Perp_AllJets.xAxis.SetAxis("patsy", stringMETSig2DHack_Perp_AllJets, &inSHBB->m_histBounds_RootPxPy, bDoSyst);
-    H_METSig2DHack_Perp_AllJets.SetIndAxisLabel(stringSmear + stringMETSig2DHack_Perp_AllJets, mapVartoLabel, 1);
-    H_METSig2DHack_Perp_AllJets.yAxis.SetAxisAsDefaultCountAxis("Sig.");
-    
-    HistogramT H_METSig2DHack_ParFull; H_METSig2DHack_ParFull.DefaultVarVals();
-    H_METSig2DHack_ParFull.SetName(stringSmear, stringMETSig2DHack_ParFull, "");
-    H_METSig2DHack_ParFull.xAxis.SetAxis("patsy", stringMETSig2DHack_ParFull, &inSHBB->m_histBounds_RootPxPy, bDoSyst);
-    H_METSig2DHack_ParFull.SetIndAxisLabel(stringSmear + stringMETSig2DHack_ParFull, mapVartoLabel, 1);
-    H_METSig2DHack_ParFull.yAxis.SetAxisAsDefaultCountAxis("Sig.");
-    
-    HistogramT H_METSig2DHack_PerpFull; H_METSig2DHack_PerpFull.DefaultVarVals();
-    H_METSig2DHack_PerpFull.SetName(stringSmear, stringMETSig2DHack_PerpFull, "");
-    H_METSig2DHack_PerpFull.xAxis.SetAxis("patsy", stringMETSig2DHack_PerpFull, &inSHBB->m_histBounds_RootPxPy, bDoSyst);
-    H_METSig2DHack_PerpFull.SetIndAxisLabel(stringSmear + stringMETSig2DHack_PerpFull, mapVartoLabel, 1);
-    H_METSig2DHack_PerpFull.yAxis.SetAxisAsDefaultCountAxis("Sig.");
+    H_METPhi.yAxis.SetAxisAsDefaultCountAxis("radians");    
     
     HistogramT H_METX; H_METX.DefaultVarVals();
     H_METX.SetName(stringSmear, stringMET + "X", "");
@@ -144,20 +58,7 @@ void OneDeeHistTVec_AddBasicMETHists(std::vector<HistogramT> * inHistTVec, StopH
     //inHistTVec->push_back(H_METTightBin);
     inHistTVec->push_back(H_METPhi);
     inHistTVec->push_back(H_METX);
-    inHistTVec->push_back(H_METY);
-    
-    inHistTVec->push_back(H_METSig1DHack);
-    inHistTVec->push_back(H_METSig1DHack_AllJets);
-    inHistTVec->push_back(H_METSig2DHack);
-    inHistTVec->push_back(H_METSig2DHack_AllJets);
-    inHistTVec->push_back(H_METSig2DHack_Par);
-    inHistTVec->push_back(H_METSig2DHack_Par_AllJets);
-    inHistTVec->push_back(H_METSig2DHack_Perp);
-    inHistTVec->push_back(H_METSig2DHack_Perp_AllJets);
-    inHistTVec->push_back(H_METSig2DHackFull);
-    inHistTVec->push_back(H_METSig2DHack_ParFull);
-    inHistTVec->push_back(H_METSig2DHack_PerpFull);
-    inHistTVec->push_back(H_METSig2DTrue);
+    inHistTVec->push_back(H_METY);    
     
     inHistTVec->push_back(H_TTBarPt);
 }
